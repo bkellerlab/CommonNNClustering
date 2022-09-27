@@ -1,5 +1,7 @@
 from commonnn._primitive_types cimport AINDEX, AVALUE, ABOOL
 
+from libcpp.unordered_set cimport unordered_set as stduset
+
 
 cdef class ClusterParameters:
     cdef public:
@@ -17,4 +19,4 @@ cdef class Labels:
     cdef:
         AINDEX[::1] _labels
         ABOOL[::1] _consider
-        cppunordered_set[AINDEX] _consider_set
+        stduset[AINDEX] _consider_set
