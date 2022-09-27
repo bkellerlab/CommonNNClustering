@@ -1,2 +1,3 @@
 cython>=0.29
 bump2version
+anybadge
