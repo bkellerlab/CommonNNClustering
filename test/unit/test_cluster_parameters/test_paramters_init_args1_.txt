@@ -1,0 +1,2 @@
+{'radius_cutoff': 0.2, 'similarity_cutoff': 1, 'similarity_cutoff_continuous': 1.0, 'n_member_cutoff': 5, 'current_start': 2}
+{'radius_cutoff': 0.2, 'similarity_cutoff': 1, 'similarity_cutoff_continuous': 1.0, 'n_member_cutoff': 5, 'current_start': 2}
