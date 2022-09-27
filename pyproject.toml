@@ -1,0 +1,21 @@
+[build-system]
+requires = [
+    "setuptools>=40.8.0",
+    "wheel",
+    "cython>=0.29",
+    "numpy>=1.19",
+    ]
+build-backend = "setuptools.build_meta"
+
+[tool.pytest.ini_options]
+norecursedirs = ".tox .git docs build htmlcov src"
+addopts = "-v -p no:warnings --doctest-glob='*.md' --ignore=setup.py"
+testpaths = ["test", "."]
+markers = [
+    "sklearn: requires scikit-learn install",
+    "pandas: requires pandas install",
+    "networkx: requires networkx install",
+    "scipy: requires scipy install",
+    "heavy: takes quite a long time (too long with TRACE_CYTHON=1)",
+    "image_regression: creates images for regression testing",
+    ]
