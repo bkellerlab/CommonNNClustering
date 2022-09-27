@@ -1,0 +1,11 @@
+include LICENSE.txt
+include README.md
+include pyproject.toml
+include requirements*.txt
+
+# Include docs
+recursive-include docs *
+
+# Include Cython sources
+recursive-include src/commonnn *.pyx
+recursive-include src/commonnn *.pxd
