@@ -42,6 +42,7 @@ extensions = [
 
 compiler_directives = {
     "language_level": 3,
+    "binding": True,
     "embedsignature": True,
     "boundscheck": False,
     "wraparound": False,
