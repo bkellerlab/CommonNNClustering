@@ -1,15 +1,16 @@
 from commonnn._primitive_types cimport AINDEX, AVALUE, ABOOL
+from commonnn._primitive_types cimport _allocate_and_fill_aindex_array, _allocate_and_fill_avalue_array
 
+from libc.stdlib cimport malloc, free
 from libcpp.unordered_set cimport unordered_set as stduset
 
 
 cdef class ClusterParameters:
-    cdef public:
-        AVALUE radius_cutoff
-        AINDEX similarity_cutoff
-        AVALUE similarity_cutoff_continuous
-        AINDEX n_member_cutoff
-        AINDEX current_start
+    cdef:
+        AVALUE *fparams
+        AINDEX *iparams
+
+cdef class CommonNNParameters(ClusterParameters): pass
 
 
 cdef class Labels:

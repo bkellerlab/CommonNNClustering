@@ -10,67 +10,57 @@ from commonnn._primitive_types import P_AINDEX, P_AVALUE, P_ABOOL
 cdef class ClusterParameters:
     """Input parameters for clustering procedure"""
 
-    def __cinit__(
-            self,
-            radius_cutoff: float,
-            similarity_cutoff: int = 0,
-            similarity_cutoff_continuous: float = 0.,
-            n_member_cutoff: int = None,
-            current_start: int = 1):
+    _fparam_names = []
+    _iparam_names = []
 
-        if n_member_cutoff is None:
-            n_member_cutoff = similarity_cutoff
+    def __cinit__(self, fparams: list, iparams: list, *, **kwargs):
+        self.fparams = _allocate_and_fill_avalue_array(len(fparams), fparams)
+        self.iparams = _allocate_and_fill_aindex_array(len(iparams), iparams)
 
-        self.radius_cutoff = radius_cutoff
-        self.similarity_cutoff = similarity_cutoff
-        self.similarity_cutoff_continuous = similarity_cutoff_continuous
-        self.n_member_cutoff = n_member_cutoff
-        self.current_start = current_start
+    def __init__(self, *args, **kwargs):
+        if type(self) is ClusterParameters:
+            raise RuntimeError(
+                f"Cannot instantiate abstract class {type(self)}"
+                )
 
-    def __init__(
-            self,
-            radius_cutoff: float,
-            similarity_cutoff: int = 0,
-            similarity_cutoff_continuous: float = 0.,
-            n_member_cutoff: int = None,
-            current_start: int = 1):
-        """
+    def __dealloc__(self):
+        if self.fparams != NULL:
+            free(self.fparams)
 
-        Args:
-            radius_cutoff: Neighbour search radius :math:`r`.
+        if self.iparams != NULL:
+            free(self.iparams)
 
-        Keyword args:
-            similarity_cutoff:
-                Value used to check the similarity criterion, i.e. the
-                minimum required number of shared neighbours :math:`n_\mathrm{c}`.
-            similarity_cutoff_continuous:
-                Same as `similarity_cutoff` but allowed to be a floating point
-                value.
-            n_member_cutoff:
-                Minimum required number of points in neighbour lists
-                to be considered for a similarity check
-                (used for example in :obj:`~cnnclustering._types.Neighbours.enough`).
-                If `None`, will be set to `similarity_cutoff`.
-            current_start: Use this as the first label for identified clusters.
-        """
-        pass
+    @classmethod
+    def from_mapping(cls, parameters: dict, *, **kwargs):
+        fparams = [parameters[pn] for pn in cls._fparam_names]
+        iparams = [parameters[pn] for pn in cls._iparam_names]
+        return cls(fparams, iparams, **kwargs)
 
     def to_dict(self):
         """Return a Python dictionary of cluster parameter key-value pairs"""
 
-        return {
-            "radius_cutoff": self.radius_cutoff,
-            "similarity_cutoff": self.similarity_cutoff,
-            "similarity_cutoff_continuous": self.similarity_cutoff_continuous,
-            "n_member_cutoff": self.n_member_cutoff,
-            "current_start": self.current_start,
-            }
+        cdef AINDEX i
+
+        dict_ = {}
+        for i, pn in enumerate(self._fparam_names):
+            dict_[pn] = self.fparams[i]
+
+        for i, pn in enumerate(self._iparam_names):
+            dict_[pn] = self.iparams[i]
+
+        return dict_
 
     def __repr__(self):
         return f"{self.to_dict()!r}"
 
     def __str__(self):
         return f"{self.to_dict()!s}"
+
+
+cdef class CommonNNParameters(ClusterParameters):
+    _fparam_names = ["radius_cutoff"]
+    _iparam_names = ["similarity_cutoff", "_support_cutoff", "start_label"]
+
 
 cdef class Labels:
     """Represents cluster label assignments"""
