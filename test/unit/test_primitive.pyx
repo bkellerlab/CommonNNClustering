@@ -5,12 +5,18 @@ from cython_helper import cytest
 
 from libc.stdlib cimport free
 
+
 @cytest
 def test_primitive_consistency():
-    isinstance(P_AVALUE, float)
-    isinstance(P_AVALUE32, float)
-    isinstance(P_AINDEX, int)
-    isinstance(P_ABOOL, bool)
+    cdef AVALUE[::1] avalue = np.zeros(5, dtype=P_AVALUE)
+    cdef AVALUE32[::1] avalue32 = np.zeros(5, dtype=P_AVALUE32)
+    cdef AINDEX[::1] aindex = np.zeros(5, dtype=P_AINDEX)
+    cdef ABOOL[::1] abool = np.zeros(5, dtype=P_ABOOL)
+
+    cdef AINDEX i
+
+    for i in range(5):
+        assert avalue[i] == avalue32[i] == aindex[i] == abool[i]
 
 
 @cytest

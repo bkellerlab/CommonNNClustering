@@ -1,0 +1,13 @@
+CommonNNRecord(n_points=10, radius_cutoff=0.1, similarity_cutoff=2, member_cutoff=1, max_clusters=None, n_clusters=3, ratio_largest=0.5, ratio_noise=0.05, execution_time=0.0001)
+
+{'n_points': 10, 'radius_cutoff': 0.1, 'similarity_cutoff': 2, 'member_cutoff': 1, 'max_clusters': None, 'n_clusters': 3, 'ratio_largest': 0.5, 'ratio_noise': 0.05, 'execution_time': 0.0001}
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time     
+10        0.100     2         1         None      3         0.500     0.050     00:00:0.000
+-----------------------------------------------------------------------------------------------
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time     
+10        0.100     2         1         None      3         0.500     0.050     None
+-----------------------------------------------------------------------------------------------
