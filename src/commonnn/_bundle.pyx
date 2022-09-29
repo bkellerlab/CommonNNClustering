@@ -1,3 +1,4 @@
+from collections import deque
 from collections.abc import Iterable, MutableMapping, MutableSequence
 import weakref
 

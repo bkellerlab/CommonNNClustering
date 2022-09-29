@@ -21,3 +21,9 @@ cdef class Labels:
         AINDEX[::1] _labels
         ABOOL[::1] _consider
         stduset[AINDEX] _consider_set
+
+
+cdef class ReferenceIndices:
+    cdef:
+        AINDEX[::1] _root
+        AINDEX[::1] _parent

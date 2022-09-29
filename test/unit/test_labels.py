@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 
 from commonnn._primitive_types import P_AINDEX, P_ABOOL
-from commonnn._types import Labels
+from commonnn._types import Labels, ReferenceIndices
 from commonnn._bundle import Bundle
 
 
@@ -99,3 +99,11 @@ def test_labels_sort_by_size_bundle():
     assert bundle._children[1].alias == "2"
     assert bundle._children[2].alias == "1"
     assert 3 not in bundle._children
+
+
+def test_reference_indices_init():
+
+    refindices = ReferenceIndices(np.arange(5), np.arange(5))
+
+    assert refindices.root.shape[0] == 5
+    assert refindices.parent.shape[0] == 5

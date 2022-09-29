@@ -261,3 +261,19 @@ cdef class Labels:
                     bundle._children = processed_children
 
         return
+
+
+cdef class ReferenceIndices:
+    """Root and parent indices relating child with parent clusterings"""
+
+    def __cinit__(self, root_indices not None, parent_indices not None):
+        self._root = root_indices
+        self._parent = parent_indices
+
+    @property
+    def root(self):
+        return np.asarray(self._root)
+
+    @property
+    def parent(self):
+        return np.asarray(self._parent)
