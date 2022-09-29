@@ -1,3 +1,4 @@
+from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
 from itertools import count
 from typing import Any, Optional, Type
@@ -277,3 +278,176 @@ cdef class ReferenceIndices:
     @property
     def parent(self):
         return np.asarray(self._parent)
+
+
+class InputData(ABC):
+    """Defines the input data interface"""
+
+    @property
+    @abstractmethod
+    def data(self):
+        """Return underlying data (only for user convenience, not to be relied on)"""
+
+    @property
+    @abstractmethod
+    def meta(self):
+        """Return meta-information"""
+
+    @property
+    @abstractmethod
+    def n_points(self) -> int:
+        """Return total number of points"""
+
+    @abstractmethod
+    def get_subset(self, indices: Container) -> Type['InputData']:
+        """Return input data subset"""
+
+    def __str__(self):
+        return f"{type(self).__name__}"
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return []
+
+
+class InputDataComponents(InputData):
+    """Extends the input data interface"""
+
+    @property
+    @abstractmethod
+    def n_dim(self) -> int:
+        """Return total number of dimensions"""
+
+    @abstractmethod
+    def get_component(self, point: int, dimension: int) -> float:
+        """Return one component of point coordinates"""
+
+    @abstractmethod
+    def to_components_array(self) -> Type[np.ndarray]:
+        """Return input data as NumPy array of shape (#points, #components)"""
+
+
+class InputDataPairwiseDistances(InputData):
+    """Extends the input data interface"""
+
+    @abstractmethod
+    def get_distance(self, point_a: int, point_b: int) -> float:
+        """Return the pairwise distance between two points"""
+
+
+class InputDataPairwiseDistancesComputer(InputDataPairwiseDistances):
+    """Extends the input data interface"""
+
+    @abstractmethod
+    def compute_distances(self, input_data: Type["InputData"]) -> None:
+        """Pre-compute pairwise distances"""
+
+
+class InputDataNeighbourhoods(InputData):
+    """Extends the input data interface"""
+
+    @abstractmethod
+    def get_n_neighbours(self, point: int) -> int:
+        """Return number of neighbours for point"""
+
+    @abstractmethod
+    def get_neighbour(self, point: int, member: int) -> int:
+        """Return a member for point"""
+
+
+class InputDataNeighbourhoodsComputer(InputDataNeighbourhoods):
+    """Extends the input data interface"""
+
+    @abstractmethod
+    def compute_neighbourhoods(
+            self,
+            input_data: Type["InputData"], r: float,
+            is_sorted: bool = False, is_selfcounting: bool = True) -> None:
+        """Pre-compute neighbourhoods at radius"""
+
+
+cdef class InputDataExtInterface:
+    """Defines the input data interface for Cython extension types"""
+
+    cdef AVALUE _get_component(
+            self, const AINDEX point, const AINDEX dimension) nogil: ...
+
+    def get_component(self, point: int, dimension: int) -> int:
+        return self._get_component(point, dimension)
+
+    cdef AINDEX _get_n_neighbours(self, const AINDEX point) nogil: ...
+
+    def get_n_neighbours(self, point: int) -> int:
+        return self._get_n_neighbours(point)
+
+    cdef AINDEX _get_neighbour(self, const AINDEX point, const AINDEX member) nogil: ...
+
+    def get_neighbour(self, point: int, member: int) -> int:
+        return self._get_neighbour(point, member)
+
+    cdef AVALUE _get_distance(self, const AINDEX point_a, const AINDEX point_b) nogil: ...
+
+    def get_distance(self, point_a: int, point_b: int) -> int:
+        return self._get_distance(point_a, point_b)
+
+    cdef void _compute_distances(self, InputDataExtInterface input_data) nogil: ...
+
+    def compute_distances(self, InputDataExtInterface input_data):
+        self._compute_distances(input_data)
+
+    cdef void _compute_neighbourhoods(
+            self,
+            InputDataExtInterface input_data, AVALUE r,
+            ABOOL is_sorted, ABOOL is_selfcounting) nogil: ...
+
+    def compute_neighbourhoods(
+            self,
+            InputDataExtInterface input_data, AVALUE r,
+            ABOOL is_sorted, ABOOL is_selfcounting):
+        self._compute_neighbourhoods(input_data, r, is_sorted, is_selfcounting)
+
+    def __str__(self):
+        return f"{type(self).__name__}"
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return []
+
+
+class InputDataComponentsSequence(InputDataComponents):
+
+    def __init__(self, data: Sequence, *, meta=None):
+        n_dim = len(data[0])
+        assert all(len(p) == n_dim for p in data), "Dimensionality inconsistent"
+
+        self._data = data
+
+        _meta = {"access_coordinates": True}
+        if meta is not None:
+            _meta.update(meta)
+        self._meta = _meta
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def meta(self):
+        return self._meta
+
+    @property
+    def n_points(self):
+        return len(self._data)
+
+    @property
+    def n_dim(self) -> int:
+        return len(self._data[0])
+
+    def get_component(self, point: int, dimension: int) -> float:
+        return self._data[point][dimension]
+
+    def to_components_array(self) -> Type[np.ndarray]:
+        return np.asarray(self._data)
+
+    def get_subset(self, indices: Container) -> Type['InputData']:
+        return type(self)([self._data[i] for i in indices])

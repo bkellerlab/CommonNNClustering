@@ -1,5 +1,5 @@
-from collections.abc import MutableSequence
 from abc import ABC, abstractmethod
+from collections.abc import MutableSequence
 
 import numpy as np
 
