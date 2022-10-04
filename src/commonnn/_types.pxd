@@ -3,6 +3,7 @@ from commonnn._primitive_types cimport _allocate_and_fill_aindex_array, _allocat
 
 from libc.stdlib cimport malloc, free
 from libcpp.unordered_set cimport unordered_set as stduset
+from libcpp.vector cimport vector as stdvector
 
 
 cdef class ClusterParameters:
@@ -45,3 +46,19 @@ cdef class InputDataExtInterface:
             self,
             InputDataExtInterface input_data, AVALUE r,
             ABOOL is_sorted, ABOOL is_selfcounting) nogil
+
+cdef class InputDataExtComponentsMemoryview(InputDataExtInterface):
+    cdef AVALUE[:, ::1] _data
+
+cdef class InputDataExtDistancesLinearMemoryview(InputDataExtInterface):
+    cdef AVALUE[::1] _data
+
+cdef class InputDataExtNeighbourhoodsMemoryview(InputDataExtInterface):
+    cdef:
+        AINDEX[:, ::1] _data
+        AINDEX[::1] _n_neighbours
+
+cdef class InputDataExtNeighbourhoodsVector(InputDataExtInterface):
+    cdef:
+        stdvector[stdvector[AINDEX]] _data
+        stdvector[AINDEX] _n_neighbours

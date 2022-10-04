@@ -5,7 +5,15 @@ from typing import Any, Optional, Type
 
 import numpy as np
 
+try:
+    import sklearn.neighbors
+    SKLEARN_FOUND = True
+except ModuleNotFoundError:
+    SKLEARN_FOUND = False  # pragma: no cover
+
 from commonnn._primitive_types import P_AINDEX, P_AVALUE, P_ABOOL
+
+from libc.math cimport sqrt as csqrt, pow as cpow, fabs as cfabs
 
 
 cdef class ClusterParameters:
@@ -302,12 +310,12 @@ class InputData(ABC):
     def get_subset(self, indices: Container) -> Type['InputData']:
         """Return input data subset"""
 
-    def __str__(self):
-        return f"{type(self).__name__}"
-
     @classmethod
     def get_builder_kwargs(cls):
         return []
+
+    def __repr__(self):  # pragma: no cover
+        return f"{type(self).__name__}"
 
 
 class InputDataComponents(InputData):
@@ -326,6 +334,9 @@ class InputDataComponents(InputData):
     def to_components_array(self) -> Type[np.ndarray]:
         """Return input data as NumPy array of shape (#points, #components)"""
 
+    def __str__(self):
+        return f"components of {self.n_points} points in {self.n_dim} dimensions"
+
 
 class InputDataPairwiseDistances(InputData):
     """Extends the input data interface"""
@@ -333,6 +344,9 @@ class InputDataPairwiseDistances(InputData):
     @abstractmethod
     def get_distance(self, point_a: int, point_b: int) -> float:
         """Return the pairwise distance between two points"""
+
+    def __str__(self):
+        return f"distances of {self.n_points} points"
 
 
 class InputDataPairwiseDistancesComputer(InputDataPairwiseDistances):
@@ -354,6 +368,8 @@ class InputDataNeighbourhoods(InputData):
     def get_neighbour(self, point: int, member: int) -> int:
         """Return a member for point"""
 
+    def __str__(self):
+        return f"neighbourhoods of {self.n_points} points"
 
 class InputDataNeighbourhoodsComputer(InputDataNeighbourhoods):
     """Extends the input data interface"""
@@ -406,17 +422,18 @@ cdef class InputDataExtInterface:
             ABOOL is_sorted, ABOOL is_selfcounting):
         self._compute_neighbourhoods(input_data, r, is_sorted, is_selfcounting)
 
-    def __str__(self):
-        return f"{type(self).__name__}"
-
     @classmethod
     def get_builder_kwargs(cls):
         return []
+
+    def __repr__(self):  # pragma: no cover
+        return f"{type(self).__name__}"
 
 
 class InputDataComponentsSequence(InputDataComponents):
 
     def __init__(self, data: Sequence, *, meta=None):
+        assert len(data) > 0, "Requires sequence of length > 0"
         n_dim = len(data[0])
         assert all(len(p) == n_dim for p in data), "Dimensionality inconsistent"
 
@@ -451,3 +468,444 @@ class InputDataComponentsSequence(InputDataComponents):
 
     def get_subset(self, indices: Container) -> Type['InputData']:
         return type(self)([self._data[i] for i in indices])
+
+
+cdef class InputDataExtComponentsMemoryview(InputDataExtInterface):
+    """Implements the input data interface
+    Stores compenents as cython memoryview.
+    """
+
+    def __cinit__(self, AVALUE[:, ::1] data not None, *, meta=None):
+        self._data = data
+        self.n_points = self._data.shape[0]
+        self.n_dim = self._data.shape[1]
+
+        _meta = {"access_coordinates": True}
+        if meta is not None:
+            _meta.update(meta)
+        self.meta = _meta
+
+    @property
+    def data(self):
+        return self._data
+
+    def to_components_array(self):
+        return np.asarray(self._data)
+
+    cdef AVALUE _get_component(
+            self, const AINDEX point, const AINDEX dimension) nogil:
+        return self._data[point, dimension]
+
+    def get_subset(
+            self,
+            object indices: Sequence) -> Type['InputDataExtComponentsMemoryview']:
+
+        has_coordinates = self.meta.get("access_coordinates", False)
+        has_distances = self.meta.get("access_distances", False)
+        if has_distances & has_coordinates:
+            raise RuntimeError(
+                f"{type(self)} can not store coordinates and distances at the same time. "
+                f"Set 'access_coordinates' or 'access_distances' in {type(self)}.meta accordingly to proceed."
+                )
+
+        elif has_distances:
+            return type(self)(
+                np.array(self.to_components_array()[indices][:, indices], order="c")
+                )
+        elif has_coordinates:
+            return type(self)(self.to_components_array()[indices])
+            # Slow because it goes via numpy array
+        else:
+            raise RuntimeError(
+                f"No information whether coordinates or distances or stored. "
+                f"Set 'access_coordinates' or 'access_distances' in {type(self)}.meta accordingly to proceed."
+                )
+
+    def by_parts(self) -> Iterator:
+        """Yield data by parts
+
+        Returns:
+            Generator of 2D :obj:`numpy.ndarray` s (parts)
+        """
+
+        if self.n_points > 0:
+            edges = self.meta.get("edges", None)
+            if not edges:
+               edges = [self.n_points]
+
+            data = self.data
+
+            start = 0
+            for end in edges:
+                yield data[start:(start + end), :]
+                start += end
+
+        else:
+            yield from ()
+
+    def __str__(self):
+        return InputDataComponents.__str__(self)
+
+
+class InputDataSklearnKDTree(InputDataComponents,InputDataNeighbourhoodsComputer):
+    """Implements the input data interface
+
+    Components stored as a NumPy array.  Neighbour queries delegated
+    to pre-build KDTree.
+    """
+
+    def __init__(self, data: Type[np.ndarray], *, meta=None, **kwargs):
+        self._data = data
+        self._n_points = self._data.shape[0]
+        self._n_dim = self._data.shape[1]
+
+        self.build_tree(**kwargs)
+        self.clear_cached()
+
+        _meta = {
+            "access_coordinates": True,
+            "access_neighbours": True
+            }
+        if meta is not None:
+            _meta.update(meta)
+        self._meta = _meta
+
+    @property
+    def meta(self):
+        return self._meta
+
+    @property
+    def n_points(self):
+        return self._n_points
+
+    @property
+    def n_dim(self):
+        return self._n_dim
+
+    @property
+    def data(self):
+        return self.to_components_array()
+
+    @property
+    def n_neighbours(self):
+        return self.to_n_neighbours_array()
+
+    def to_components_array(self):
+        return self._data
+
+    def to_n_neighbours_array(self):
+        self._n_neighbours
+
+    def get_component(self, point: int, dimension: int) -> float:
+        return self._data[point, dimension]
+
+    def get_n_neighbours(self, point: int) -> int:
+        return self._n_neighbours[point]
+
+    def get_neighbour(self, point: int, member: int) -> int:
+        """Return a member for point"""
+        return self._cached_neighbourhoods[point][member]
+
+    def get_subset(self, indices: Container) -> Type['InputDataSklearnKDTree']:
+        """Return input data subset"""
+
+        return type(self)(self._data[indices])
+
+    def build_tree(self, **kwargs):
+        self._tree = sklearn.neighbors.KDTree(self._data, **kwargs)
+
+    def compute_neighbourhoods(
+            self,
+            input_data: Type["InputData"],
+            radius: float,
+            is_sorted: bool = False,
+            is_selfcounting: bool = True):
+
+        self._cached_neighbourhoods = self._tree.query_radius(
+            input_data.to_components_array(), r=radius,
+            return_distance=False,
+            )
+        self._radius = radius
+
+        if is_sorted:
+            for n in self._cached_neighbourhoods:
+                n.sort()
+
+        if is_selfcounting is False:
+            raise NotImplementedError()
+
+        self._n_neighbours = np.array([s.shape[0] for s in self._cached_neighbourhoods])
+
+    def clear_cached(self):
+        self._cached_neighbourhoods = None
+        self._n_neighbours = None
+        self._radius = None
+
+
+cdef class InputDataExtDistancesLinearMemoryview(InputDataExtInterface):
+    """Implements the input data interface
+
+    Stores distances as 1D memoryview
+    """
+
+    def __cinit__(self, AVALUE[::1] data not None, *, n_points=None, meta=None):
+        self._data = data
+        if n_points is None:
+            self.n_points = int(0.5 * (csqrt(8 * self._data.shape[0] + 1) + 1))
+
+        _meta = {"access_distances": True}
+        if meta is not None:
+            _meta.update(meta)
+        self.meta = _meta
+
+    cdef AVALUE _get_distance(self, const AINDEX point_a, const AINDEX point_b) nogil:
+
+        cdef AINDEX i, j, a, b
+
+        if point_a == point_b:
+            return 0
+
+        if point_a > point_b:
+            b = point_a
+            a = point_b
+        else:
+            a = point_a
+            b = point_b
+
+        # Start of block d(a)
+        i = a * (self.n_points - 1) - (a**2 - a) / 2
+        j = b - a - 1  # Pos. within d(a) block
+
+        return self._data[i + j]
+
+    @property
+    def data(self):
+        return self._data
+
+    def to_distance_array(self):
+        return np.asarray(self._data)
+
+    def __str__(self):
+        return InputDataPairwiseDistances.__str__(self)
+
+
+cdef class InputDataExtNeighbourhoodsMemoryview(InputDataExtInterface):
+    """Implements the input data interface
+
+    Neighbours of points stored using a Cython memoryview.
+    """
+
+    def __cinit__(
+            self,
+            AINDEX[:, ::1] data not None,
+            AINDEX[::1] n_neighbours not None, *, meta=None):
+
+        self._data = data
+        self.n_points = self._data.shape[0]
+        self._n_neighbours = n_neighbours
+
+        _meta = {"access_neighbours": True}
+        if meta is not None:
+            _meta.update(meta)
+        self.meta = _meta
+
+    @property
+    def data(self):
+        self._data
+
+    def to_neighbourhoods_array(self):
+        cdef AINDEX i
+
+        return [
+            s[:self._n_neighbours[i]]
+            for i, s in enumerate(np.asarray(self._data))
+            ]
+
+    @property
+    def n_neighbours(self):
+        return self._n_neighbours
+
+    def to_n_neighbours_array(self):
+        return np.asarray(self._n_neighbours)
+
+    cdef AINDEX _get_n_neighbours(self, const AINDEX point) nogil:
+        return self._n_neighbours[point]
+
+    def get_n_neighbours(self, point: int) -> int:
+        return self._get_n_neighbours(point)
+
+    cdef AINDEX _get_neighbour(self, const AINDEX point, const AINDEX member) nogil:
+        """Return a member for point"""
+        return self._data[point, member]
+
+    def get_neighbour(self, point: int, member: int) -> int:
+        return self._get_neighbour(point, member)
+
+    def get_subset(self, indices: Sequence) -> Type['InputDataExtNeighbourhoodsMemoryview']:
+        cdef list lengths
+
+        data_subset = np.asarray(self._data)[indices]
+        data_subset = [
+            [m for m in a if m in indices]
+            for a in data_subset
+        ]
+
+        lengths = np.array([len(a) for a in data_subset])
+        pad_to = lengths.max()
+
+        for i, a in enumerate(data_subset):
+            missing_elements = pad_to - lengths[i]
+            a.extend([0] * missing_elements)
+
+        return type(self)(np.asarray(data_subset, order="C", dtype=P_AINDEX), lengths)
+
+    def __str__(self):
+        return InputDataNeighbourhoods.__str__(self)
+
+
+cdef class InputDataExtNeighbourhoodsVector(InputDataExtInterface):
+    """Implements the input data interface
+
+    Neighbours of points are stored using a C++ std::vector of vectors.
+    """
+
+    def __cinit__(
+            self,
+            data, *, meta=None):
+        self._data = data
+        self.n_points = self._data.size()
+        self._n_neighbours = [len(x) for x in data]
+
+        _meta = {"access_neighbours": True}
+        if meta is not None:
+            _meta.update(meta)
+        self.meta = _meta
+
+    # TODO: issues warning: comparison of integer expressions of different signedness: ‘Py_ssize_t’ {aka ‘long int’} and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare]
+    @property
+    def data(self):
+        cdef AINDEX i, j
+        cdef list as_list = []
+
+        for i in range(self.n_points):
+            as_list.append([])
+            for j in range(self._n_neighbours[i]):
+                as_list[i].append(<Py_ssize_t>self._data[i][j])
+        return as_list
+
+    def to_neighbourhoods_array(self):
+        cdef AINDEX i, j
+        cdef list as_list = []
+
+        for i in range(self.n_points):
+            as_list.append(np.empty(self._n_neighbours[i], dtype=P_AINDEX))
+            for j in range(self._n_neighbours[i]):
+                as_list[i][j] = self._data[i][j]
+        return np.asarray(as_list, dtype=object)
+
+    @property
+    def n_neighbours(self):
+        cdef AINDEX i
+        cdef list as_list = []
+
+        for i in range(self.n_points):
+            as_list.append(<Py_ssize_t>self._n_neighbours[i])
+        return as_list
+
+    def to_n_neighbours_array(self):
+        cdef AINDEX i
+        cdef AINDEX[::1] as_array = np.empty(self.n_points, dtype=P_AINDEX)
+
+        for i in range(self.n_points):
+            as_array[i] = self._n_neighbours[i]
+
+        return np.asarray(as_array)
+
+    cdef AINDEX _get_n_neighbours(self, const AINDEX point) nogil:
+        return self._n_neighbours[point]
+
+    def get_n_neighbours(self, point: int) -> int:
+        return self._get_n_neighbours(point)
+
+    cdef AINDEX _get_neighbour(self, const AINDEX point, const AINDEX member) nogil:
+        """Return a member for point"""
+        return self._data[point][member]
+
+    def get_neighbour(self, point: int, member: int) -> int:
+        return self._get_neighbour(point, member)
+
+    def get_subset(self, indices: Sequence) -> Type['InputDataExtNeighbourhoodsVector']:
+        """Return input data subset"""
+        cdef list lengths
+
+        data_subset = [x for x in self.data if x in indices]
+        data_subset = [
+            [m for m in a if m in indices]
+            for a in data_subset
+        ]
+        return type(self)(data_subset)
+
+    def __str__(self):
+        return InputDataNeighbourhoods.__str__(self)
+
+
+class InputDataNeighbourhoodsSequence(InputDataNeighbourhoods):
+    """Implements the input data interface
+
+    Neighbours of points stored as a sequence.
+    """
+
+    def __init__(self, data: Sequence, *, meta=None):
+        """
+
+        Args:
+            data: Any sequence of neighbour index sequences (needs to be
+                sized, indexable, and iterable)
+        Keyword args:
+            meta: Meta-information dictionary.
+        """
+
+        self._data = data
+        self._n_neighbours = [len(s) for s in self._data]
+
+        _meta = {"access_neighbours": True}
+        if meta is not None:
+            _meta.update(meta)
+        self._meta = _meta
+
+    @property
+    def data(self):
+        return self._data
+
+    @property
+    def meta(self):
+        return self._meta
+
+    @property
+    def n_points(self):
+        return len(self._data)
+
+    @property
+    def n_neighbours(self):
+        return self._n_neighbours
+
+    def get_n_neighbours(self, point: int) -> int:
+        return self._n_neighbours[point]
+
+    def get_neighbour(self, point: int, member: int) -> int:
+        return self._data[point][member]
+
+    def get_subset(self, indices: Container) -> Type['InputDataNeighbourhoodsSequence']:
+        data_subset = [
+            [m for m in s if m in indices]
+            for i, s in enumerate(self._data)
+            if i in indices
+        ]
+
+        return type(self)(data_subset)
+
+
+InputDataComponents.register(InputDataExtComponentsMemoryview)
+InputDataPairwiseDistances.register(InputDataExtDistancesLinearMemoryview)
+InputDataNeighbourhoods.register(InputDataExtNeighbourhoodsMemoryview)
+InputDataNeighbourhoods.register(InputDataExtNeighbourhoodsVector)

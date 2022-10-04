@@ -1,0 +1,2 @@
+InputDataExtComponentsMemoryview
+components of 12 points in 2 dimensions
