@@ -651,7 +651,8 @@ cdef class InputDataExtDistancesLinearMemoryview(InputDataExtInterface):
     def __cinit__(self, AVALUE[::1] data not None, *, n_points=None, meta=None):
         self._data = data
         if n_points is None:
-            self.n_points = int(0.5 * (csqrt(8 * self._data.shape[0] + 1) + 1))
+            n_points = int(0.5 * (csqrt(8 * self._data.shape[0] + 1) + 1))
+        self.n_points = n_points
 
         _meta = {"access_distances": True}
         if meta is not None:
@@ -711,7 +712,7 @@ cdef class InputDataExtNeighbourhoodsMemoryview(InputDataExtInterface):
 
     @property
     def data(self):
-        self._data
+        return self._data
 
     def to_neighbourhoods_array(self):
         cdef AINDEX i

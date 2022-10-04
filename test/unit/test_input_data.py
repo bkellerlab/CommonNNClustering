@@ -1,28 +1,9 @@
 import pytest
 import numpy as np
 
+from commonnn import recipes
 from commonnn._primitive_types import P_AVALUE
 from commonnn import _types
-
-
-def to_array(x, **kwargs): return np.asarray(x, **kwargs)
-
-
-def square_array_to_linear(x, **kwargs):
-    indices = np.triu_indices_from(x, **kwargs)
-    x = x[indices]
-    return x
-
-
-def pad_list(x):
-    lengths = np.array([len(a) for a in x])
-    pad_to = lengths.max()
-
-    padded = []
-    for i, a in enumerate(x):
-        padded.append(a + [0] * (pad_to - lengths[i]))
-
-    return np.asarray(padded)
 
 
 @pytest.mark.parametrize(
@@ -30,10 +11,10 @@ def pad_list(x):
     [
         (_types.InputDataComponentsSequence, None, None),
         (
-            _types.InputDataExtComponentsMemoryview, [to_array],
+            _types.InputDataExtComponentsMemoryview, [np.array],
             [{"order": "c", "dtype": P_AVALUE}]
         ),
-        (_types.InputDataSklearnKDTree, [to_array], [{"order": "c", "dtype": P_AVALUE}])
+        (_types.InputDataSklearnKDTree, [np.array], [{"order": "c", "dtype": P_AVALUE}])
     ],
 )
 def test_input_data_init_components(
@@ -74,27 +55,25 @@ def test_input_data_init_components(
 
 
 @pytest.mark.parametrize(
-    "input_data_type,hooks,kwargs",
+    "input_data_type,hook,kwargs",
     [
         (
             _types.InputDataExtDistancesLinearMemoryview,
-            [to_array, square_array_to_linear], [{}, {"k": 1}]
+            recipes.prepare_square_array_to_linear, {}
         )
     ],
 )
 def test_input_data_init_distances(
         input_data_type,
-        hooks, kwargs,
+        hook, kwargs,
         file_regression,
         basic_distances):
 
     n_points = len(basic_distances)
 
-    if hooks is not None:
-        processed_distances = basic_distances
-        for i, hook in enumerate(hooks):
-            processed_distances = hook(processed_distances, **kwargs[i])
-        input_data = input_data_type(processed_distances)
+    if hook is not None:
+        data_args, data_kwargs = hook(basic_distances, **kwargs)
+        input_data = input_data_type(*data_args, **data_kwargs)
     else:
         input_data = input_data_type(basic_distances)
 
@@ -109,27 +88,29 @@ def test_input_data_init_distances(
 
 
 @pytest.mark.parametrize(
-    "input_data_type,hooks,kwargs",
+    "input_data_type,hook,kwargs",
     [
         (
             _types.InputDataNeighbourhoodsSequence,
-            [pad_list], [{}]
+            None, {}
+        ),
+        (
+            _types.InputDataExtNeighbourhoodsMemoryview,
+            recipes.prepare_padded_neighbourhoods_array, {}
         )
     ],
 )
 def test_input_data_init_neighbourhoods(
         input_data_type,
-        hooks, kwargs,
+        hook, kwargs,
         file_regression,
         basic_neighbourhoods):
 
     n_points = len(basic_neighbourhoods)
 
-    if hooks is not None:
-        processed_neighbourhoods = basic_neighbourhoods
-        for i, hook in enumerate(hooks):
-            processed_neighbourhoods = hook(processed_neighbourhoods, **kwargs[i])
-        input_data = input_data_type(processed_neighbourhoods)
+    if hook is not None:
+        data_args, data_kwargs = hook(basic_neighbourhoods, **kwargs)
+        input_data = input_data_type(*data_args, **data_kwargs)
     else:
         input_data = input_data_type(basic_neighbourhoods)
 
