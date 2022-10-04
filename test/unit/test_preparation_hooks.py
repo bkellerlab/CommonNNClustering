@@ -75,3 +75,9 @@ def test_prepare_square_array_to_linear():
     lst = [[0, 1, 2, 3], [1, 0, 4, 5], [2, 4, 0, 6], [3, 5, 6, 0]]
     data_args, data_kwargs = recipes.prepare_square_array_to_linear(lst)
     assert data_args[0].shape == (6,)
+
+
+def test_prepare_pass():
+    data = None
+    data_args, data_kwargs = recipes.prepare_pass(data)
+    assert data_args[0] is None
