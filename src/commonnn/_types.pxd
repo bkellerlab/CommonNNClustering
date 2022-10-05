@@ -183,6 +183,14 @@ cdef class NeighboursExtVectorUnorderedSet(NeighboursExtInterface):
         stduset[AINDEX] _neighbours_view
 
 
+cdef class MetricExtDummy(MetricExtInterface): pass
+cdef class MetricExtPrecomputed(MetricExtInterface): pass
+cdef class MetricExtEuclidean(MetricExtInterface): pass
+cdef class MetricExtEuclideanReduced(MetricExtInterface): pass
+cdef class MetricExtEuclideanPeriodicReduced(MetricExtInterface):
+    cdef AVALUE[::1] _bounds
+
+
 cdef class SimilarityCheckerExtContains(SimilarityCheckerExtInterface): pass
 cdef class SimilarityCheckerExtSwitchContains(SimilarityCheckerExtInterface): pass
 cdef class SimilarityCheckerExtScreensorted(SimilarityCheckerExtInterface): pass

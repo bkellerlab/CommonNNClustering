@@ -68,6 +68,12 @@ cdef class ClusterParameters:
     def __str__(self):
         return f"{self.to_dict()!s}"
 
+    def get_iparam(self, AINDEX i):
+        return self.iparams[i]
+
+    def get_fparam(self, AINDEX i):
+        return self.fparams[i]
+
 
 cdef class CommonNNParameters(ClusterParameters):
     _fparam_names = ["radius_cutoff"]
@@ -1819,6 +1825,717 @@ Neighbours.register(NeighboursExtVector)
 Neighbours.register(NeighboursExtSet)
 Neighbours.register(NeighboursExtUnorderedSet)
 Neighbours.register(NeighboursExtVectorUnorderedSet)
+
+class MetricDummy(Metric):
+    """Implements the metric interface"""
+
+    def calc_distance(
+            self,
+            index_a: int, index_b: int,
+            input_data: Type['InputData']) -> float:
+        return 0.
+
+    def calc_distance_other(
+            self,
+            index_a: int, index_b: int,
+            input_data: Type['InputData'],
+            other_input_data: Type['InputData']) -> float:
+        return 0.
+
+    def adjust_radius(self, radius_cutoff: float) -> float:
+        return radius_cutoff
+
+
+cdef class MetricExtDummy(MetricExtInterface):
+    """Implements the metric interface"""
+
+    cdef AVALUE _calc_distance(
+            self,
+            const AINDEX index_a, const AINDEX index_b,
+            InputDataExtInterface input_data) nogil:
+
+        return 0.
+
+    cdef AVALUE _calc_distance_other(
+            self,
+            const AINDEX index_a, const AINDEX index_b,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data) nogil:
+
+        return 0.
+
+    cdef AVALUE _adjust_radius(self, AVALUE radius_cutoff) nogil:
+        return radius_cutoff
+
+
+class MetricPrecomputed(Metric):
+    """Implements the metric interface"""
+
+    def calc_distance(
+            self,
+            index_a: int, index_b: int,
+            input_data: Type['InputData']) -> float:
+
+        return input_data.get_component(index_a, index_b)
+
+    def calc_distance_other(
+            self,
+            index_a: int, index_b: int,
+            input_data: Type['InputData'],
+            other_input_data: Type['InputData']) -> float:
+
+        return other_input_data.get_component(index_a, index_b)
+
+    def adjust_radius(self, radius_cutoff: float) -> float:
+        return radius_cutoff
+
+
+cdef class MetricExtPrecomputed(MetricExtInterface):
+    """Implements the metric interface"""
+
+    cdef AVALUE _calc_distance(
+            self,
+            const AINDEX index_a, const AINDEX index_b,
+            InputDataExtInterface input_data) nogil:
+
+        return input_data._get_component(index_a, index_b)
+
+    cdef AVALUE _calc_distance_other(
+            self,
+            const AINDEX index_a, const AINDEX index_b,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data) nogil:
+
+        return other_input_data._get_component(index_a, index_b)
+
+    cdef AVALUE _adjust_radius(self, AVALUE radius_cutoff) nogil:
+        return radius_cutoff
+
+
+class MetricEuclidean(Metric):
+    """Implements the metric interface"""
+
+    def calc_distance(
+            self,
+            index_a: int, index_b: int,
+            input_data: Type['InputData']) -> float:
+
+        cdef AVALUE total = 0
+        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AVALUE a, b
+
+        for i in range(n_dim):
+            a = input_data.get_component(index_a, i)
+            b = input_data.get_component(index_b, i)
+            total += cpow(a - b, 2)
+
+        return csqrt(total)
+
+    def calc_distance_other(
+            self,
+            index_a: int, index_b: int,
+            input_data: Type['InputData'],
+            other_input_data: Type['InputData']) -> float:
+
+        cdef AVALUE total = 0
+        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AVALUE a, b
+
+        for i in range(n_dim):
+            a = other_input_data.get_component(index_a, i)
+            b = input_data.get_component(index_b, i)
+            total += cpow(a - b, 2)
+
+        return csqrt(total)
+
+    def adjust_radius(self, radius_cutoff: float) -> float:
+        return radius_cutoff
+
+
+cdef class MetricExtEuclidean(MetricExtInterface):
+    """Implements the metric interface"""
+
+    cdef AVALUE _calc_distance(
+            self,
+            const AINDEX index_a, const AINDEX index_b,
+            InputDataExtInterface input_data) nogil:
+
+        cdef AVALUE total = 0
+        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AVALUE a, b
+
+        for i in range(n_dim):
+            a = input_data._get_component(index_a, i)
+            b = input_data._get_component(index_b, i)
+            total += cpow(a - b, 2)
+
+        return csqrt(total)
+
+    cdef AVALUE _calc_distance_other(
+            self,
+            const AINDEX index_a, const AINDEX index_b,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data) nogil:
+
+        cdef AVALUE total = 0
+        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AVALUE a, b
+
+        for i in range(n_dim):
+            a = other_input_data._get_component(index_a, i)
+            b = input_data._get_component(index_b, i)
+            total += cpow(a - b, 2)
+
+        return csqrt(total)
+
+    cdef AVALUE _adjust_radius(self, AVALUE radius_cutoff) nogil:
+        return radius_cutoff
+
+
+class MetricEuclideanReduced(Metric):
+    """Implements the metric interface"""
+
+    def calc_distance(
+            self,
+            index_a: int, index_b: int,
+            input_data: Type['InputData']) -> float:
+
+        cdef AVALUE total = 0
+        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AVALUE a, b
+
+        for i in range(n_dim):
+            a = input_data.get_component(index_a, i)
+            b = input_data.get_component(index_b, i)
+            total += cpow(a - b, 2)
+
+        return total
+
+    def calc_distance_other(
+            self,
+            index_a: int, index_b: int,
+            input_data: Type['InputData'],
+            other_input_data: Type['InputData']) -> float:
+
+        cdef AVALUE total = 0
+        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AVALUE a, b
+
+        for i in range(n_dim):
+            a = other_input_data.get_component(index_a, i)
+            b = input_data.get_component(index_b, i)
+            total += cpow(a - b, 2)
+
+        return total
+
+    def adjust_radius(self, radius_cutoff: float) -> float:
+        return radius_cutoff**2
+
+
+cdef class MetricExtEuclideanReduced:
+    """Implements the metric interface"""
+
+    cdef AVALUE _calc_distance(
+            self,
+            const AINDEX index_a, const AINDEX index_b,
+            InputDataExtInterface input_data) nogil:
+
+        cdef AVALUE total = 0
+        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AVALUE a, b
+
+        for i in range(n_dim):
+            a = input_data._get_component(index_a, i)
+            b = input_data._get_component(index_b, i)
+            total += cpow(a - b, 2)
+
+        return total
+
+    cdef AVALUE _calc_distance_other(
+            self,
+            const AINDEX index_a, const AINDEX index_b,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data) nogil:
+
+        cdef AVALUE total = 0
+        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AVALUE a, b
+
+        for i in range(n_dim):
+            a = other_input_data._get_component(index_a, i)
+            b = input_data._get_component(index_b, i)
+            total += cpow(a - b, 2)
+
+        return total
+
+    cdef AVALUE _adjust_radius(self, AVALUE radius_cutoff) nogil:
+        return cpow(radius_cutoff, 2)
+
+
+cdef class MetricExtEuclideanPeriodicReduced:
+    """Implements the metric interface"""
+
+    def __cinit__(self, bounds):
+        self._bounds = bounds
+
+    cdef AVALUE _calc_distance(
+            self,
+            const AINDEX index_a, const AINDEX index_b,
+            InputDataExtInterface input_data) nogil:
+
+        cdef AVALUE total = 0
+        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AVALUE a, b, distance, bound
+
+        for i in range(n_dim):
+            a = input_data._get_component(index_a, i)
+            b = input_data._get_component(index_b, i)
+
+            bound = self._bounds[i]
+            distance = cfabs(a - b)
+
+            if bound > 0:
+                distance = distance % bound
+                if distance > (bound / 2):
+                    distance = bound - distance
+
+            total +=  cpow(distance, 2)
+
+        return total
+
+    cdef AVALUE _calc_distance_other(
+            self,
+            const AINDEX index_a, const AINDEX index_b,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data) nogil:
+
+        cdef AVALUE total = 0
+        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AVALUE a, b, distance, bound
+
+        for i in range(n_dim):
+            a = other_input_data._get_component(index_a, i)
+            b = input_data._get_component(index_b, i)
+
+            bound = self._bounds[i]
+            distance = cfabs(a - b)
+
+            if bound > 0:
+                distance = distance % bound
+                if distance > (bound / 2):
+                    distance = bound - distance
+
+            total += cpow(a - b, 2)
+
+        return total
+
+    cdef AVALUE _adjust_radius(self, AVALUE radius_cutoff) nogil:
+        return cpow(radius_cutoff, 2)
+
+
+Metric.register(MetricExtDummy)
+Metric.register(MetricExtPrecomputed)
+Metric.register(MetricExtEuclidean)
+Metric.register(MetricExtEuclideanReduced)
+Metric.register(MetricExtEuclideanPeriodicReduced)
+
+
+class SimilarityCheckerContains(SimilarityChecker):
+    r"""Implements the similarity checker interface
+    Strategy:
+        Loops over members of one neighbours container and checks
+        if they are contained in the other neighbours container.  Breaks
+        early when similarity criterion is reached.
+        The performance and time-complexity of the check depends on the
+        used neighbour containers.  Worst case time
+        complexity is :math:`\mathcal{O}(n * m)` with :math:`n` and
+        :math:`m` being the lengths of the neighbours containers if the
+        containment check is performed by iteration.  Worst
+        case time complexity is :math:`\mathcal{O}(n)` if containment
+        check can be performed as lookup in linear time.  Note that
+        no switching of the neighbours containers is done to ensure
+        that the first container is the one with the shorter length
+        (compare
+        :obj:`commonnn._types.SimilarityCheckerSwitchContains`).
+    """
+
+    def check(
+            self,
+            neighbours_a: Type["Neighbours"],
+            neighbours_b: Type["Neighbours"],
+            cluster_params: Type['ClusterParameters']) -> bool:
+
+        cdef AINDEX na = neighbours_a._n_points
+
+        cdef AINDEX c = cluster_params.get_iparam(0)
+        cdef AINDEX member_a, member_index_a
+        cdef AINDEX common = 0
+
+        if c == 0:
+            return True
+
+        for member_index_a in range(na):
+            member_a = neighbours_a.get_member(member_index_a)
+            if neighbours_b.contains(member_a):
+                common += 1
+                if common == c:
+                    return True
+                continue
+        return False
+
+    def get(
+            self,
+            neighbours_a: Type["Neighbours"],
+            neighbours_b: Type["Neighbours"],
+            cluster_params: Type['ClusterParameters']) -> int:
+        """Return number of common neighbours"""
+
+        cdef AINDEX na = neighbours_a._n_points
+
+        cdef AINDEX member_a, member_index_a
+        cdef AINDEX common = 0
+
+        for member_index_a in range(na):
+            member_a = neighbours_a.get_member(member_index_a)
+            if neighbours_b.contains(member_a):
+                common += 1
+
+        return common
+
+
+class SimilarityCheckerSwitchContains(SimilarityChecker):
+    r"""Implements the similarity checker interface
+    Strategy:
+        Loops over members of one neighbours container and checks
+        if they are contained in the other neighbours container.  Breaks
+        early when similarity criterion is reached.  The performance
+        and time-complexity of the check depends on the
+        used neighbour containers.  Worst case time
+        complexity is :math:`\mathcal{O}(n * m)` with :math:`n` and
+        :math:`m` being the lengths of the neighbours containers if the
+        containment check is performed by iteration.  Worst
+        case time complexity is :math:`\mathcal{O}(n)` if containment
+        check can be performed as lookup in linear time.  Note that a
+        switching of the neighbours containers is done to ensure
+        that the first container is the one with the shorter length
+        (compare
+        :obj:`commonnn._types.SimilarityCheckerContains`).
+    """
+
+    def check(
+            self,
+            neighbours_a: Type["Neighbours"],
+            neighbours_b: Type["Neighbours"],
+            cluster_params: Type['ClusterParameters']) -> bool:
+
+        cdef AINDEX na = neighbours_a._n_points
+        cdef AINDEX nb = neighbours_b._n_points
+
+        cdef AINDEX c = cluster_params.get_iparam(0)
+        cdef AINDEX member_a, member_index_a
+        cdef AINDEX common = 0
+
+        if c == 0:
+            return True
+
+        if nb < na:
+            neighbours_a, neighbours_b = neighbours_b, neighbours_a
+            na, nb = nb, na
+
+        for member_index_a in range(na):
+            member_a = neighbours_a.get_member(member_index_a)
+            if neighbours_b.contains(member_a):
+                common += 1
+                if common == c:
+                    return True
+                continue
+        return False
+
+    def get(
+            self,
+            neighbours_a: Type["Neighbours"],
+            neighbours_b: Type["Neighbours"],
+            cluster_params: Type['ClusterParameters']) -> int:
+        """Return number of common neighbours"""
+
+        cdef AINDEX na = neighbours_a._n_points
+        cdef AINDEX nb = neighbours_b._n_points
+
+        cdef AINDEX member_a, member_index_a
+        cdef AINDEX common = 0
+
+        if nb < na:
+            neighbours_a, neighbours_b = neighbours_b, neighbours_a
+            na, nb = nb, na
+
+        for member_index_a in range(na):
+            member_a = neighbours_a.get_member(member_index_a)
+            if neighbours_b.contains(member_a):
+                common += 1
+
+        return common
+
+
+cdef class SimilarityCheckerExtContains(SimilarityCheckerExtInterface):
+    r"""Implements the similarity checker interface
+    Strategy:
+        Loops over members of one neighbours container and checks
+        if they are contained in the other neighbours container.  Breaks
+        early when similarity criterion is reached.
+        The performance and time-complexity of the check depends on the
+        used neighbour containers.
+        Worst case time
+        complexity is :math:`\mathcal{O}(n * m)` with :math:`n` and
+        :math:`m` being the lengths of the neighbours containers if the
+        containment check is performed by iteration.  Worst
+        case time complexity is :math:`\mathcal{O}(n)` if containment
+        check can be performed as lookup in linear time.  Note that
+        no switching of the neighbours containers is done to ensure
+        that the first container is the one with the shorter length
+        (compare
+        :obj:`commonnn._types.SimilarityCheckerExtSwitchContains`).
+    """
+
+    cdef bint _check(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params) nogil:
+
+        cdef AINDEX c = cluster_params.iparams[0]
+
+        if c == 0:
+            return True
+
+        cdef AINDEX na = neighbours_a._n_points
+        cdef AINDEX member_a, member_index_a
+        cdef AINDEX common = 0
+
+        for member_index_a in range(na):
+            member_a = neighbours_a._get_member(member_index_a)
+            if neighbours_b._contains(member_a):
+                common += 1
+                if common == c:
+                    return True
+                continue
+        return False
+
+    cdef AINDEX _get(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params) nogil:
+
+        cdef AINDEX na = neighbours_a._n_points
+        cdef AINDEX member_a, member_index_a
+        cdef AINDEX common = 0
+
+        for member_index_a in range(na):
+            member_a = neighbours_a._get_member(member_index_a)
+            if neighbours_b._contains(member_a):
+                common += 1
+
+        return common
+
+
+cdef class SimilarityCheckerExtSwitchContains(SimilarityCheckerExtInterface):
+    r"""Implements the similarity checker interface
+    Strategy:
+        Loops over members of one neighbours container and checks
+        if they are contained in the other neighbours container.  Breaks
+        early when similarity criterion is reached.
+        The performance and time-complexity of the check depends on the
+        used neighbour containers.
+        Worst case time
+        complexity is :math:`\mathcal{O}(n * m)` with :math:`n` and
+        :math:`m` being the lengths of the neighbours containers if the
+        containment check is performed by iteration.  Worst
+        case time complexity is :math:`\mathcal{O}(n)` if containment
+        check can be performed as lookup in linear time.  Note that
+        switching of the neighbours containers is done to ensure
+        that the first container is the one with the shorter length
+        (compare
+        :class:`~commonnn._types.SimilarityCheckerExtContains`).
+    """
+
+    cdef bint _check(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params) nogil:
+
+
+        cdef AINDEX c = cluster_params.iparams[0]
+
+        if c == 0:
+            return True
+
+        cdef AINDEX na = neighbours_a._n_points
+        cdef AINDEX nb = neighbours_b._n_points
+
+        cdef AINDEX member_a, member_index_a
+        cdef AINDEX common = 0
+
+        if nb < na:
+            with gil:
+                neighbours_a, neighbours_b = neighbours_b, neighbours_a
+                na, nb = nb, na
+
+        for member_index_a in range(na):
+            member_a = neighbours_a._get_member(member_index_a)
+            if neighbours_b._contains(member_a):
+                common += 1
+                if common == c:
+                    return True
+                continue
+        return False
+
+    cdef AINDEX _get(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params) nogil:
+
+        cdef AINDEX na = neighbours_a._n_points
+        cdef AINDEX nb = neighbours_b._n_points
+
+        cdef AINDEX member_a, member_index_a
+        cdef AINDEX common = 0
+
+        if nb < na:
+            with gil:
+                neighbours_a, neighbours_b = neighbours_b, neighbours_a
+                na, nb = nb, na
+
+        for member_index_a in range(na):
+            member_a = neighbours_a._get_member(member_index_a)
+            if neighbours_b._contains(member_a):
+                common += 1
+
+        return common
+
+
+cdef class SimilarityCheckerExtScreensorted(SimilarityCheckerExtInterface):
+    r"""Implements the similarity checker interface
+    Strategy:
+        Loops over members of two neighbour containers alternatingly
+        and checks if neighbours are contained in both containers.
+        Requires that the containers are sorted ascendingly to return
+        the correct result. Sorting will neither be checked nor enforced.
+        Breaks
+        early when similarity criterion is reached.
+        The performance of the check depends on the
+        used neighbour containers.
+        Worst case time
+        complexity is :math:`\mathcal{O}(n + m)` with :math:`n` and
+        :math:`m` being the lengths of the neighbours containers.
+    """
+
+    cdef bint _check(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params) nogil:
+
+        cdef AINDEX c = cluster_params.iparams[0]
+
+        if c == 0:
+            return True
+
+        cdef AINDEX na = neighbours_a._n_points
+        cdef AINDEX nb = neighbours_b._n_points
+
+        if (na == 0) or (nb == 0):
+            return False
+
+        cdef AINDEX member_index_a = 0, member_index_b = 0
+        cdef AINDEX member_a, member_b
+        cdef AINDEX common = 0
+
+        member_a = neighbours_a._get_member(member_index_a)
+        member_b = neighbours_b._get_member(member_index_b)
+
+        while True:
+            if member_a == member_b:
+                common += 1
+                if common == c:
+                    return True
+
+                member_index_a += 1
+                member_index_b += 1
+
+                if (member_index_a == na) or (member_index_b == nb):
+                    break
+
+                member_a = neighbours_a._get_member(member_index_a)
+                member_b = neighbours_b._get_member(member_index_b)
+                continue
+
+            if member_a < member_b:
+                member_index_a += 1
+                if (member_index_a == na):
+                    break
+                member_a = neighbours_a._get_member(member_index_a)
+                continue
+
+            member_index_b += 1
+            if (member_index_b == nb):
+                break
+            member_b = neighbours_b._get_member(member_index_b)
+
+        return False
+
+    cdef AINDEX _get(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params) nogil:
+
+        cdef AINDEX na = neighbours_a._n_points
+        cdef AINDEX nb = neighbours_b._n_points
+
+        if (na == 0) or (nb == 0):
+            return 0
+
+        cdef AINDEX member_index_a = 0, member_index_b = 0
+        cdef AINDEX member_a, member_b
+        cdef AINDEX common = 0
+
+        member_a = neighbours_a._get_member(member_index_a)
+        member_b = neighbours_b._get_member(member_index_b)
+
+        while True:
+            if member_a == member_b:
+                common += 1
+
+                member_index_a += 1
+                member_index_b += 1
+
+                if (member_index_a == na) or (member_index_b == nb):
+                    break
+
+                member_a = neighbours_a._get_member(member_index_a)
+                member_b = neighbours_b._get_member(member_index_b)
+                continue
+
+            if member_a < member_b:
+                member_index_a += 1
+                if (member_index_a == na):
+                    break
+                member_a = neighbours_a._get_member(member_index_a)
+                continue
+
+            member_index_b += 1
+            if (member_index_b == nb):
+                break
+            member_b = neighbours_b._get_member(member_index_b)
+
+        return common
+
+
+SimilarityChecker.register(SimilarityCheckerExtContains)
+SimilarityChecker.register(SimilarityCheckerExtSwitchContains)
+SimilarityChecker.register(SimilarityCheckerExtScreensorted)
 
 
 class QueueFIFODeque(Queue):
