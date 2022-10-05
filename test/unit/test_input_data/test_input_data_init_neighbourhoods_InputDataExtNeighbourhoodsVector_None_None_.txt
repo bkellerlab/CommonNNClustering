@@ -1,0 +1,2 @@
+InputDataExtNeighbourhoodsVector
+neighbourhoods of 12 points

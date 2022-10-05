@@ -1,0 +1,2 @@
+InputDataNeighbourhoodsSequence
+neighbourhoods of 12 points

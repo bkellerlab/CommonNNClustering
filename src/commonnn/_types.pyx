@@ -546,23 +546,21 @@ cdef class InputDataExtComponentsMemoryview(InputDataExtInterface):
         """Yield data by parts
 
         Returns:
-            Generator of 2D :obj:`numpy.ndarray` s (parts)
+            Generator of 2D :obj:`numpy.ndarray`s (parts)
         """
 
-        if self.n_points > 0:
-            edges = self.meta.get("edges", None)
-            if not edges:
-               edges = [self.n_points]
+        assert self.n_points > 0
 
-            data = self.data
+        edges = self.meta.get("edges", None)
+        if not edges:
+            edges = [self.n_points]
 
-            start = 0
-            for end in edges:
-                yield data[start:(start + end), :]
-                start += end
+        data = self.data
 
-        else:
-            yield from ()
+        start = 0
+        for end in edges:
+            yield data[start:(start + end), :]
+            start += end
 
     def __str__(self):
         return InputDataComponents.__str__(self)
@@ -611,7 +609,7 @@ class InputDataSklearnKDTree(InputDataComponents,InputDataNeighbourhoodsComputer
         return self._data
 
     def to_n_neighbours_array(self):
-        self._n_neighbours
+        return self._n_neighbours
 
     def get_component(self, point: int, dimension: int) -> float:
         return self._data[point, dimension]
@@ -649,7 +647,9 @@ class InputDataSklearnKDTree(InputDataComponents,InputDataNeighbourhoodsComputer
                 n.sort()
 
         if is_selfcounting is False:
-            raise NotImplementedError()
+            self._cached_neighbourhoods = np.array(
+                [x[1:] for x in self._cached_neighbourhoods], dtype=object
+            )
 
         self._n_neighbours = np.array([s.shape[0] for s in self._cached_neighbourhoods])
 
@@ -934,7 +934,7 @@ cdef class InputDataExtNeighbourhoodsVector(InputDataExtInterface):
         """Return input data subset"""
         cdef list lengths
 
-        data_subset = [x for x in self.data if x in indices]
+        data_subset = [x for i, x in enumerate(self.data) if i in indices]
         data_subset = [
             [m for m in a if m in indices]
             for a in data_subset
