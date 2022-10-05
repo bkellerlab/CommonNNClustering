@@ -1921,7 +1921,7 @@ class MetricEuclidean(Metric):
             input_data: Type['InputData']) -> float:
 
         cdef AVALUE total = 0
-        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AINDEX i, n_dim = input_data._n_dim
         cdef AVALUE a, b
 
         for i in range(n_dim):
@@ -1938,7 +1938,7 @@ class MetricEuclidean(Metric):
             other_input_data: Type['InputData']) -> float:
 
         cdef AVALUE total = 0
-        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AINDEX i, n_dim = input_data._n_dim
         cdef AVALUE a, b
 
         for i in range(n_dim):
@@ -1961,7 +1961,7 @@ cdef class MetricExtEuclidean(MetricExtInterface):
             InputDataExtInterface input_data) nogil:
 
         cdef AVALUE total = 0
-        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AINDEX i, n_dim = input_data._n_dim
         cdef AVALUE a, b
 
         for i in range(n_dim):
@@ -1978,7 +1978,7 @@ cdef class MetricExtEuclidean(MetricExtInterface):
             InputDataExtInterface other_input_data) nogil:
 
         cdef AVALUE total = 0
-        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AINDEX i, n_dim = input_data._n_dim
         cdef AVALUE a, b
 
         for i in range(n_dim):
@@ -2001,7 +2001,7 @@ class MetricEuclideanReduced(Metric):
             input_data: Type['InputData']) -> float:
 
         cdef AVALUE total = 0
-        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AINDEX i, n_dim = input_data._n_dim
         cdef AVALUE a, b
 
         for i in range(n_dim):
@@ -2018,7 +2018,7 @@ class MetricEuclideanReduced(Metric):
             other_input_data: Type['InputData']) -> float:
 
         cdef AVALUE total = 0
-        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AINDEX i, n_dim = input_data._n_dim
         cdef AVALUE a, b
 
         for i in range(n_dim):
@@ -2041,7 +2041,7 @@ cdef class MetricExtEuclideanReduced:
             InputDataExtInterface input_data) nogil:
 
         cdef AVALUE total = 0
-        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AINDEX i, n_dim = input_data._n_dim
         cdef AVALUE a, b
 
         for i in range(n_dim):
@@ -2058,7 +2058,7 @@ cdef class MetricExtEuclideanReduced:
             InputDataExtInterface other_input_data) nogil:
 
         cdef AVALUE total = 0
-        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AINDEX i, n_dim = input_data._n_dim
         cdef AVALUE a, b
 
         for i in range(n_dim):
@@ -2084,7 +2084,7 @@ cdef class MetricExtEuclideanPeriodicReduced:
             InputDataExtInterface input_data) nogil:
 
         cdef AVALUE total = 0
-        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AINDEX i, n_dim = input_data._n_dim
         cdef AVALUE a, b, distance, bound
 
         for i in range(n_dim):
@@ -2110,7 +2110,7 @@ cdef class MetricExtEuclideanPeriodicReduced:
             InputDataExtInterface other_input_data) nogil:
 
         cdef AVALUE total = 0
-        cdef AINDEX i, n_dim = input_data.n_dim
+        cdef AINDEX i, n_dim = input_data._n_dim
         cdef AVALUE a, b, distance, bound
 
         for i in range(n_dim):
