@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, deque
 from collections.abc import Container, Iterator, Sequence
+import heapq
 from itertools import count
 from typing import Any, Optional, Type
 
@@ -16,7 +17,7 @@ from commonnn import helper
 from commonnn._primitive_types import P_AINDEX, P_AVALUE, P_ABOOL
 
 from libc.math cimport sqrt as csqrt, pow as cpow, fabs as cfabs
-
+from cython.operator cimport dereference, preincrement
 
 cdef class ClusterParameters:
     """Input parameters for clustering procedure"""
@@ -454,7 +455,7 @@ class Neighbours(ABC):
 
     @property
     @abstractmethod
-    def neighbours(self):
+    def to_neighbours_array(self):
        """Return point indices as NumPy array"""
 
     @property
@@ -488,6 +489,7 @@ class Neighbours(ABC):
     @classmethod
     def get_builder_kwargs(cls):
         return []
+
 
 class NeighboursGetter(ABC):
     """Defines the neighbours-getter interface"""
@@ -527,6 +529,7 @@ class NeighboursGetter(ABC):
     def get_builder_kwargs(cls):
         return []
 
+
 cdef class NeighboursExtInterface:
 
     cdef void _assign(self, const AINDEX member) nogil: ...
@@ -556,6 +559,7 @@ cdef class NeighboursExtInterface:
     @classmethod
     def get_builder_kwargs(cls):
         return []
+
 
 cdef class NeighboursGetterExtInterface:
 
@@ -602,6 +606,7 @@ cdef class NeighboursGetterExtInterface:
     def get_builder_kwargs(cls):
         return []
 
+
 class DistanceGetter(ABC):
     """Defines the distance getter interface"""
 
@@ -626,6 +631,7 @@ class DistanceGetter(ABC):
     @classmethod
     def get_builder_kwargs(cls):
         return []
+
 
 cdef class DistanceGetterExtInterface:
     cdef AVALUE _get_single(
@@ -665,6 +671,7 @@ cdef class DistanceGetterExtInterface:
     def get_builder_kwargs(cls):
         return []
 
+
 class Metric(ABC):
     """Defines the metric-interface"""
 
@@ -685,6 +692,7 @@ class Metric(ABC):
 
     def __str__(self):
         return f"{type(self).__name__}"
+
 
 cdef class MetricExtInterface:
     """Defines the metric interface for extension types"""
@@ -729,6 +737,7 @@ cdef class MetricExtInterface:
     def get_builder_kwargs(cls):
         return []
 
+
 class SimilarityChecker(ABC):
     """Defines the similarity checker interface"""
 
@@ -754,6 +763,7 @@ class SimilarityChecker(ABC):
     @classmethod
     def get_builder_kwargs(cls):
         return []
+
 
 cdef class SimilarityCheckerExtInterface:
     """Defines the similarity checker interface for extension types"""
@@ -792,6 +802,7 @@ cdef class SimilarityCheckerExtInterface:
     @classmethod
     def get_builder_kwargs(cls):
         return []
+
 
 class Queue(ABC):
     """Defines the queue interface"""
@@ -836,6 +847,7 @@ cdef class QueueExtInterface:
     @classmethod
     def get_builder_kwargs(cls):
         return []
+
 
 class PriorityQueue(ABC):
     """Defines the prioqueue interface"""
@@ -1462,3 +1474,448 @@ InputDataComponents.register(InputDataExtDistancesMemoryview)
 InputDataPairwiseDistances.register(InputDataExtDistancesLinearMemoryview)
 InputDataNeighbourhoods.register(InputDataExtNeighbourhoodsMemoryview)
 InputDataNeighbourhoods.register(InputDataExtNeighbourhoodsVector)
+
+
+class NeighboursList(Neighbours):
+    """Implements the neighbours interface"""
+
+    def __init__(self, neighbours=None):
+        if neighbours is not None:
+            self._neighbours = neighbours
+            self._n_points = len(self._neighbours)
+        else:
+            self.reset()
+
+    @property
+    def n_points(self):
+        return self._n_points
+
+    @property
+    def neighbours(self):
+        return self._neighbours
+
+    @property
+    def to_neighbours_array(self):
+        return np.asarray(self._neighbours)
+
+    def assign(self, member: int):
+        self._neighbours.append(member)
+        self._n_points += 1
+
+    def reset(self):
+        self._neighbours = []
+        self._n_points = 0
+
+    def enough(self, member_cutoff: int) -> bool:
+        if self._n_points > member_cutoff:
+            return True
+        return False
+
+    def get_member(self, index: int) -> int:
+        return self._neighbours[index]
+
+    def contains(self, member: int) -> bool:
+        if member in self._neighbours:
+            return True
+        return False
+
+
+class NeighboursSet(Neighbours):
+    """Implements the neighbours interface"""
+
+    def __init__(self, neighbours=None):
+        if neighbours is not None:
+            self._neighbours = neighbours
+            self._n_points = len(self._neighbours)
+            self._query = 0
+            self._iter = None
+        else:
+            self.reset()
+
+    @property
+    def n_points(self):
+        return self._n_points
+
+    @property
+    def neighbours(self):
+        return self._neighbours
+
+    @property
+    def to_neighbours_array(self):
+        return np.asarray(list(self._neighbours))
+
+    def assign(self, member: int):
+        self._neighbours.add(member)
+        self._n_points += 1
+
+    def reset(self):
+        self._neighbours = set()
+        self._n_points = 0
+        self._query = 0
+        self._iter = None
+
+    def enough(self, member_cutoff: int):
+        if self._n_points > member_cutoff:
+            return True
+        return False
+
+    def get_member(self, index: int) -> int:
+        if (self._iter is None) or (index != self._query):
+            self._iter = iter(self._neighbours)
+            self._query = 0
+
+        while self._query != index:
+            _ = next(self._iter)
+            self._query += 1
+
+        return next(self._iter)
+
+    def contains(self, member: int) -> bool:
+        if member in self._neighbours:
+            return True
+        return False
+
+
+cdef class NeighboursExtVector(NeighboursExtInterface):
+    """Implements the neighbours interface
+    Uses an underlying C++ std:vector.
+    Args:
+        initial_size: Number of elements reserved for the size of vector.
+    Keyword args:
+        neighbours: A sequence of labels suitable to be cast to a vector.
+    """
+
+    def __cinit__(self, neighbours=None, *, AINDEX initial_size=1):
+        self._initial_size = initial_size
+
+        if neighbours is not None:
+            self._neighbours = neighbours
+            self._n_points = self._neighbours.size()
+            self._neighbours.reserve(self._initial_size)
+        else:
+            self._reset()
+
+    cdef void _assign(self, const AINDEX member) nogil:
+        self._neighbours.push_back(member)
+        self._n_points += 1
+
+    cdef void _reset(self) nogil:
+        self._neighbours.resize(0)
+        self._neighbours.reserve(self._initial_size)
+        self._n_points = 0
+
+    cdef bint _enough(self, const AINDEX member_cutoff) nogil:
+        if self._n_points > member_cutoff:
+            return True
+        return False
+
+    cdef AINDEX _get_member(self, const AINDEX index) nogil:
+        return self._neighbours[index]
+
+    cdef bint _contains(self, const AINDEX member) nogil:
+
+        if find(self._neighbours.begin(), self._neighbours.end(), member) == self._neighbours.end():
+            return False
+        return True
+
+    @property
+    def to_neighbours_array(self):
+        cdef AINDEX i
+        cdef AINDEX[::1] a = np.empty(self._n_points, dtype=P_AINDEX)
+
+        for i in range(self._n_points):
+            a[i] = self._neighbours[i]
+
+        return np.asarray(a)
+
+    @property
+    def n_points(self):
+        return self._neighbours.size()
+
+
+cdef class NeighboursExtSet(NeighboursExtInterface):
+    """Implements the neighbours interface
+    Uses an underlying C++ std:set.
+    Keyword args:
+        neighbours: A sequence of labels suitable to be cast to a C++ set.
+    """
+
+    def __cinit__(self, neighbours=None):
+
+        if neighbours is not None:
+            self._neighbours = neighbours
+            self._n_points = self._neighbours.size()
+        else:
+            self._reset()
+
+    cdef void _assign(self, const AINDEX member) nogil:
+        self._neighbours.insert(member)
+        self._n_points += 1
+
+    cdef void _reset(self) nogil:
+        self._neighbours.clear()
+        self._n_points = 0
+
+    cdef bint _enough(self, const AINDEX member_cutoff) nogil:
+        if self._n_points > member_cutoff:
+            return True
+        return False
+
+    cdef AINDEX _get_member(self, const AINDEX index) nogil:
+        cdef stdset[AINDEX].iterator it = self._neighbours.begin()
+        cdef AINDEX i
+
+        for i in range(index):
+            preincrement(it)
+
+        return dereference(it)
+
+    cdef bint _contains(self, const AINDEX member) nogil:
+        if self._neighbours.find(member) == self._neighbours.end():
+            return False
+        return True
+
+    @property
+    def to_neighbours_array(self):
+        cdef stdset[AINDEX].iterator it = self._neighbours.begin()
+        cdef AINDEX[::1] a = np.empty(self._n_points, dtype=P_AINDEX)
+        cdef AINDEX i = 0
+
+        while it != self._neighbours.end():
+            a[i] = dereference(it)
+            preincrement(it)
+            i += 1
+
+        return np.asarray(a)
+
+    @property
+    def n_points(self):
+        return self._neighbours.size()
+
+
+cdef class NeighboursExtUnorderedSet(NeighboursExtInterface):
+    """Implements the neighbours interface
+    Uses an underlying C++ std:unordered_set.
+    Keyword args:
+        neighbours: A sequence of labels suitable to be cast to a C++ set.
+    """
+
+    def __cinit__(self, neighbours=None):
+
+        if neighbours is not None:
+            self._neighbours = neighbours
+            self._n_points = self._neighbours.size()
+        else:
+            self._reset()
+
+    cdef void _assign(self, const AINDEX member) nogil:
+        self._neighbours.insert(member)
+        self._n_points += 1
+
+    cdef void _reset(self) nogil:
+        self._neighbours.clear()
+        self._n_points = 0
+
+    cdef bint _enough(self, const AINDEX member_cutoff) nogil:
+        if self._n_points > member_cutoff:
+            return True
+        return False
+
+    cdef AINDEX _get_member(self, const AINDEX index) nogil:
+        cdef stduset[AINDEX].iterator it = self._neighbours.begin()
+        cdef AINDEX i
+
+        for i in range(index):
+            preincrement(it)
+
+        return dereference(it)
+
+    cdef bint _contains(self, const AINDEX member) nogil:
+        if self._neighbours.find(member) == self._neighbours.end():
+            return False
+        return True
+
+    @property
+    def to_neighbours_array(self):
+        cdef stduset[AINDEX].iterator it = self._neighbours.begin()
+        cdef AINDEX[::1] a = np.empty(self._n_points, dtype=P_AINDEX)
+        cdef AINDEX i = 0
+
+        while it != self._neighbours.end():
+            a[i] = dereference(it)
+            preincrement(it)
+            i += 1
+
+        return np.asarray(a)
+
+    @property
+    def n_points(self):
+        return self._neighbours.size()
+
+
+cdef class NeighboursExtVectorUnorderedSet(NeighboursExtInterface):
+    """Implements the neighbours interface
+    Uses a compination of an underlying C++ std:vector and a std:unordered_set.
+    Keyword args:
+        neighbours: A sequence of labels suitable to be cast to a C++ vector.
+    """
+
+    def __cinit__(self, neighbours=None, *, initial_size=1):
+        cdef AINDEX member
+
+        self._initial_size = initial_size
+
+
+        if neighbours is not None:
+            self._neighbours = neighbours
+            self._n_points = self._neighbours.size()
+            self._neighbours.reserve(self._initial_size)
+
+            for member in self._neighbours:
+                self._neighbours_view.insert(member)
+        else:
+            self._reset()
+
+    cdef void _assign(self, const AINDEX member) nogil:
+        self._neighbours.push_back(member)
+        self._neighbours_view.insert(member)
+        self._n_points += 1
+
+    cdef void _reset(self) nogil:
+        self._neighbours.resize(0)
+        self._neighbours.reserve(self._initial_size)
+        self._neighbours_view.clear()
+        self._n_points = 0
+
+    cdef bint _enough(self, const AINDEX member_cutoff) nogil:
+        if self._n_points > member_cutoff:
+            return True
+        return False
+
+    cdef AINDEX _get_member(self, const AINDEX index) nogil:
+        return self._neighbours[index]
+
+    cdef bint _contains(self, const AINDEX member) nogil:
+        if self._neighbours_view.find(member) == self._neighbours_view.end():
+            return False
+        return True
+
+    @property
+    def to_neighbours_array(self):
+        cdef AINDEX i
+        cdef AINDEX[::1] a = np.empty(self._n_points, dtype=P_AINDEX)
+
+        for i in range(self._n_points):
+            a[i] = self._neighbours[i]
+
+        return np.asarray(a)
+
+    @property
+    def n_points(self):
+        return self._neighbours.size()
+
+
+Neighbours.register(NeighboursExtVector)
+Neighbours.register(NeighboursExtSet)
+Neighbours.register(NeighboursExtUnorderedSet)
+Neighbours.register(NeighboursExtVectorUnorderedSet)
+
+
+class QueueFIFODeque(Queue):
+    """Implements the queue interface"""
+
+    def __init__(self):
+       self._queue = deque()
+
+    def push(self, value):
+        """Append value to back/right end"""
+        self._queue.append(value)
+
+    def pop(self):
+        """Retrieve value from front/left end"""
+        return self._queue.popleft()
+
+    def is_empty(self) -> bool:
+        """Return True if there are no values in the queue"""
+        if self._queue:
+            return False
+        return True
+
+
+cdef class QueueExtLIFOVector(QueueExtInterface):
+    """Implements the queue interface"""
+
+    def __cinit__(self, values=None):
+        if values is None:
+            values = []
+
+        self._queue = values
+
+    cdef inline void _push(self, const AINDEX value) nogil:
+        """Append value to back/right end"""
+        self._queue.push_back(value)
+
+    cdef inline AINDEX _pop(self) nogil:
+        """Retrieve value from back/right end"""
+
+        cdef AINDEX value = self._queue.back()
+        self._queue.pop_back()
+
+        return value
+
+    cdef inline bint _is_empty(self) nogil:
+        """Return True if there are no values in the queue"""
+        return self._queue.empty()
+
+
+cdef class QueueExtFIFOQueue(QueueExtInterface):
+    """Implements the queue interface"""
+
+    cdef inline void _push(self, const AINDEX value) nogil:
+        """Append value to back/right end"""
+        self._queue.push(value)
+
+    cdef inline AINDEX _pop(self) nogil:
+        """Retrieve value from front/left end"""
+
+        cdef AINDEX value = self._queue.front()
+        self._queue.pop()
+
+        return value
+
+    cdef inline bint _is_empty(self) nogil:
+        """Return True if there are no values in the queue"""
+        return self._queue.empty()
+
+
+Queue.register(QueueExtLIFOVector)
+Queue.register(QueueExtFIFOQueue)
+
+
+class PriorityQueueMaxHeap(PriorityQueue):
+    """Defines the prioqueue interface"""
+
+    def __init__(self):
+       self.reset()
+
+    def reset(self) -> None:
+        self._queue = []
+
+    def push(self, a, b, weight) -> None:
+        """Put values into the queue"""
+        heapq.heappush(self._queue, (-weight, (a, b)))
+
+    def pop(self) -> (int, int, float):
+        """Retrieve values from the queue"""
+        weight, (a, b) = heapq.heappop(self._queue)
+        return a, b, -weight
+
+    def is_empty(self) -> bool:
+        """Return True if there are no values in the queue"""
+
+        if self._queue:
+            return False
+        return True
+
+    def size(self):
+        return len(self._queue)

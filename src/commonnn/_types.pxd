@@ -3,7 +3,13 @@ from commonnn._primitive_types cimport _allocate_and_fill_aindex_array, _allocat
 
 from libc.stdlib cimport malloc, free
 from libcpp.unordered_set cimport unordered_set as stduset
+from libcpp.set cimport set as stdset
 from libcpp.vector cimport vector as stdvector
+from libcpp.queue cimport queue as stdqueue, priority_queue as stdprioqueue
+
+
+cdef extern from "<algorithm>" namespace "std":
+    Iter find[Iter, T](Iter first, Iter last, const T& value) nogil
 
 
 cdef class ClusterParameters:
@@ -49,7 +55,7 @@ cdef class InputDataExtInterface:
 
 cdef class NeighboursExtInterface:
     cdef public:
-        AINDEX n_points
+        AINDEX _n_points
 
     cdef void _assign(self, const AINDEX member) nogil
     cdef void _reset(self) nogil
@@ -159,3 +165,30 @@ cdef class InputDataExtNeighbourhoodsVector(InputDataExtInterface):
         stdvector[AINDEX] _n_neighbours
 
 
+cdef class NeighboursExtVector(NeighboursExtInterface):
+    cdef:
+        AINDEX _initial_size
+        stdvector[AINDEX] _neighbours
+
+cdef class NeighboursExtSet(NeighboursExtInterface):
+    cdef stdset[AINDEX] _neighbours
+
+cdef class NeighboursExtUnorderedSet(NeighboursExtInterface):
+    cdef stduset[AINDEX] _neighbours
+
+cdef class NeighboursExtVectorUnorderedSet(NeighboursExtInterface):
+    cdef:
+        AINDEX _initial_size
+        stdvector[AINDEX] _neighbours
+        stduset[AINDEX] _neighbours_view
+
+
+cdef class SimilarityCheckerExtContains(SimilarityCheckerExtInterface): pass
+cdef class SimilarityCheckerExtSwitchContains(SimilarityCheckerExtInterface): pass
+cdef class SimilarityCheckerExtScreensorted(SimilarityCheckerExtInterface): pass
+
+cdef class QueueExtLIFOVector(QueueExtInterface):
+    cdef stdvector[AINDEX] _queue
+
+cdef class QueueExtFIFOQueue(QueueExtInterface):
+    cdef stdqueue[AINDEX] _queue
