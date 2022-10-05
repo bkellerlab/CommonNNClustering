@@ -16,13 +16,12 @@ cdef class CommonNNParameters(ClusterParameters): pass
 
 cdef class Labels:
     cdef public:
-        dict meta
+        dict _meta
 
     cdef:
         AINDEX[::1] _labels
         ABOOL[::1] _consider
         stduset[AINDEX] _consider_set
-
 
 cdef class ReferenceIndices:
     cdef:
@@ -32,9 +31,9 @@ cdef class ReferenceIndices:
 
 cdef class InputDataExtInterface:
     cdef public:
-        AINDEX n_points
-        AINDEX n_dim
-        dict meta
+        AINDEX _n_points
+        AINDEX _n_dim
+        dict _meta
 
     cdef AVALUE _get_component(
             self, const AINDEX point, const AINDEX dimension) nogil

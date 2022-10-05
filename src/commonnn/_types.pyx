@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict
+from collections.abc import Container, Iterator, Sequence
 from itertools import count
 from typing import Any, Optional, Type
 
@@ -11,6 +12,7 @@ try:
 except ModuleNotFoundError:
     SKLEARN_FOUND = False  # pragma: no cover
 
+from commonnn import helper
 from commonnn._primitive_types import P_AINDEX, P_AVALUE, P_ABOOL
 
 from libc.math cimport sqrt as csqrt, pow as cpow, fabs as cfabs
@@ -88,8 +90,6 @@ cdef class Labels:
                     "'labels' and 'consider' must have the same length"
                     )
 
-        if meta is None:
-            meta = {}
         self.meta = meta
 
     def __init__(self, labels, *, consider=None, meta=None):
@@ -136,6 +136,14 @@ cdef class Labels:
     @property
     def n_points(self):
         return self._labels.shape[0]
+
+    @property
+    def meta(self):
+        return helper.get_dict_attribute(self, "_meta")
+
+    @meta.setter
+    def meta(self, value):
+        helper.set_dict_attribute(self, "_meta", value)
 
     @property
     def consider_set(self):
@@ -297,9 +305,12 @@ class InputData(ABC):
         """Return underlying data (only for user convenience, not to be relied on)"""
 
     @property
-    @abstractmethod
     def meta(self):
-        """Return meta-information"""
+        return helper.get_dict_attribute(self, "_meta")
+
+    @meta.setter
+    def meta(self, value):
+        helper.set_dict_attribute(self, "_meta", value)
 
     @property
     @abstractmethod
@@ -429,6 +440,14 @@ cdef class InputDataExtInterface:
     def __repr__(self):  # pragma: no cover
         return f"{type(self).__name__}"
 
+    @property
+    def meta(self):
+        return helper.get_dict_attribute(self, "_meta")
+
+    @meta.setter
+    def meta(self, value):
+        helper.set_dict_attribute(self, "_meta", value)
+
 
 class InputDataComponentsSequence(InputDataComponents):
 
@@ -438,6 +457,8 @@ class InputDataComponentsSequence(InputDataComponents):
         assert all(len(p) == n_dim for p in data), "Dimensionality inconsistent"
 
         self._data = data
+        self._n_points = len(self._data)
+        self._n_dim = n_dim
 
         _meta = {"access_coordinates": True}
         if meta is not None:
@@ -447,10 +468,6 @@ class InputDataComponentsSequence(InputDataComponents):
     @property
     def data(self):
         return self._data
-
-    @property
-    def meta(self):
-        return self._meta
 
     @property
     def n_points(self):
@@ -477,13 +494,21 @@ cdef class InputDataExtComponentsMemoryview(InputDataExtInterface):
 
     def __cinit__(self, AVALUE[:, ::1] data not None, *, meta=None):
         self._data = data
-        self.n_points = self._data.shape[0]
-        self.n_dim = self._data.shape[1]
+        self._n_points = self._data.shape[0]
+        self._n_dim = self._data.shape[1]
 
         _meta = {"access_coordinates": True}
         if meta is not None:
             _meta.update(meta)
         self.meta = _meta
+
+    @property
+    def n_points(self):
+        return self._data.shape[0]
+
+    @property
+    def n_dim(self):
+        return self._data.shape[1]
 
     @property
     def data(self):
@@ -571,10 +596,6 @@ class InputDataSklearnKDTree(InputDataComponents,InputDataNeighbourhoodsComputer
         self._meta = _meta
 
     @property
-    def meta(self):
-        return self._meta
-
-    @property
     def n_points(self):
         return self._n_points
 
@@ -652,7 +673,7 @@ cdef class InputDataExtDistancesLinearMemoryview(InputDataExtInterface):
         self._data = data
         if n_points is None:
             n_points = int(0.5 * (csqrt(8 * self._data.shape[0] + 1) + 1))
-        self.n_points = n_points
+        self._n_points = n_points
 
         _meta = {"access_distances": True}
         if meta is not None:
@@ -674,10 +695,14 @@ cdef class InputDataExtDistancesLinearMemoryview(InputDataExtInterface):
             b = point_b
 
         # Start of block d(a)
-        i = a * (self.n_points - 1) - (a**2 - a) / 2
+        i = a * (self._n_points - 1) - (a**2 - a) / 2
         j = b - a - 1  # Pos. within d(a) block
 
         return self._data[i + j]
+
+    @property
+    def n_points(self):
+        return self._n_points
 
     @property
     def data(self):
@@ -702,13 +727,17 @@ cdef class InputDataExtNeighbourhoodsMemoryview(InputDataExtInterface):
             AINDEX[::1] n_neighbours not None, *, meta=None):
 
         self._data = data
-        self.n_points = self._data.shape[0]
+        self._n_points = self._data.shape[0]
         self._n_neighbours = n_neighbours
 
         _meta = {"access_neighbours": True}
         if meta is not None:
             _meta.update(meta)
         self.meta = _meta
+
+    @property
+    def n_points(self):
+        return self._data.shape[0]
 
     @property
     def data(self):
@@ -774,7 +803,7 @@ cdef class InputDataExtNeighbourhoodsVector(InputDataExtInterface):
             self,
             data, *, meta=None):
         self._data = data
-        self.n_points = self._data.size()
+        self._n_points = self._data.size()
         self._n_neighbours = [len(x) for x in data]
 
         _meta = {"access_neighbours": True}
@@ -782,7 +811,10 @@ cdef class InputDataExtNeighbourhoodsVector(InputDataExtInterface):
             _meta.update(meta)
         self.meta = _meta
 
-    # TODO: issues warning: comparison of integer expressions of different signedness: ‘Py_ssize_t’ {aka ‘long int’} and ‘size_t’ {aka ‘long unsigned int’} [-Wsign-compare]
+    @property
+    def n_points(self):
+        return self._data.size()
+
     @property
     def data(self):
         cdef AINDEX i, j
@@ -867,6 +899,7 @@ class InputDataNeighbourhoodsSequence(InputDataNeighbourhoods):
         """
 
         self._data = data
+        self._n_points = len(self._data)
         self._n_neighbours = [len(s) for s in self._data]
 
         _meta = {"access_neighbours": True}
@@ -877,10 +910,6 @@ class InputDataNeighbourhoodsSequence(InputDataNeighbourhoods):
     @property
     def data(self):
         return self._data
-
-    @property
-    def meta(self):
-        return self._meta
 
     @property
     def n_points(self):
