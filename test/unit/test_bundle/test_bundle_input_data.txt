@@ -2,6 +2,6 @@ Bundle(alias='root', hierarchy_lavel=0)
 
 alias: 'root'
 hierarchy_level: 0
-access: coordinates
+access: components
 points: 2
 children: 0

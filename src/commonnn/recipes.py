@@ -20,6 +20,10 @@ def prepare_pass(data):
     return (data,), {}
 
 
+def prepare_to_array(data, **kwargs):
+    return (np.array(data, **kwargs),), {}
+
+
 def prepare_square_array_to_linear(data):
     if not isinstance(data, np.ndarray):
         data = np.asarray(data)

@@ -49,6 +49,9 @@ cdef class InputDataExtInterface:
 cdef class InputDataExtComponentsMemoryview(InputDataExtInterface):
     cdef AVALUE[:, ::1] _data
 
+cdef class InputDataExtDistancesMemoryview(InputDataExtInterface):
+    cdef AVALUE[:, ::1] _data
+
 cdef class InputDataExtDistancesLinearMemoryview(InputDataExtInterface):
     cdef AVALUE[::1] _data
 

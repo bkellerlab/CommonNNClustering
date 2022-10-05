@@ -1,0 +1,2 @@
+InputDataExtDistancesMemoryview
+distances of 12 points

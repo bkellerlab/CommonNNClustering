@@ -138,7 +138,7 @@ cdef class Bundle:
         access = []
         if self._input_data is not None:
             for kind, check in (
-                    ("coordinates", "access_coordinates"),
+                    ("components", "access_components"),
                     ("distances", "access_distances"),
                     ("neighbours", "access_neighbours")):
 
