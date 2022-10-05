@@ -6,34 +6,6 @@ from commonnn._primitive_types import P_AINDEX, P_AVALUE
 # from commonnn import _types, _fit
 
 
-# class Recipe(dict):
-#     def __init__(self, valid_input=None):
-#         if valid_input is None:
-#             valid_input = []
-#         self.valid_input = valid_input
-# 
-#     @property
-#     def valid_input(self):
-#         return self._valid_input
-# 
-#     @valid_input.setter
-#     def valid_input(self, values: Iterable):
-#         if not isinstance(values, Iterable):
-#             values = [values]
-# 
-#         checked = []
-#         for v in values:
-#             if not issubclass(v, _types.InputData):
-#                 try:
-#                     v = COMPONENT_NAME_TYPE_MAP[v]
-#                 except KeyError:
-#                     raise ValueError(f"Object {v!r} is not a registered InputData type")
-# 
-#             checked.append(v)
-# 
-#         self._valid_input = checked
-
-
 def prepare_pass(data):
     """Dummy preparation hook
 

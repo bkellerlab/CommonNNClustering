@@ -5,9 +5,11 @@ import weakref
 import numpy as np
 cimport numpy as np
 
+from commonnn import helper
 from commonnn.report import Summary
 from commonnn._primitive_types import P_AINDEX, P_AVALUE, P_ABOOL
 from commonnn._types import InputData
+
 
 cdef class Bundle:
     """Bundles input data and clustering output"""
@@ -106,45 +108,31 @@ cdef class Bundle:
 
     @property
     def children(self):
-        """
-        Return a mapping of child cluster labels to
-        :obj:`~commonnn._bundle.Bundle` instances representing
-        the children of this clustering.
-        """
-        return self._children
+        return helper.get_dict_attribute(self, "_children")
 
     @children.setter
     def children(self, value):
-        """
-        Return a mapping of child cluster labels to
-        :obj:`~commonnn._bundle.Bundle` instances representing
-        the children of this clustering.
-        """
-        if value is None:
-            value = {}
-        if not isinstance(value, MutableMapping):
-            raise TypeError("Expected a mutable mapping")
-        self._children = value
+        helper.set_dict_attribute(self, "_children", value)
 
     @property
     def summary(self):
-        """
-        Return an instance of :obj:`commonnn.cluster.Summary`
-        collecting clustering results for this clustering.
-        """
         return self._summary
 
     @summary.setter
     def summary(self, value):
-        """
-        Return an instance of :obj:`cnnclustering.cluster.Summary`
-        collecting clustering results for this clustering.
-        """
         if value is None:
             value = Summary()
         if not isinstance(value, MutableSequence):
             raise TypeError("Expected a mutable sequence")
         self._summary = value
+
+    @property
+    def meta(self):
+        return helper.get_dict_attribute(self, "_meta")
+
+    @meta.setter
+    def meta(self, value):
+        helper.set_dict_attribute(self, "_meta", value)
 
     def info(self):
         access = []
@@ -219,20 +207,25 @@ cdef class Bundle:
 
     def add_child(self, label, bundle=None):
         """Add a child for this bundle
+
         Args:
             label: Add child with this label. Compare :func:`get_child`
                 for which arguments are allowed.
+
         Keyword args:
-            bundle: The child to add. If `None`, creates a new bundle with
-                set parent.
+            bundle: The child to add. If `None`, creates a new bundle.
+
         Note:
             If the label already exists, the respective child is silently
             overridden. It is not checked if a children mapping exists.
+
+            Overrides parent of the newly added bundle.
         """
         if bundle is None:
-            bundle = type(self)(parent=self)
+            bundle = type(self)()
 
         assert isinstance(bundle, Bundle)
+        bundle._parent = weakref.proxy(self)
 
         if isinstance(label, str):
             label = label.split(".")
@@ -244,11 +237,17 @@ cdef class Bundle:
                 label = label[0]
 
         if isinstance(label, int):
-            self._children[label] = bundle
+            children = self.children
+            children[label] = bundle
+            self._children = children
+            return
 
         *rest, label = label
         child = self.get_child(rest)
-        child._children[label] = bundle
+        bundle._parent = weakref.proxy(child)
+        children = child.children
+        children[label] = bundle
+        child._children = children
 
     def __getitem__(self, key):
         return self.get_child(key)
@@ -265,6 +264,89 @@ cdef class Bundle:
         Note:
             see :func:`~commonnn._bundle.isolate`
         """
+        isolate(self, purge, isolate_input_data)
 
-        pass
-        # isolate(self, purge, isolate_input_data)
+
+cpdef void isolate(
+        Bundle bundle,
+        bint purge: bool = True,
+        bint isolate_input_data: bool = True):
+    """Create child clusterings from cluster labels
+
+    Args:
+        bundle: A bundle to operate on.
+        purge: If `True`, creates a new mapping for the children of this
+            clustering.
+        isolate_input_data: If `True`, attaches a subset of the input data
+            of this clustering to the child. Note, that the used
+            input data type needs to support this via
+            `~commonnn._types.InputData.get_subset`.
+
+    Note:
+        Does not create a child for noise points (label = 0)
+    """
+
+    cdef AINDEX label, index
+    cdef list indices
+    cdef AINDEX index_part_end, child_index_part_end
+
+    if purge or (bundle._children is None):
+        bundle._children = {}
+
+    for label, indices in bundle._labels.mapping.items():
+        if label == 0:
+            continue
+
+        # Assumes indices to be sorted
+        parent_indices = np.array(indices, dtype=P_AINDEX)
+        if bundle._reference_indices is None:
+            root_indices = parent_indices
+        else:
+            root_indices = bundle._reference_indices.root[parent_indices]
+
+        bundle._children[label] = Bundle(parent=bundle)
+        bundle._children[label]._reference_indices = ReferenceIndices(
+            root_indices,
+            parent_indices
+            )
+        parent_alias = bundle.alias if bundle.alias is not None else ""
+        bundle._children[label].alias += f"{parent_alias}.{label}"
+
+        if not isolate_input_data:
+            continue
+
+        bundle._children[label]._input_data = bundle._input_data.get_subset(indices)
+
+        edges = bundle._input_data.meta.get("edges", None)
+        if edges is None:
+            continue
+
+        meta = bundle._children[label]._input_data.meta
+        meta["edges"] = child_edges = []
+        bundle._children[label]._input_data._meta = meta
+
+        if not edges:
+            continue
+
+        edges_iter = iter(edges)
+        index_part_end = next(edges_iter)
+        child_index_part_end = 0
+
+        for index in range(parent_indices.shape[0]):
+            if parent_indices[index] < index_part_end:
+                child_index_part_end += 1
+                continue
+
+            while parent_indices[index] >= index_part_end:
+                child_edges.append(child_index_part_end)
+                index_part_end += next(edges_iter)
+                child_index_part_end = 0
+
+            child_index_part_end += 1
+
+        child_edges.append(child_index_part_end)
+
+        while len(child_edges) < len(edges):
+            child_edges.append(0)
+
+    return

@@ -1,9 +1,10 @@
+from selectors import EpollSelector
 import numpy as np
 import pytest
 
 from commonnn.report import Summary
 from commonnn import _bundle
-from commonnn._primitive_types import P_AVALUE
+from commonnn._primitive_types import P_AVALUE, P_AINDEX
 from commonnn import _types
 
 
@@ -16,9 +17,9 @@ def test_bundle_init(file_regression):
     assert bundle.parent_indices is None
     assert bundle.parent is None
     assert bundle.children == {}
-    assert bundle.meta is None
+    assert bundle.meta == {}
     assert isinstance(bundle.summary, Summary)
-    file_regression.check(f"{bundle!r}")
+    file_regression.check(f"{bundle!r}\n\n{bundle.info()}")
 
 
 def test_bundle_init_parent():
@@ -31,7 +32,7 @@ def test_bundle_init_parent():
     assert parent.alias != child.alias
 
 
-def test_bundle_input_data():
+def test_bundle_input_data(file_regression):
     input_data = []
     with pytest.raises(TypeError):
         _bundle.Bundle(input_data)
@@ -44,6 +45,8 @@ def test_bundle_input_data():
     np.testing.assert_array_equal(
         np.array(bundle.input_data), np.array(input_data.data)
     )
+
+    file_regression.check(f"{bundle!r}\n\n{bundle.info()}")
 
 
 def test_bundle_labels():
@@ -83,3 +86,140 @@ def test_bundle_children():
 
     with pytest.raises(KeyError):
         bundle.get_child("1.3")
+
+    assert bundle.get_child([1, 1]) == bundle[1, 1]
+
+    bundle.add_child(3)
+    assert bundle[3].alias == "root"
+
+    bundle["4"] = _bundle.Bundle(alias=4)
+    assert bundle[4].alias == "4"
+
+    bundle.add_child("3.1", bundle=_bundle.Bundle(alias="3.1"))
+    assert bundle["3.1"].alias == "3.1"
+
+
+def test_bundle_summary():
+    bundle = _bundle.Bundle()
+
+    with pytest.raises(TypeError):
+        bundle.summary = set()
+
+    bundle.summary = []
+    bundle.summary.append(1)
+    assert bundle.summary[0] == 1
+
+
+@pytest.mark.parametrize(
+    "input_data_type,data,meta,labels,root_indices,parent_indices",
+    [
+        (
+            _types.InputDataExtComponentsMemoryview,
+            np.array(
+                [[0, 0, 0],
+                 [1, 1, 1]],
+                order="C", dtype=P_AVALUE
+            ),
+            None,
+            np.array([1, 2], dtype=P_AINDEX),
+            None, None
+        ),
+        (
+            _types.InputDataExtComponentsMemoryview,
+            np.array(
+                [[0, 0], [1, 1], [2, 2],
+                 [3, 3], [4, 4], [5, 5],
+                 [6, 6], [7, 7], [8, 8]],
+                order="c", dtype=P_AVALUE
+            ),
+            {"edges": []},
+            np.array([2, 1, 2, 2, 2, 1, 0, 1, 0], dtype=P_AINDEX),
+            None, None
+        ),
+        (
+            _types.InputDataExtComponentsMemoryview,
+            np.array(
+                [[0, 0, 0],
+                 [1, 1, 1],
+                 [2, 2, 2],
+                 [3, 3, 3],
+                 [4, 4, 4],
+                 [5, 5, 5]],
+                order="C", dtype=P_AVALUE
+            ),
+            {"edges": [2, 2, 2]},
+            np.array([1, 2, 1, 2, 0, 0], dtype=P_AINDEX),
+            None, None
+        ),
+        (
+            _types.InputDataExtComponentsMemoryview,
+            np.array(
+                [[1, 1, 1],
+                 [2, 2, 2],
+                 [3, 3, 3],
+                 [4, 4, 4]],
+                order="C", dtype=P_AVALUE
+            ),
+            {"edges": [4]},
+            np.array([1, 2, 1, 2], dtype=P_AINDEX),
+            np.array([1, 2, 3, 4], dtype=P_AINDEX),
+            np.array([1, 2, 3, 4], dtype=P_AINDEX),
+        ),
+        (
+            _types.InputDataExtComponentsMemoryview,
+            np.array(
+                [[1, 1, 1],
+                 [4, 4, 4]],
+                order="C", dtype=P_AVALUE
+            ),
+            {"edges": [1, 1]},
+            np.array([1, 2], dtype=P_AINDEX),
+            np.array([1, 3], dtype=P_AINDEX),
+            np.array([0, 2], dtype=P_AINDEX),
+        ),
+    ]
+)
+def test_isolate(
+        input_data_type, data, meta, labels, root_indices, parent_indices,
+        file_regression):
+
+    if root_indices is not None:
+        reference_indices = _types.ReferenceIndices(root_indices, parent_indices)
+    else:
+        reference_indices = None
+
+    bundle = _bundle.Bundle(
+        input_data_type(data, meta=meta),
+        labels=labels,
+        reference_indices=reference_indices
+    )
+
+    bundle.isolate(isolate_input_data=False)
+    label_set = bundle._labels.set
+    label_set.discard(0)
+    assert len(bundle.children) == len(label_set)
+    assert bundle[1]._input_data is None
+
+    bundle.isolate()
+    label_mapping = bundle._labels.mapping
+    for label, indices in label_mapping.items():
+        if label == 0: continue
+        assert len(indices) == bundle[label]._input_data.n_points
+
+    report = ""
+    for label in label_set:
+        isolated_points = bundle._children[label]._input_data
+
+        edges = isolated_points.meta.get('edges', "None")
+        report += (
+            f"Child {label}\n"
+            f'{"=" * 80}\n'
+            f"Data:\n{isolated_points.to_components_array()}\n\n"
+            f"Edges:\n{edges}\n\n"
+            f"Root:\n{bundle._children[label].root_indices}\n\n"
+            f"Parent:\n{bundle._children[label].parent_indices}\n\n"
+        )
+
+    report = report.rstrip("\n")
+
+    file_regression.check(report)
