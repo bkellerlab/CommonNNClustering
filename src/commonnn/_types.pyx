@@ -449,6 +449,456 @@ cdef class InputDataExtInterface:
         helper.set_dict_attribute(self, "_meta", value)
 
 
+class Neighbours(ABC):
+    """Defines the neighbours interface"""
+
+    @property
+    @abstractmethod
+    def neighbours(self):
+       """Return point indices as NumPy array"""
+
+    @property
+    @abstractmethod
+    def n_points(self) -> int:
+       """Return total number of points"""
+
+    @abstractmethod
+    def assign(self, member: int) -> None:
+       """Add a member to this container"""
+
+    @abstractmethod
+    def reset(self) -> None:
+       """Reset/empty this container"""
+
+    @abstractmethod
+    def enough(self, member_cutoff: int) -> bool:
+        """Return True if there are enough points"""
+
+    @abstractmethod
+    def get_member(self, index: int) -> int:
+       """Return indexable neighbours container"""
+
+    @abstractmethod
+    def contains(self, member: int) -> bool:
+       """Return True if member is in neighbours container"""
+
+    def __str__(self):
+        return f"{type(self).__name__}"
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return []
+
+class NeighboursGetter(ABC):
+    """Defines the neighbours-getter interface"""
+
+    @property
+    @abstractmethod
+    def is_sorted(self) -> bool:
+       """Return True if neighbour indices are sorted"""
+
+    @property
+    @abstractmethod
+    def is_selfcounting(self) -> bool:
+       """Return True if points count as their own neighbour"""
+
+    @abstractmethod
+    def get(
+            self,
+            index: int,
+            input_data: Type['InputData'],
+            neighbours: Type['Neighbours'],
+            cluster_params: Type['ClusterParameters']) -> None:
+        """Collect neighbours for point in input data"""
+
+    def get_other(
+            self,
+            index: int,
+            input_data: Type['InputData'],
+            other_input_data: Type['InputData'],
+            neighbours: Type['Neighbours'],
+            cluster_params: Type['ClusterParameters']) -> None:
+        """Collect neighbours in input data for point in other input data"""
+
+    def __str__(self):
+        return f"{type(self).__name__}"
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return []
+
+cdef class NeighboursExtInterface:
+
+    cdef void _assign(self, const AINDEX member) nogil: ...
+    cdef void _reset(self) nogil: ...
+    cdef bint _enough(self, const AINDEX member_cutoff) nogil: ...
+    cdef AINDEX _get_member(self, const AINDEX index) nogil: ...
+    cdef bint _contains(self, const AINDEX member) nogil: ...
+
+    def assign(self, member: int):
+        self._assign(member)
+
+    def reset(self):
+        self._reset()
+
+    def enough(self, member_cutoff: int):
+        return self._enough(member_cutoff)
+
+    def get_member(self, index: int):
+        return self._get_member(index)
+
+    def contains(self, member: int):
+        return self._contains(member)
+
+    def __str__(self):
+        return f"{type(self).__name__}"
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return []
+
+cdef class NeighboursGetterExtInterface:
+
+    cdef void _get(
+            self,
+            const AINDEX index,
+            InputDataExtInterface input_data,
+            NeighboursExtInterface neighbours,
+            ClusterParameters cluster_params) nogil: ...
+
+    cdef void _get_other(
+            self,
+            const AINDEX index,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data,
+            NeighboursExtInterface neighbours,
+            ClusterParameters cluster_params) nogil: ...
+
+    def get(
+            self,
+            AINDEX index,
+            InputDataExtInterface input_data,
+            NeighboursExtInterface neighbours,
+            ClusterParameters cluster_params):
+        self._get(index, input_data, neighbours, cluster_params)
+
+
+    def get_other(
+            self,
+            AINDEX index,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data,
+            NeighboursExtInterface neighbours,
+            ClusterParameters cluster_params):
+        self._get_other(
+            index, input_data, other_input_data,
+            neighbours, cluster_params
+            )
+
+    def __str__(self):
+        return f"{type(self).__name__}"
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return []
+
+class DistanceGetter(ABC):
+    """Defines the distance getter interface"""
+
+    @abstractmethod
+    def get_single(
+            self,
+            point_a: int, point_b: int,
+            input_data: Type['InputData']) -> float:
+        """Get distance between two points in input data"""
+
+    @abstractmethod
+    def get_single_other(
+            self,
+            point_a: int, point_b: int,
+            input_data: Type['InputData'],
+            other_input_data: Type['InputData']) -> float:
+        """Get distance between two points in input data and other input data"""
+
+    def __str__(self):
+        return f"{type(self).__name__}"
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return []
+
+cdef class DistanceGetterExtInterface:
+    cdef AVALUE _get_single(
+            self,
+            const AINDEX point_a,
+            const AINDEX point_b,
+            InputDataExtInterface input_data) nogil: ...
+
+    cdef AVALUE _get_single_other(
+            self,
+            const AINDEX point_a,
+            const AINDEX point_b,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data) nogil: ...
+
+    def get_single(
+            self,
+            AINDEX point_a,
+            AINDEX point_b,
+            InputDataExtInterface input_data):
+
+        return self._get_single(point_a, point_b, input_data)
+
+    def get_single_other(
+            self,
+            AINDEX point_a,
+            AINDEX point_b,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data):
+
+        return self._get_single_other(point_a, point_b, input_data, other_input_data)
+
+    def __str__(self):
+        return f"{type(self).__name__}"
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return []
+
+class Metric(ABC):
+    """Defines the metric-interface"""
+
+    @abstractmethod
+    def calc_distance(
+            self,
+            index_a: int, index_b: int,
+            input_data: Type['InputData']) -> float:
+        """Return distance between two points in input data"""
+
+    @abstractmethod
+    def calc_distance_other(
+            self,
+            index_a: int, index_b: int,
+            input_data: Type['InputData'],
+            other_input_data: Type['InputData']) -> float:
+        """Return distance between two points in input data and other input data"""
+
+    def __str__(self):
+        return f"{type(self).__name__}"
+
+cdef class MetricExtInterface:
+    """Defines the metric interface for extension types"""
+
+    cdef AVALUE _calc_distance(
+            self,
+            const AINDEX index_a, const AINDEX index_b,
+            InputDataExtInterface input_data) nogil: ...
+
+    cdef AVALUE _calc_distance_other(
+            self,
+            const AINDEX index_a, const AINDEX index_b,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data) nogil: ...
+
+    cdef AVALUE _adjust_radius(self, AVALUE radius_cutoff) nogil: ...
+
+    def calc_distance(
+            self,
+            AINDEX index_a, AINDEX index_b,
+            InputDataExtInterface input_data) -> float:
+
+        return self._calc_distance(index_a, index_b, input_data)
+
+    def calc_distance_other(
+            self,
+            AINDEX index_a, AINDEX index_b,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data) -> float:
+
+        return self._calc_distance_other(
+            index_a, index_b, input_data, other_input_data
+            )
+
+    def adjust_radius(self, AVALUE radius_cutoff) -> float:
+        return self._adjust_radius(radius_cutoff)
+
+    def __str__(self):
+        return f"{type(self).__name__}"
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return []
+
+class SimilarityChecker(ABC):
+    """Defines the similarity checker interface"""
+
+    @abstractmethod
+    def check(
+            self,
+            neighbours_a: Type["Neighbours"],
+            neighbours_b: Type["Neighbours"],
+            cluster_params: Type['ClusterParameters']) -> bool:
+        """Return True if a and b have sufficiently many common neighbours"""
+
+    @abstractmethod
+    def get(
+            self,
+            neighbours_a: Type["Neighbours"],
+            neighbours_b: Type["Neighbours"],
+            cluster_params: Type['ClusterParameters']) -> int:
+        """Return number of common neighbours"""
+
+    def __str__(self):
+        return f"{type(self).__name__}"
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return []
+
+cdef class SimilarityCheckerExtInterface:
+    """Defines the similarity checker interface for extension types"""
+
+    cdef bint _check(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params) nogil: ...
+
+    def check(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params):
+
+        return self._check(neighbours_a, neighbours_b, cluster_params)
+
+    cdef AINDEX _get(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params) nogil: ...
+
+    def get(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params):
+
+        return self._get(neighbours_a, neighbours_b, cluster_params)
+
+    def __str__(self):
+        return f"{type(self).__name__}"
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return []
+
+class Queue(ABC):
+    """Defines the queue interface"""
+
+    @abstractmethod
+    def push(self, value):
+        """Put value into the queue"""
+
+    @abstractmethod
+    def pop(self):
+        """Retrieve value from the queue"""
+
+    @abstractmethod
+    def is_empty(self) -> bool:
+        """Return True if there are no values in the queue"""
+
+    def __str__(self):
+        return f"{type(self).__name__}"
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return []
+
+cdef class QueueExtInterface:
+
+    cdef void _push(self, const AINDEX value) nogil: ...
+    cdef AINDEX _pop(self) nogil: ...
+    cdef bint _is_empty(self) nogil: ...
+
+    def push(self, value: int):
+        self._push(value)
+
+    def pop(self) -> int:
+        return self._pop()
+
+    def is_empty(self) -> bool:
+        return self._is_empty()
+
+    def __str__(self):
+        return f"{type(self).__name__}"
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return []
+
+class PriorityQueue(ABC):
+    """Defines the prioqueue interface"""
+
+    @abstractmethod
+    def reset(self) -> None:
+        """Reset the queue"""
+
+    @abstractmethod
+    def size(self) -> int:
+        """Get number of items in the queue"""
+
+    @abstractmethod
+    def push(self, a, b, weight) -> None:
+        """Put values into the queue"""
+
+    @abstractmethod
+    def pop(self) -> (int, int, float):
+        """Retrieve values from the queue"""
+
+    @abstractmethod
+    def is_empty(self) -> bool:
+        """Return True if there are no values in the queue"""
+
+    def __str__(self):
+        return f"{type(self).__name__}"
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return []
+
+
+cdef class PriorityQueueExtInterface:
+
+    cdef void _reset(self) nogil: ...
+    cdef void _push(self, const AINDEX a, const AINDEX b, const AVALUE weight) nogil: ...
+    cdef (AINDEX, AINDEX, AVALUE) _pop(self) nogil: ...
+    cdef bint _is_empty(self) nogil: ...
+    cdef AINDEX _size(self) nogil: ...
+
+    def push(self, a: int, b: int, weight: float):
+        self._push(a, b, weight)
+
+    def pop(self) -> (int, int, float):
+        return self._pop()
+
+    def is_empty(self) -> bool:
+        return self._is_empty()
+
+    def size(self) -> int:
+        return self._size()
+
+    def reset(self) -> None:
+        return self._reset()
+
+    def __str__(self):
+        return f"{type(self).__name__}"
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return []
+
+
 class InputDataComponentsSequence(InputDataComponents):
 
     def __init__(self, data: Sequence, *, meta=None):
