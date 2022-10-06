@@ -13,10 +13,11 @@ from commonnn import _types
 )
 def test_use_queue(queue_type, kind):
     queue = queue_type()
-
     assert queue.is_empty()
 
     queue.push(1)
+    assert not queue.is_empty()
+    assert queue.size() == 1
     assert queue.pop() == 1
 
     pushed = list(range(10))
@@ -44,11 +45,13 @@ def test_use_queue(queue_type, kind):
 )
 def test_use_prio_queue(queue_type, values, expected):
     queue = queue_type()
-
     assert queue.is_empty()
 
     for a, b, w in values:
         queue.push(a, b, w)
+
+    assert not queue.is_empty()
+    assert queue.size() == len(values)
 
     for ea, eb, ew in expected:
         a, b, w = queue.pop()

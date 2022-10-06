@@ -842,6 +842,10 @@ class Queue(ABC):
     def is_empty(self) -> bool:
         """Return True if there are no values in the queue"""
 
+    @abstractmethod
+    def size(self) -> int:
+        """Get number of items in the queue"""
+
     def __str__(self):
         return f"{type(self).__name__}"
 
@@ -854,6 +858,7 @@ cdef class QueueExtInterface:
     cdef void _push(self, const AINDEX value) nogil: ...
     cdef AINDEX _pop(self) nogil: ...
     cdef bint _is_empty(self) nogil: ...
+    cdef AINDEX _size(self) nogil: ...
 
     def push(self, value: int):
         self._push(value)
@@ -863,6 +868,9 @@ cdef class QueueExtInterface:
 
     def is_empty(self) -> bool:
         return self._is_empty()
+
+    def size(self) -> int:
+        return self._size()
 
     def __str__(self):
         return f"{type(self).__name__}"
@@ -3023,14 +3031,15 @@ class QueueFIFODeque(Queue):
         self._queue.append(value)
 
     def pop(self):
-        """Retrieve value from front/left end"""
         return self._queue.popleft()
 
     def is_empty(self) -> bool:
-        """Return True if there are no values in the queue"""
         if self._queue:
             return False
         return True
+
+    def size(self) -> int:
+        return len(self._queue)
 
 
 cdef class QueueExtLIFOVector(QueueExtInterface):
@@ -3058,6 +3067,9 @@ cdef class QueueExtLIFOVector(QueueExtInterface):
         """Return True if there are no values in the queue"""
         return self._queue.empty()
 
+    cdef inline AINDEX _size(self) nogil:
+        return self._queue.size()
+
 
 cdef class QueueExtFIFOQueue(QueueExtInterface):
     """Implements the queue interface"""
@@ -3077,6 +3089,9 @@ cdef class QueueExtFIFOQueue(QueueExtInterface):
     cdef inline bint _is_empty(self) nogil:
         """Return True if there are no values in the queue"""
         return self._queue.empty()
+
+    cdef inline AINDEX _size(self) nogil:
+        return self._queue.size()
 
 
 Queue.register(QueueExtLIFOVector)

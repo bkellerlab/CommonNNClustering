@@ -134,6 +134,7 @@ cdef class QueueExtInterface:
     cdef void _push(self, const AINDEX value) nogil
     cdef AINDEX _pop(self) nogil
     cdef bint _is_empty(self) nogil
+    cdef AINDEX _size(self) nogil
 
 
 cdef class PriorityQueueExtInterface:
