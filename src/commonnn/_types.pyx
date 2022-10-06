@@ -2608,7 +2608,7 @@ cdef class MetricExtEuclideanPeriodicReduced:
                 if distance > (bound / 2):
                     distance = bound - distance
 
-            total += cpow(a - b, 2)
+            total += cpow(distance, 2)
 
         return total
 
