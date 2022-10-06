@@ -175,3 +175,40 @@ def test_calc_distance(
             np.testing.assert_approx_equal(
                 distance, ref_distance, significant=12
             )
+
+
+@pytest.mark.parametrize(
+    "metric_type",
+    [_types.MetricPrecomputed, _types.MetricExtPrecomputed]
+)
+def test_distance_precomputed(metric_type):
+
+    input_data = _types.InputDataExtComponentsMemoryview(
+        np.array([
+            [0, 0.5, 0.7],
+            [0.5, 0, 1],
+            [0.7, 1, 0],
+        ], order="C", dtype=P_AVALUE)
+    )
+    metric = metric_type()
+
+    for i in range(input_data.n_points):
+        for j in range(input_data.n_points):
+            d = metric.calc_distance(i, j, input_data)
+            do = metric.calc_distance_other(i, j, input_data, input_data)
+            assert d == do == metric.adjust_radius(d)
+
+
+@pytest.mark.parametrize(
+    "metric_type",
+    [_types.MetricDummy, _types.MetricExtDummy]
+)
+def test_distance_dummy(metric_type):
+
+    input_data = _types.InputDataExtComponentsMemoryview(
+        np.array([[0]], order="C", dtype=P_AVALUE)
+    )
+    metric = metric_type()
+    assert metric.calc_distance(5, 3, input_data) == 0
+    assert metric.calc_distance_other(6, 6, input_data, input_data) == 0
+    assert 1 == metric.adjust_radius(1)
