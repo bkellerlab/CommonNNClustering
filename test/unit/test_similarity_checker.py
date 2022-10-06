@@ -29,6 +29,7 @@ from commonnn import _types
     [
         ([], [], 0, True, True),
         ([], [], 1, True, False),
+        ([1], [1], 2, True, False),
         ([1, 2, 3], [2, 5], 1, True, True),
         ([1, 2, 3], [2, 5, 8, 9], 2, True, False),
         ([1, 2, 3, 9, 10], [2, 5, 8, 9, 10], 3, True, True),
@@ -62,4 +63,9 @@ def test_check(
 
     checker = checker_type()
     passed = checker.check(neighbours_a, neighbours_b, cluster_params)
-    assert passed == expected
+    passed_swapped = checker.check(neighbours_b, neighbours_a, cluster_params)
+    assert passed == expected == passed_swapped
+
+    ns = checker.get(neighbours_a, neighbours_b, cluster_params)
+    ns_swapped = checker.get(neighbours_b, neighbours_a, cluster_params)
+    assert ns == len(set(members_a) & set(members_b)) == ns_swapped

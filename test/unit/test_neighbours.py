@@ -1,3 +1,4 @@
+from operator import ne
 import pytest
 
 from commonnn import _types
@@ -20,7 +21,11 @@ def test_neighbours(neighbours_type, args, kwargs, n_points, ordered):
 
     neighbours.assign(5)
     assert neighbours.n_points == n_points + 1
-    if ordered: assert neighbours.get_member(n_points) == 5
+    if ordered:
+        expected = list(args[0]) + [5]
+        for i in range(neighbours.n_points):
+            assert neighbours.get_member(i) == expected[i]
+
     assert neighbours.contains(5)
     assert not neighbours.contains(99)
     assert neighbours.enough(3)

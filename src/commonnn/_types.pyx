@@ -1599,6 +1599,7 @@ class NeighboursSet(Neighbours):
             _ = next(self._iter)
             self._query += 1
 
+        self._query += 1
         return next(self._iter)
 
     def contains(self, member: int) -> bool:
