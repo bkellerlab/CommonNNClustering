@@ -183,6 +183,18 @@ cdef class NeighboursExtVectorUnorderedSet(NeighboursExtInterface):
         stduset[AINDEX] _neighbours_view
 
 
+cdef class NeighboursGetterExtBruteForce(NeighboursGetterExtInterface):
+    cdef public DistanceGetterExtInterface _distance_getter
+
+cdef class NeighboursGetterExtLookup(NeighboursGetterExtInterface): pass
+
+
+cdef class DistanceGetterExtMetric(DistanceGetterExtInterface):
+    cdef public MetricExtInterface _metric
+
+cdef class DistanceGetterExtLookup(DistanceGetterExtInterface): pass
+
+
 cdef class MetricExtDummy(MetricExtInterface): pass
 cdef class MetricExtPrecomputed(MetricExtInterface): pass
 cdef class MetricExtEuclidean(MetricExtInterface): pass

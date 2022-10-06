@@ -25,6 +25,8 @@ cdef class ClusterParameters:
     _fparam_names = []
     _iparam_names = []
 
+    _defaults = {}
+
     def __cinit__(self, fparams: list, iparams: list, *, **kwargs):
         self.fparams = _allocate_and_fill_avalue_array(len(fparams), fparams)
         self.iparams = _allocate_and_fill_aindex_array(len(iparams), iparams)
@@ -44,8 +46,19 @@ cdef class ClusterParameters:
 
     @classmethod
     def from_mapping(cls, parameters: dict, *, **kwargs):
-        fparams = [parameters[pn] for pn in cls._fparam_names]
-        iparams = [parameters[pn] for pn in cls._iparam_names]
+        fparams = []
+        iparams = []
+
+        for pn in cls._fparam_names:
+            p = parameters.get(pn, cls._defaults.get(pn))
+            if p is None: raise KeyError(f"{pn}")
+            fparams.append(p)
+
+        for pn in cls._iparam_names:
+            p = parameters.get(pn, cls._defaults.get(pn))
+            if p is None: raise KeyError(f"{pn}")
+            iparams.append(p)
+
         return cls(fparams, iparams, **kwargs)
 
     def to_dict(self):
@@ -79,6 +92,10 @@ cdef class CommonNNParameters(ClusterParameters):
     _fparam_names = ["radius_cutoff"]
     _iparam_names = ["similarity_cutoff", "_support_cutoff", "start_label"]
 
+    _defaults = {
+        "_support_cutoff": 0,
+        "start_label": 1
+    }
 
 cdef class Labels:
     """Represents cluster label assignments"""
@@ -1825,6 +1842,463 @@ Neighbours.register(NeighboursExtVector)
 Neighbours.register(NeighboursExtSet)
 Neighbours.register(NeighboursExtUnorderedSet)
 Neighbours.register(NeighboursExtVectorUnorderedSet)
+
+
+class NeighboursGetterBruteForce(NeighboursGetter):
+    """Implements the neighbours getter interface"""
+
+    def __init__(
+            self,
+            distance_getter: Type["DistanceGetter"]):
+        self._is_sorted = False
+        self._is_selfcounting = True
+        self._distance_getter = distance_getter
+
+    def __str__(self):
+        attr_str = ", ".join([
+            f"dgetter={self._distance_getter}",
+            f"sorted={self._is_sorted}",
+            f"selfcounting={self._is_selfcounting}",
+        ])
+
+        return f"{type(self).__name__}({attr_str})"
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return [("distance_getter", None)]
+
+    @property
+    def is_sorted(self) -> bool:
+        return self._is_sorted
+
+    @property
+    def is_selfcounting(self) -> bool:
+        return self._is_selfcounting
+
+    def get(
+            self,
+            index: int,
+            input_data: Type['InputData'],
+            neighbours: Type['Neighbours'],
+            cluster_params: Type['ClusterParameters']):
+
+        cdef AINDEX i
+        cdef AVALUE distance
+
+        neighbours.reset()
+
+        for i in range(input_data._n_points):
+            distance = self._distance_getter.get_single(
+                index, i, input_data
+                )
+
+            if distance <= cluster_params.get_fparam(0):
+                neighbours.assign(i)
+
+    def get_other(
+            self,
+            index: int,
+            input_data: Type['InputData'],
+            other_input_data: Type['InputData'],
+            neighbours: Type['Neighbours'],
+            cluster_params: Type['ClusterParameters']):
+
+        cdef AINDEX i
+        cdef AVALUE distance
+
+        neighbours.reset()
+
+        for i in range(input_data._n_points):
+            distance = self._distance_getter.get_single_other(
+                index, i, input_data, other_input_data
+                )
+
+            if distance <= cluster_params.get_fparam(0):
+                neighbours.assign(i)
+
+
+cdef class NeighboursGetterExtBruteForce(NeighboursGetterExtInterface):
+    """Implements the neighbours getter interface
+    This getter retrieves the neighbours of a point by comparing the
+    distances (from a distance getter) between the point and all
+    other points to the radius cutoff (:math:`r_{ij} \leq r`).
+    The resulting neighbour containers are in general not sorted and
+    include points as their own neighbour (self counting).
+    Args:
+        distance_getter: An object implementing the distance getter
+            interface. Has to be a Cython extension type.
+    """
+
+    def __cinit__(
+            self,
+            DistanceGetterExtInterface distance_getter):
+        self.is_sorted = False
+        self.is_selfcounting = True
+        self._distance_getter = distance_getter
+
+    def __init__(self, distance_getter: Type["DistanceGetterExtInterface"]):
+        pass
+
+    def __str__(self):
+        attr_str = ", ".join([
+            f"dgetter={self._distance_getter}",
+            f"sorted={self.is_sorted}",
+            f"selfcounting={self.is_selfcounting}",
+        ])
+
+        return f"{type(self).__name__}({attr_str})"
+
+    cdef void _get(
+            self,
+            const AINDEX index,
+            InputDataExtInterface input_data,
+            NeighboursExtInterface neighbours,
+            ClusterParameters cluster_params) nogil:
+
+        cdef AINDEX i
+        cdef AVALUE distance
+
+        neighbours._reset()
+
+        for i in range(input_data._n_points):
+            distance = self._distance_getter._get_single(
+                index, i, input_data
+                )
+
+            if distance <= cluster_params.fparams[0]:
+                neighbours._assign(i)
+
+    cdef void _get_other(
+            self,
+            const AINDEX index,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data,
+            NeighboursExtInterface neighbours,
+            ClusterParameters cluster_params) nogil:
+
+        cdef AINDEX i
+        cdef AVALUE distance
+
+        neighbours._reset()
+
+        for i in range(input_data._n_points):
+            distance = self._distance_getter._get_single_other(
+                index, i, input_data, other_input_data
+                )
+
+            if distance <= cluster_params.fparams[0]:
+                neighbours._assign(i)
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return [("distance_getter", None)]
+
+
+class NeighboursGetterLookup(NeighboursGetter):
+    """Implements the neighbours getter interface"""
+
+    def __init__(self, is_sorted=False, is_selfcounting=False):
+        self._is_sorted = is_sorted
+        self._is_selfcounting = is_selfcounting
+
+    def __str__(self):
+        attr_str = ", ".join([
+            f"sorted={self._is_sorted}",
+            f"selfcounting={self._is_selfcounting}",
+        ])
+
+        return f"{type(self).__name__}({attr_str})"
+
+    @property
+    def is_sorted(self) -> bool:
+        return self._is_sorted
+
+    @property
+    def is_selfcounting(self) -> bool:
+        return self._is_selfcounting
+
+    def get(
+            self,
+            index: int,
+            input_data: Type['InputData'],
+            neighbours: Type['Neighbours'],
+            cluster_params: Type['ClusterParameters']) -> None:
+
+        cdef AINDEX i
+
+        neighbours.reset()
+
+        for i in range(input_data.get_n_neighbours(index)):
+            neighbours.assign(input_data.get_neighbour(index, i))
+
+    def get_other(
+            self,
+            index: int,
+            input_data: Type['InputData'],
+            other_input_data: Type['InputData'],
+            neighbours: Type['Neighbours'],
+            cluster_params: Type['ClusterParameters']):
+
+        cdef AINDEX i
+
+        neighbours.reset()
+
+        for i in range(other_input_data.get_n_neighbours(index)):
+            neighbours.assign(other_input_data.get_neighbour(index, i))
+
+
+cdef class NeighboursGetterExtLookup(NeighboursGetterExtInterface):
+    """Implements the neighbours getter interface"""
+
+    def __cinit__(self, is_sorted=False, is_selfcounting=True):
+        self.is_sorted = is_sorted
+        self.is_selfcounting = is_selfcounting
+
+    def __str__(self):
+        attr_str = ", ".join([
+            f"sorted={self.is_sorted}",
+            f"selfcounting={self.is_selfcounting}",
+        ])
+
+        return f"{type(self).__name__}({attr_str})"
+
+    cdef void _get(
+            self,
+            const AINDEX index,
+            InputDataExtInterface input_data,
+            NeighboursExtInterface neighbours,
+            ClusterParameters cluster_params) nogil:
+
+        cdef AINDEX i
+        neighbours._reset()
+
+        for i in range(input_data._get_n_neighbours(index)):
+            neighbours._assign(input_data._get_neighbour(index, i))
+
+    cdef void _get_other(
+            self,
+            const AINDEX index,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data,
+            NeighboursExtInterface neighbours,
+            ClusterParameters cluster_params) nogil:
+
+        cdef AINDEX i
+
+        neighbours._reset()
+
+        for i in range(other_input_data._get_n_neighbours(index)):
+            neighbours._assign(other_input_data._get_neighbour(index, i))
+
+
+class NeighboursGetterRecomputeLookup(NeighboursGetter):
+    """Implements the neighbours getter interface"""
+
+    def __init__(self, is_sorted=False, is_selfcounting=True):
+        self._is_sorted = is_sorted
+        self._is_selfcounting = is_selfcounting
+
+    def __str__(self):
+        attr_str = ", ".join([
+            f"sorted={self._is_sorted}",
+            f"selfcounting={self._is_selfcounting}",
+        ])
+
+        return f"{type(self).__name__}({attr_str})"
+
+    @property
+    def is_sorted(self) -> bool:
+        return self._is_sorted
+
+    @property
+    def is_selfcounting(self) -> bool:
+        return self._is_selfcounting
+
+    def get(
+            self,
+            index: int,
+            input_data: Type['InputData'],
+            neighbours: Type['Neighbours'],
+            cluster_params: Type['ClusterParameters']) -> None:
+
+        cdef AINDEX i
+
+        if input_data._radius != cluster_params.get_fparam(0):
+            input_data.compute_neighbourhoods(
+                input_data,
+                cluster_params.get_fparam(0),
+                self._is_sorted,
+                self._is_selfcounting
+                )
+
+        neighbours.reset()
+
+        for i in range(input_data.get_n_neighbours(index)):
+            neighbours.assign(input_data.get_neighbour(index, i))
+
+    def get_other(
+            self,
+            index: int,
+            input_data: Type['InputData'],
+            other_input_data: Type['InputData'],
+            neighbours: Type['Neighbours'],
+            cluster_params: Type['ClusterParameters']):
+
+        cdef AINDEX i
+
+        if other_input_data._radius != cluster_params.get_fparam(0):
+            other_input_data.compute_neighbourhoods(
+                input_data,
+                cluster_params.get_fparam(0),
+                self._is_sorted,
+                self._is_selfcounting
+                )
+
+        neighbours.reset()
+
+        for i in range(other_input_data.get_n_neighbours(index)):
+            neighbours.assign(other_input_data.get_neighbour(index, i))
+
+
+NeighboursGetter.register(NeighboursGetterExtBruteForce)
+NeighboursGetter.register(NeighboursGetterExtLookup)
+
+
+class DistanceGetterMetric(DistanceGetter):
+    """Implements the distance getter interface"""
+
+    def __init__(self, metric: Type["Metric"]):
+        self._metric = metric
+
+    def __str__(self):
+        attr_str = ", ".join([
+            f"metric={self._metric}",
+        ])
+
+        return f"{type(self).__name__}({attr_str})"
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return [("metric", None)]
+
+    def  get_single(
+            self,
+            point_a: int,
+            point_b: int,
+            input_data: Type["InputData"]):
+
+        return self._metric.calc_distance(point_a, point_b, input_data)
+
+    def get_single_other(
+            self,
+            point_a: int,
+            point_b: int,
+            input_data: Type["InputData"],
+            other_input_data: Type["InputData"]):
+
+        return self._metric._calc_distance_other(
+            point_a, point_b, input_data, other_input_data
+            )
+
+
+class DistanceGetterLookup(DistanceGetter):
+    """Implements the distance getter interface"""
+
+    def get_single(
+            self,
+            const AINDEX point_a,
+            const AINDEX point_b,
+            InputDataExtInterface input_data):
+
+        return input_data.get_distance(point_a, point_b)
+
+    def get_single_other(
+            self,
+            const AINDEX point_a,
+            const AINDEX point_b,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data):
+
+        return other_input_data.get_distance(point_a, point_b)
+
+
+cdef class DistanceGetterExtMetric(DistanceGetterExtInterface):
+    """Implements the distance getter interface"""
+
+    def __cinit__(self, MetricExtInterface metric):
+        self._metric = metric
+
+    def __str__(self):
+        attr_str = ", ".join([
+            f"metric={self._metric}",
+        ])
+
+        return f"{type(self).__name__}({attr_str})"
+
+    cdef AVALUE _get_single(
+            self,
+            const AINDEX point_a,
+            const AINDEX point_b,
+            InputDataExtInterface input_data) nogil:
+
+        return self._metric._calc_distance(point_a, point_b, input_data)
+
+    def get_single(
+            self,
+            AINDEX point_a,
+            AINDEX point_b,
+            InputDataExtInterface input_data):
+
+        return self._get_single(point_a, point_b, input_data)
+
+    cdef AVALUE _get_single_other(
+            self,
+            const AINDEX point_a,
+            const AINDEX point_b,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data) nogil:
+
+        return self._metric._calc_distance_other(
+            point_a, point_b, input_data, other_input_data
+            )
+
+    def get_single_other(
+            self,
+            AINDEX point_a,
+            AINDEX point_b,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data):
+
+        return self._get_single_other(point_a, point_b, input_data, other_input_data)
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return [("metric", None)]
+
+cdef class DistanceGetterExtLookup(DistanceGetterExtInterface):
+    """Implements the distance getter interface"""
+
+    cdef AVALUE _get_single(
+            self,
+            const AINDEX point_a,
+            const AINDEX point_b,
+            InputDataExtInterface input_data) nogil:
+
+        return input_data._get_distance(point_a, point_b)
+
+    cdef AVALUE _get_single_other(
+            self,
+            const AINDEX point_a,
+            const AINDEX point_b,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data) nogil:
+
+        return other_input_data._get_distance(point_a, point_b)
+
+
+DistanceGetter.register(DistanceGetterExtMetric)
+DistanceGetter.register(DistanceGetterExtLookup)
+
 
 class MetricDummy(Metric):
     """Implements the metric interface"""

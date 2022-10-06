@@ -58,7 +58,6 @@ def test_check(
 
     cluster_params = _types.CommonNNParameters.from_mapping({
         "radius_cutoff": 0.0, "similarity_cutoff": c,
-        "_support_cutoff": 0, "start_label": 1
     })
 
     checker = checker_type()
