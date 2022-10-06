@@ -201,7 +201,6 @@ cdef class Labels:
         labels = np.zeros(n, order="C", dtype=P_AINDEX)
         return cls(labels, meta=meta)
 
-
     def to_mapping(self):
         """Convert labels container to `mapping` of labels to lists of point indices"""
 
@@ -476,7 +475,6 @@ cdef class InputDataExtInterface:
 class Neighbours(ABC):
     """Defines the neighbours interface"""
 
-    @property
     @abstractmethod
     def to_neighbours_array(self):
        """Return point indices as NumPy array"""
@@ -506,7 +504,7 @@ class Neighbours(ABC):
     def contains(self, member: int) -> bool:
        """Return True if member is in neighbours container"""
 
-    def __str__(self):
+    def __repr__(self):
         return f"{type(self).__name__}"
 
     @classmethod
@@ -545,7 +543,7 @@ class NeighboursGetter(ABC):
             cluster_params: Type['ClusterParameters']) -> None:
         """Collect neighbours in input data for point in other input data"""
 
-    def __str__(self):
+    def __repr__(self):
         return f"{type(self).__name__}"
 
     @classmethod
@@ -622,7 +620,7 @@ cdef class NeighboursGetterExtInterface:
             neighbours, cluster_params
             )
 
-    def __str__(self):
+    def __repr__(self):
         return f"{type(self).__name__}"
 
     @classmethod
@@ -648,7 +646,7 @@ class DistanceGetter(ABC):
             other_input_data: Type['InputData']) -> float:
         """Get distance between two points in input data and other input data"""
 
-    def __str__(self):
+    def __repr__(self):
         return f"{type(self).__name__}"
 
     @classmethod
@@ -687,7 +685,7 @@ cdef class DistanceGetterExtInterface:
 
         return self._get_single_other(point_a, point_b, input_data, other_input_data)
 
-    def __str__(self):
+    def __repr__(self):
         return f"{type(self).__name__}"
 
     @classmethod
@@ -713,7 +711,7 @@ class Metric(ABC):
             other_input_data: Type['InputData']) -> float:
         """Return distance between two points in input data and other input data"""
 
-    def __str__(self):
+    def __repr__(self):
         return f"{type(self).__name__}"
 
 
@@ -780,7 +778,7 @@ class SimilarityChecker(ABC):
             cluster_params: Type['ClusterParameters']) -> int:
         """Return number of common neighbours"""
 
-    def __str__(self):
+    def __repr__(self):
         return f"{type(self).__name__}"
 
     @classmethod
@@ -819,7 +817,7 @@ cdef class SimilarityCheckerExtInterface:
 
         return self._get(neighbours_a, neighbours_b, cluster_params)
 
-    def __str__(self):
+    def __repr__(self):
         return f"{type(self).__name__}"
 
     @classmethod
@@ -846,7 +844,7 @@ class Queue(ABC):
     def size(self) -> int:
         """Get number of items in the queue"""
 
-    def __str__(self):
+    def __repr__(self):
         return f"{type(self).__name__}"
 
     @classmethod
@@ -872,7 +870,7 @@ cdef class QueueExtInterface:
     def size(self) -> int:
         return self._size()
 
-    def __str__(self):
+    def __repr__(self):
         return f"{type(self).__name__}"
 
     @classmethod
@@ -903,7 +901,7 @@ class PriorityQueue(ABC):
     def is_empty(self) -> bool:
         """Return True if there are no values in the queue"""
 
-    def __str__(self):
+    def __repr__(self):
         return f"{type(self).__name__}"
 
     @classmethod
@@ -934,7 +932,7 @@ cdef class PriorityQueueExtInterface:
     def reset(self) -> None:
         return self._reset()
 
-    def __str__(self):
+    def __repr__(self):
         return f"{type(self).__name__}"
 
     @classmethod
@@ -1525,7 +1523,6 @@ class NeighboursList(Neighbours):
     def neighbours(self):
         return self._neighbours
 
-    @property
     def to_neighbours_array(self):
         return np.asarray(self._neighbours)
 
@@ -1571,7 +1568,6 @@ class NeighboursSet(Neighbours):
     def neighbours(self):
         return self._neighbours
 
-    @property
     def to_neighbours_array(self):
         return np.asarray(list(self._neighbours))
 
@@ -1610,11 +1606,12 @@ class NeighboursSet(Neighbours):
 
 cdef class NeighboursExtVector(NeighboursExtInterface):
     """Implements the neighbours interface
+
     Uses an underlying C++ std:vector.
-    Args:
-        initial_size: Number of elements reserved for the size of vector.
+
     Keyword args:
         neighbours: A sequence of labels suitable to be cast to a vector.
+        initial_size: Number of elements reserved for the size of vector.
     """
 
     def __cinit__(self, neighbours=None, *, AINDEX initial_size=1):
@@ -1650,7 +1647,6 @@ cdef class NeighboursExtVector(NeighboursExtInterface):
             return False
         return True
 
-    @property
     def to_neighbours_array(self):
         cdef AINDEX i
         cdef AINDEX[::1] a = np.empty(self._n_points, dtype=P_AINDEX)
@@ -1667,7 +1663,9 @@ cdef class NeighboursExtVector(NeighboursExtInterface):
 
 cdef class NeighboursExtSet(NeighboursExtInterface):
     """Implements the neighbours interface
+
     Uses an underlying C++ std:set.
+
     Keyword args:
         neighbours: A sequence of labels suitable to be cast to a C++ set.
     """
@@ -1707,7 +1705,6 @@ cdef class NeighboursExtSet(NeighboursExtInterface):
             return False
         return True
 
-    @property
     def to_neighbours_array(self):
         cdef stdset[AINDEX].iterator it = self._neighbours.begin()
         cdef AINDEX[::1] a = np.empty(self._n_points, dtype=P_AINDEX)
@@ -1727,7 +1724,9 @@ cdef class NeighboursExtSet(NeighboursExtInterface):
 
 cdef class NeighboursExtUnorderedSet(NeighboursExtInterface):
     """Implements the neighbours interface
+
     Uses an underlying C++ std:unordered_set.
+
     Keyword args:
         neighbours: A sequence of labels suitable to be cast to a C++ set.
     """
@@ -1767,7 +1766,6 @@ cdef class NeighboursExtUnorderedSet(NeighboursExtInterface):
             return False
         return True
 
-    @property
     def to_neighbours_array(self):
         cdef stduset[AINDEX].iterator it = self._neighbours.begin()
         cdef AINDEX[::1] a = np.empty(self._n_points, dtype=P_AINDEX)
@@ -1787,7 +1785,9 @@ cdef class NeighboursExtUnorderedSet(NeighboursExtInterface):
 
 cdef class NeighboursExtVectorUnorderedSet(NeighboursExtInterface):
     """Implements the neighbours interface
+
     Uses a compination of an underlying C++ std:vector and a std:unordered_set.
+
     Keyword args:
         neighbours: A sequence of labels suitable to be cast to a C++ vector.
     """
@@ -1796,7 +1796,6 @@ cdef class NeighboursExtVectorUnorderedSet(NeighboursExtInterface):
         cdef AINDEX member
 
         self._initial_size = initial_size
-
 
         if neighbours is not None:
             self._neighbours = neighbours
@@ -1832,7 +1831,6 @@ cdef class NeighboursExtVectorUnorderedSet(NeighboursExtInterface):
             return False
         return True
 
-    @property
     def to_neighbours_array(self):
         cdef AINDEX i
         cdef AINDEX[::1] a = np.empty(self._n_points, dtype=P_AINDEX)
@@ -1864,13 +1862,13 @@ class NeighboursGetterBruteForce(NeighboursGetter):
         self._distance_getter = distance_getter
 
     def __str__(self):
-        attr_str = ", ".join([
-            f"dgetter={self._distance_getter}",
-            f"sorted={self._is_sorted}",
-            f"selfcounting={self._is_selfcounting}",
+        attr_str = ",".join([
+            f"    dgetter={self._distance_getter}",
+            f"\n    sorted={self._is_sorted}",
+            f"\n    selfcounting={self._is_selfcounting}",
         ])
 
-        return f"{type(self).__name__}({attr_str})"
+        return f"{type(self).__name__}(\n{attr_str}\n)"
 
     @classmethod
     def get_builder_kwargs(cls):
@@ -1949,13 +1947,13 @@ cdef class NeighboursGetterExtBruteForce(NeighboursGetterExtInterface):
         pass
 
     def __str__(self):
-        attr_str = ", ".join([
-            f"dgetter={self._distance_getter}",
-            f"sorted={self.is_sorted}",
-            f"selfcounting={self.is_selfcounting}",
+        attr_str = ",".join([
+            f"    dgetter={self._distance_getter}",
+            f"\n    sorted={self.is_sorted}",
+            f"\n    selfcounting={self.is_selfcounting}",
         ])
 
-        return f"{type(self).__name__}({attr_str})"
+        return f"{type(self).__name__}(\n{attr_str}\n)"
 
     cdef void _get(
             self,
@@ -2205,7 +2203,7 @@ class DistanceGetterMetric(DistanceGetter):
             input_data: Type["InputData"],
             other_input_data: Type["InputData"]):
 
-        return self._metric._calc_distance_other(
+        return self._metric.calc_distance_other(
             point_a, point_b, input_data, other_input_data
             )
 
@@ -2283,6 +2281,7 @@ cdef class DistanceGetterExtMetric(DistanceGetterExtInterface):
     @classmethod
     def get_builder_kwargs(cls):
         return [("metric", None)]
+
 
 cdef class DistanceGetterExtLookup(DistanceGetterExtInterface):
     """Implements the distance getter interface"""

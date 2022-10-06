@@ -1,0 +1,2 @@
+DistanceGetterExtMetric
+DistanceGetterExtMetric(metric=MetricExtDummy)

@@ -58,3 +58,9 @@ def test_use_prio_queue(queue_type, values, expected):
         assert (ea, eb, ew) == (a, b, w)
 
     assert queue.is_empty()
+
+    for a, b, w in values:
+        queue.push(a, b, w)
+
+    queue.reset()
+    assert queue.is_empty()

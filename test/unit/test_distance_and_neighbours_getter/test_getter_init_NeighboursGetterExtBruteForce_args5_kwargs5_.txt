@@ -1,0 +1,6 @@
+NeighboursGetterExtBruteForce
+NeighboursGetterExtBruteForce(
+    dgetter=DistanceGetterExtLookup,
+    sorted=False,
+    selfcounting=True
+)
