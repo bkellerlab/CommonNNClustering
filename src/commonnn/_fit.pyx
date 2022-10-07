@@ -497,15 +497,15 @@ class FitterCommonNNBFSDebug(FitterCommonNN):
             during the clustering procedure.
     """
 
-    def __cinit__(
+    def __init__(
             self,
-            NeighboursGetterExtInterface neighbours_getter,
-            NeighboursExtInterface neighbours,
-            NeighboursExtInterface neighbour_neighbours,
-            SimilarityCheckerExtInterface similarity_checker,
-            QueueExtInterface queue,
-            bint verbose=True,
-            bint yielding=True):
+            neighbours_getter,
+            neighbours,
+            neighbour_neighbours,
+            similarity_checker,
+            queue,
+            verbose=True,
+            yielding=True):
 
         self._neighbours_getter = neighbours_getter
         self._neighbours = neighbours

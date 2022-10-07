@@ -1,3 +1,4 @@
+import enum
 from selectors import EpollSelector
 import numpy as np
 import pytest
@@ -223,3 +224,31 @@ def test_isolate(
     report = report.rstrip("\n")
 
     file_regression.check(report)
+
+
+def test_bfs():
+    root = _bundle.Bundle(
+        children={
+            1: _bundle.Bundle(alias="1"),
+            2: _bundle.Bundle(alias="2"),
+            3: _bundle.Bundle(
+                alias="3",
+                children={
+                    1: _bundle.Bundle(alias="3.1"),
+                    2: _bundle.Bundle(alias="3.2"),
+                }
+            ),
+        }
+    )
+
+    expected = ["root", "1", "2", "3", "3.1", "3.2"]
+    got = _bundle.bfs(root)
+
+    for i, leaf in enumerate(got):
+        assert leaf.alias == expected[i]
+
+    expected = ["1", "2", "3.1", "3.2"]
+    got = _bundle.bfs_leafs(root)
+
+    for i, leaf in enumerate(got):
+        assert leaf.alias == expected[i]

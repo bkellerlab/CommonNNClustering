@@ -3,7 +3,7 @@ from collections.abc import Iterable
 import numpy as np
 
 from commonnn._primitive_types import P_AINDEX, P_AVALUE
-# from commonnn import _types, _fit
+from commonnn import _types, _fit
 
 
 def prepare_pass(data):
@@ -159,267 +159,270 @@ def prepare_padded_neighbourhoods_array(data):
     return data_args, data_kwargs
 
 
-# class Builder:
-# 
-#     default_recipe = "coordinates"
-#     default_preparation_hook = staticmethod(prepare_pass)
-# 
-#     def __init__(self, recipe=None, **kwargs):
-# 
-#         if recipe is None:
-#             recipe = self.default_recipe
-# 
-#         if isinstance(recipe, str):
-#             recipe = get_registered_recipe(recipe)
-# 
-#         self.recipe = recipe
-#         self.recipe.update(kwargs)
-# 
-#         self.recipe = {
-#             k.replace("__", "."): v
-#             for k, v in self.recipe.items()
-#         }
-# 
-#         self.recipe = {
-#             ".".join(
-#                 COMPONENT_ALT_KW_MAP.get(kw, kw)
-#                 for kw in k.split(".")
-#                 ): v
-#             for k, v in self.recipe.items()
-#         }
-# 
-#     def make_component(
-#             self, component_kw, alternative=None, prev_kw=None):
-#         if prev_kw is None:
-#             prev_kw = []
-# 
-#         full_kw = ".".join([*prev_kw, component_kw])
-# 
-#         if alternative is not None:
-#             alternative = full_kw.rsplit(".", 1)[0] + f".{alternative}"
-# 
-#         if full_kw in self.recipe:
-#             component_details = self.recipe[full_kw]
-#         elif (alternative is not None) & (alternative in self.recipe):
-#             component_details = self.recipe[alternative]
-#         else:
-#             return object
-# 
-#         args = ()
-#         kwargs = {}
-# 
-#         _component_kw = COMPONENT_KW_TYPE_ALIAS_MAP.get(
-#             component_kw, component_kw
-#             )
-# 
-#         if component_details is None:
-#             return None
-# 
-#         if isinstance(component_details, str):
-#             component_type = COMPONENT_NAME_TYPE_MAP[_component_kw][
-#                 component_details
-#                 ]
-# 
-#         elif isinstance(component_details, tuple):
-#             component_type, args, kwargs = component_details
-#             if isinstance(component_type, str):
-#                 component_type = COMPONENT_NAME_TYPE_MAP[_component_kw][
-#                     component_type
-#                     ]
-# 
-#         else:
-#             component_type = component_details
-# 
-#         if hasattr(component_type, "get_builder_kwargs"):
-#             for component_kw, alternative in (
-#                     component_type.get_builder_kwargs()):
-#                 component = self.make_component(
-#                     component_kw, alternative, prev_kw=full_kw.split(".")
-#                 )
-#                 if component is not object:
-#                     kwargs[component_kw] = component
-# 
-#         return component_type(*args, **kwargs)
-# 
-#     def make_input_data(self, data, preparation_hook=None, details=None):
-# 
-#         if preparation_hook is None:
-#             preparation_hook = self.recipe.get(
-#                 "preparation_hook", self.default_preparation_hook
-#                 )
-#             if isinstance(preparation_hook, str):
-#                 preparation_hook = COMPONENT_NAME_TYPE_MAP["preparation_hook"][
-#                     preparation_hook
-#                     ]
-# 
-#         if details is None:
-#             try:
-#                 details = self.recipe["input_data"]
-#             except KeyError:
-#                 raise LookupError("Input data type details not found")
-# 
-#         args = ()
-#         kwargs = {}
-# 
-#         if isinstance(details, str):
-#             component_type = COMPONENT_NAME_TYPE_MAP["input_data"][details]
-# 
-#         elif isinstance(details, tuple):
-#             component_type, args, kwargs = details
-#             if isinstance(component_type, str):
-#                 component_type = COMPONENT_NAME_TYPE_MAP["input_data"][component_type]
-# 
-#         else:
-#             component_type = details
-# 
-#         data_args, data_kwargs = preparation_hook(data)
-#         args = (*data_args, *args)
-# 
-#         if "meta" not in data_kwargs:
-#             data_kwargs["meta"] = {}
-#         data_kwargs["meta"].update(kwargs.get("meta", {}))
-# 
-#         kwargs.update(data_kwargs)
-# 
-#         if hasattr(component_type, "get_builder_kwargs"):
-#             for component_kw, alternative in (
-#                     component_type.get_builder_kwargs()):
-#                 component = self.make_component(
-#                     component_kw, alternative, prev_kw=["input_data"]
-#                     )
-#                 if component is not object:
-#                     kwargs[component_kw] = component
-# 
-#         return component_type(*args, **kwargs)
-# 
-# 
-# REGISTERED_RECIPES = {
-#     "none": {},
-#     "coordinates": {
-#         "input_data": "components_mview",
-#         "preparation_hook": "points_from_parts",
-#         "fitter": "bfs",
-#         "fitter.ngetter": "brute_force",
-#         "fitter.na": "vuset",
-#         "fitter.checker": "switch",
-#         "fitter.queue": "fifo",
-#         "fitter.ngetter.dgetter": "metric",
-#         "fitter.ngetter.dgetter.metric": "euclidean_r",
-#         },
-#     "distances": {
-#         "input_data": "components_mview",
-#         "preparation_hook": "points_from_parts",
-#         "fitter": "bfs",
-#         "fitter.ngetter": "brute_force",
-#         "fitter.na": "vuset",
-#         "fitter.checker": "switch",
-#         "fitter.queue": "fifo",
-#         "fitter.ngetter.dgetter": "metric",
-#         "fitter.ngetter.dgetter.metric": "precomputed",
-#     },
-#     "neighbourhoods": {
-#         "input_data": "neighbourhoods_mview",
-#         "preparation_hook": "neighbourhoods",
-#         "fitter": "bfs",
-#         "fitter.ngetter": "lookup",
-#         "fitter.na": "vuset",
-#         "fitter.checker": "switch",
-#         "fitter.queue": "fifo",
-#     },
-#     "sorted_neighbourhoods": {
-#         "input_data": "neighbourhoods_mview",
-#         "preparation_hook": "neighbourhoods",
-#         "fitter": "bfs",
-#         "fitter.ngetter": ("lookup", (), {"is_sorted": True}),
-#         "fitter.na": "vector",
-#         "fitter.checker": "screen",
-#         "fitter.queue": "fifo",
-#     }
-# }
-# 
-# 
-# def get_registered_recipe(key):
-#     return REGISTERED_RECIPES[key.lower()]
-# 
-# 
-# # Provides alternative (short) identifiers for types
-# COMPONENT_ALT_KW_MAP = {
-#     "prep": "preparation_hook",
-#     "input": "input_data",
-#     "data": "input_data",
-#     "n": "neighbours",
-#     "na": "neighbours",
-#     "nb": "neighbour_neighbours",
-#     "getter": "neighbours_getter",
-#     "ogetter": "neighbours_getter_other",
-#     "ngetter": "neighbours_getter",
-#     "ongetter": "neighbours_getter_other",
-#     "dgetter": "distance_getter",
-#     "checker": "similarity_checker",
-#     "q": "queue",
-#     "pq": "priority_queue",
-#     "prioq": "priority_queue",
-#     "pqt": "priority_queue_tree",
-#     "prioq_tree": "priority_queue_tree",
-#     "hfitter": "hierarchical_fitter"
-# }
-# 
-# # Provides alternative equivalent types
-# COMPONENT_KW_TYPE_ALIAS_MAP = {
-#     "neighbour_neighbours": "neighbours",
-#     "neighbour_getter_other": "neighbours_getter",
-#     "priority_queue_tree": "priority_queue"
-# }
-# 
-# # Provides name identifiers for types
-# COMPONENT_NAME_TYPE_MAP = {
-#     "preparation_hook": {
-#         "points_from_parts": prepare_points_from_parts,
-#         "neighbourhoods": prepare_neighbourhoods,
-#     },
-#     "input_data": {
-#         "components_mview": _types.InputDataExtComponentsMemoryview,
-#         "neighbourhoods_mview": _types.InputDataExtNeighbourhoodsMemoryview
-#     },
-#     "neighbours_getter": {
-#         "brute_force": _types.NeighboursGetterExtBruteForce,
-#         "lookup": _types.NeighboursGetterExtLookup,
-#     },
-#     "distance_getter": {
-#         "metric": _types.DistanceGetterExtMetric,
-#         "lookup": _types.DistanceGetterExtLookup,
-#     },
-#     "neighbours": {
-#         "vector": _types.NeighboursExtVector,
-#         "uset": _types.NeighboursExtCPPUnorderedSet,
-#         "vuset": _types.NeighboursExtVectorCPPUnorderedSet,
-#     },
-#     "metric": {
-#         "dummy": _types.MetricExtDummy,
-#         "precomputed": _types.MetricExtPrecomputed,
-#         "euclidean": _types.MetricExtEuclidean,
-#         "euclidean_r": _types.MetricExtEuclideanReduced,
-#         "euclidean_periodic_r": _types.MetricExtEuclideanPeriodicReduced,
-#         "euclidean_reduced": _types.MetricExtEuclideanReduced,
-#         "euclidean_periodic_reduced": _types.MetricExtEuclideanPeriodicReduced,
-#     },
-#     "similarity_checker": {
-#         "contains": _types.SimilarityCheckerExtContains,
-#         "switch": _types.SimilarityCheckerExtSwitchContains,
-#         "screen": _types.SimilarityCheckerExtScreensorted,
-#     },
-#     "queue": {
-#         "fifo": _types.QueueExtFIFOQueue
-#     },
-#     "priority_queue": {
-#         "maxheap": _types.PriorityQueueMaxHeap
-#     },
-#     "fitter": {
-#         "bfs": _fit.FitterExtBFS,
-#         "bfs_debug": _fit.FitterExtBFSDebug
-#     },
-#     "hierarchical_fitter": {
-#         "repeat": _fit.HierarchicalFitterRepeat,
-#         "mst": _fit.HierarchicalFitterMSTPrim,
-#     }
-# }
+class Builder:
+
+    default_recipe = "coordinates"
+    default_preparation_hook = staticmethod(prepare_pass)
+
+    def __init__(self, recipe=None, **kwargs):
+
+        if recipe is None:
+            recipe = self.default_recipe
+
+        if isinstance(recipe, str):
+            recipe = get_registered_recipe(recipe)
+
+        self.recipe = recipe
+        self.recipe.update(kwargs)
+
+        self.recipe = {
+            k.replace("__", "."): v
+            for k, v in self.recipe.items()
+        }
+
+        self.recipe = {
+            ".".join(
+                COMPONENT_ALT_KW_MAP.get(kw, kw)
+                for kw in k.split(".")
+            ): v
+            for k, v in self.recipe.items()
+        }
+
+    def make_component(
+            self, component_kw, alternative=None, prev_kw=None):
+        if prev_kw is None:
+            prev_kw = []
+
+        full_kw = ".".join([*prev_kw, component_kw])
+
+        if alternative is not None:
+            alternative = full_kw.rsplit(".", 1)[0] + f".{alternative}"
+
+        if full_kw in self.recipe:
+            component_details = self.recipe[full_kw]
+        elif (alternative is not None) & (alternative in self.recipe):
+            component_details = self.recipe[alternative]
+        else:
+            return object
+
+        args = ()
+        kwargs = {}
+
+        _component_kw = COMPONENT_KW_TYPE_ALIAS_MAP.get(
+            component_kw, component_kw
+        )
+
+        if component_details is None:
+            return None
+
+        if isinstance(component_details, str):
+            component_type = COMPONENT_NAME_TYPE_MAP[_component_kw][
+                component_details
+            ]
+
+        elif isinstance(component_details, tuple):
+            component_type, args, kwargs = component_details
+            if isinstance(component_type, str):
+                component_type = COMPONENT_NAME_TYPE_MAP[_component_kw][
+                    component_type
+                ]
+
+        else:
+            component_type = component_details
+
+        if hasattr(component_type, "get_builder_kwargs"):
+            for component_kw, alternative in (
+                    component_type.get_builder_kwargs()):
+                component = self.make_component(
+                    component_kw, alternative, prev_kw=full_kw.split(".")
+                )
+                if component is not object:
+                    kwargs[component_kw] = component
+
+        return component_type(*args, **kwargs)
+
+    def make_input_data(self, data, preparation_hook=None, details=None):
+
+        if preparation_hook is None:
+            preparation_hook = self.recipe.get(
+                "preparation_hook", self.default_preparation_hook
+            )
+
+        if isinstance(preparation_hook, str):
+            preparation_hook = COMPONENT_NAME_TYPE_MAP["preparation_hook"][
+                preparation_hook
+            ]
+
+        if details is None:
+            try:
+                details = self.recipe["input_data"]
+            except KeyError:
+                raise LookupError("Input data type details not found")
+
+        args = ()
+        kwargs = {}
+
+        if isinstance(details, str):
+            component_type = COMPONENT_NAME_TYPE_MAP["input_data"][details]
+
+        elif isinstance(details, tuple):
+            component_type, args, kwargs = details
+            if isinstance(component_type, str):
+                component_type = COMPONENT_NAME_TYPE_MAP["input_data"][component_type]
+
+        else:
+            component_type = details
+
+        data_args, data_kwargs = preparation_hook(data)
+        args = (*data_args, *args)
+
+        if "meta" not in data_kwargs:
+            data_kwargs["meta"] = {}
+        data_kwargs["meta"].update(kwargs.get("meta", {}))
+
+        kwargs.update(data_kwargs)
+
+        if hasattr(component_type, "get_builder_kwargs"):
+            for component_kw, alternative in (
+                    component_type.get_builder_kwargs()):
+                component = self.make_component(
+                    component_kw, alternative, prev_kw=["input_data"]
+                )
+                if component is not object:
+                    kwargs[component_kw] = component
+
+        return component_type(*args, **kwargs)
+
+
+REGISTERED_RECIPES = {
+    "none": {},
+    "coordinates": {
+        "input_data": "components_mview",
+        "preparation_hook": "components_array_from_parts",
+        "fitter": "bfs",
+        "fitter.ngetter": "brute_force",
+        "fitter.na": "vuset",
+        "fitter.checker": "switch",
+        "fitter.queue": "fifo",
+        "fitter.ngetter.dgetter": "metric",
+        "fitter.ngetter.dgetter.metric": "euclidean_r",
+    },
+    "distances": {
+        "input_data": "components_mview",
+        "preparation_hook": "components_array_from_parts",
+        "fitter": "bfs",
+        "fitter.ngetter": "brute_force",
+        "fitter.na": "vuset",
+        "fitter.checker": "switch",
+        "fitter.queue": "fifo",
+        "fitter.ngetter.dgetter": "metric",
+        "fitter.ngetter.dgetter.metric": "precomputed",
+    },
+    "neighbourhoods": {
+        "input_data": "neighbourhoods_mview",
+        "preparation_hook": "padded_neighbourhoods_array",
+        "fitter": "bfs",
+        "fitter.ngetter": "lookup",
+        "fitter.na": "vuset",
+        "fitter.checker": "switch",
+        "fitter.queue": "fifo",
+    },
+    "sorted_neighbourhoods": {
+        "input_data": "neighbourhoods_mview",
+        "preparation_hook": "neighbourhoods",
+        "fitter": "bfs",
+        "fitter.ngetter": ("lookup", (), {"is_sorted": True}),
+        "fitter.na": "vector",
+        "fitter.checker": "screen",
+        "fitter.queue": "fifo",
+    }
+}
+
+
+def get_registered_recipe(key):
+    return REGISTERED_RECIPES[key.lower()]
+
+
+# Provides alternative (short) identifiers for types
+COMPONENT_ALT_KW_MAP = {
+    "prep": "preparation_hook",
+    "input": "input_data",
+    "data": "input_data",
+    "n": "neighbours",
+    "na": "neighbours",
+    "nb": "neighbour_neighbours",
+    "getter": "neighbours_getter",
+    "ogetter": "neighbours_getter_other",
+    "ngetter": "neighbours_getter",
+    "ongetter": "neighbours_getter_other",
+    "dgetter": "distance_getter",
+    "checker": "similarity_checker",
+    "q": "queue",
+    "pq": "priority_queue",
+    "prioq": "priority_queue",
+    "pqt": "priority_queue_tree",
+    "prioq_tree": "priority_queue_tree",
+    "hfitter": "hierarchical_fitter"
+}
+
+# Provides alternative equivalent types
+COMPONENT_KW_TYPE_ALIAS_MAP = {
+    "neighbour_neighbours": "neighbours",
+    "neighbour_getter_other": "neighbours_getter",
+    "priority_queue_tree": "priority_queue"
+}
+
+# Provides name identifiers for types
+COMPONENT_NAME_TYPE_MAP = {
+    "preparation_hook": {
+        "components_array_from_parts": prepare_components_array_from_parts,
+        "padded_neighbourhoods_array": prepare_padded_neighbourhoods_array,
+        "array": prepare_to_array,
+    },
+    "input_data": {
+        "components_mview": _types.InputDataExtComponentsMemoryview,
+        "distances_mview": _types.InputDataExtDistancesMemoryview,
+        "neighbourhoods_mview": _types.InputDataExtNeighbourhoodsMemoryview
+    },
+    "neighbours_getter": {
+        "brute_force": _types.NeighboursGetterExtBruteForce,
+        "lookup": _types.NeighboursGetterExtLookup,
+    },
+    "distance_getter": {
+        "metric": _types.DistanceGetterExtMetric,
+        "lookup": _types.DistanceGetterExtLookup,
+    },
+    "neighbours": {
+        "vector": _types.NeighboursExtVector,
+        "uset": _types.NeighboursExtUnorderedSet,
+        "vuset": _types.NeighboursExtVectorUnorderedSet,
+    },
+    "metric": {
+        "dummy": _types.MetricExtDummy,
+        "precomputed": _types.MetricExtPrecomputed,
+        "euclidean": _types.MetricExtEuclidean,
+        "euclidean_r": _types.MetricExtEuclideanReduced,
+        "euclidean_periodic_r": _types.MetricExtEuclideanPeriodicReduced,
+        "euclidean_reduced": _types.MetricExtEuclideanReduced,
+        "euclidean_periodic_reduced": _types.MetricExtEuclideanPeriodicReduced,
+    },
+    "similarity_checker": {
+        "contains": _types.SimilarityCheckerExtContains,
+        "switch": _types.SimilarityCheckerExtSwitchContains,
+        "screen": _types.SimilarityCheckerExtScreensorted,
+    },
+    "queue": {
+        "fifo": _types.QueueExtFIFOQueue
+    },
+    "priority_queue": {
+        "maxheap": _types.PriorityQueueMaxHeap
+    },
+    "fitter": {
+        "bfs": _fit.FitterExtCommonNNBFS,
+        "bfs_debug": _fit.FitterCommonNNBFSDebug
+    },
+    "hierarchical_fitter": {
+        "repeat": _fit.HierarchicalFitterRepeat,
+        "mst": _fit.HierarchicalFitterCommonNNMSTPrim,
+    }
+}
