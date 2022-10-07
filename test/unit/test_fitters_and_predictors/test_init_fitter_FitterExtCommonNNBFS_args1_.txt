@@ -1,0 +1,3 @@
+FitterExtCommonNNBFS
+FitterExtCommonNNBFS(ngetter=None, na=None, nb=None, checker=None, queue=None)
+fit(radius_cutoff: float, similarity_cutoff: int, _support_cutoff: Optional[int] = <similarity_cutoff>, start_label: Optional[int] = 1)

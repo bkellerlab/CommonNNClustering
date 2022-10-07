@@ -19,6 +19,7 @@ from commonnn._primitive_types import P_AINDEX, P_AVALUE, P_ABOOL
 from libc.math cimport sqrt as csqrt, pow as cpow, fabs as cfabs
 from cython.operator cimport dereference, preincrement
 
+
 cdef class ClusterParameters:
     """Input parameters for clustering procedure"""
 
@@ -52,11 +53,13 @@ cdef class ClusterParameters:
         for pn in cls._fparam_names:
             p = parameters.get(pn, cls._defaults.get(pn))
             if p is None: raise KeyError(f"{pn}")
+            if isinstance(p, str): p = fparams[int(p.strip("<>"))]
             fparams.append(p)
 
         for pn in cls._iparam_names:
             p = parameters.get(pn, cls._defaults.get(pn))
             if p is None: raise KeyError(f"{pn}")
+            if isinstance(p, str): p = iparams[int(p.strip("<>"))]
             iparams.append(p)
 
         return cls(fparams, iparams, **kwargs)
@@ -93,9 +96,42 @@ cdef class CommonNNParameters(ClusterParameters):
     _iparam_names = ["similarity_cutoff", "_support_cutoff", "start_label"]
 
     _defaults = {
-        "_support_cutoff": 0,
+        "_support_cutoff": "<0>",
         "start_label": 1
     }
+
+    @property
+    def radius_cutoff(self):
+        return self.fparams[0]
+
+    @radius_cutoff.setter
+    def radius_cutoff(self, value):
+        self.fparams[0] = value
+
+    @property
+    def similarity_cutoff(self):
+        return self.iparams[0]
+
+    @similarity_cutoff.setter
+    def similarity_cutoff(self, value):
+        self.iparams[0] = value
+
+    @property
+    def _support_cutoff(self):
+        return self.iparams[1]
+
+    @_support_cutoff.setter
+    def _support_cutoff(self, value):
+        self.iparams[1] = value
+
+    @property
+    def start_label(self):
+        return self.iparams[2]
+
+    @start_label.setter
+    def start_label(self, value):
+        self.iparams[2] = value
+
 
 cdef class Labels:
     """Represents cluster label assignments"""

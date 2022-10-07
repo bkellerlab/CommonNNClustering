@@ -10,8 +10,8 @@ try:
     import networkx as nx
     NX_FOUND = True
 except ModuleNotFoundError as error:
-    print("Optional dependency module not found: ", error)
-    NX_FOUND = False
+    print("Optional dependency module not found: ", error)  # pragma: no cover
+    NX_FOUND = False  # pragma: no cover
 
 import numpy as np
 
@@ -52,8 +52,11 @@ class Fitter(ABC):
             self, *args, **kwargs) -> Type["ClusterParameters"]:
         """Create fitter specific cluster parameters"""
 
+    def __repr__(self):
+        return f"{type(self).__name__}"
 
-class FitterCommonNN(ABC):
+
+class FitterCommonNN(Fitter):
     """Defines the fitter interface"""
 
     _parameter_type = CommonNNParameters
@@ -61,46 +64,44 @@ class FitterCommonNN(ABC):
     def make_parameters(
             self, *args, **kwargs) -> Type["ClusterParameters"]:
 
+        cluster_params = self._parameter_type.from_mapping(kwargs)
+
         try:
             used_metric = self._neighbours_getter._distance_getter._metric
         except AttributeError:
             pass
         else:
-            radius_cutoff = used_metric.adjust_radius(kwargs["radius_cutoff"])
+            cluster_params.radius_cutoff = used_metric.adjust_radius(cluster_params.radius_cutoff)
 
-        similarity_cutoff = kwargs["similarity_cutoff"]
-        _support_cutoff = similarity_cutoff
         try:
             is_selfcounting = self._neighbours_getter.is_selfcounting
         except AttributeError:
             pass
         else:
             if is_selfcounting:
-                _support_cutoff += 1
-                similarity_cutoff += 2
-
-        cluster_params = self._parameter_type.from_mapping({
-            "radius_cutoff": radius_cutoff,
-            "similarity_cutoff": similarity_cutoff,
-            "_support_cutoff": _support_cutoff,
-            "start_label": kwargs["start_label"]
-        })
+                cluster_params._support_cutoff += 1
+                cluster_params.similarity_cutoff += 2
 
         return cluster_params
-
 
     def get_fit_signature(self):
         fparams = []
         for pn in self._parameter_type._fparam_names:
             if pn in self._parameter_type._defaults:
-                fparams.append(f"{pn}: Optional[float] = {self._parameter_type._defaults[pn]}")
+                p = self._parameter_type._defaults[pn]
+                if isinstance(p, str):
+                    p = "<" + self._parameter_type._fparam_names[int(p.strip("<>"))] + ">"
+                fparams.append(f"{pn}: Optional[float] = {p}")
             else:
                 fparams.append(f"{pn}: float")
 
         iparams = []
         for pn in self._parameter_type._iparam_names:
             if pn in self._parameter_type._defaults:
-                iparams.append(f"{pn}: Optional[int] = {self._parameter_type._defaults[pn]}")
+                p = self._parameter_type._defaults[pn]
+                if isinstance(p, str):
+                    p = "<" + self._parameter_type._iparam_names[int(p.strip("<>"))] + ">"
+                iparams.append(f"{pn}: Optional[int] = {p}")
             else:
                 iparams.append(f"{pn}: int")
 
@@ -133,6 +134,9 @@ cdef class FitterExtInterface:
     def make_parameters(
             self, *args, **kwargs) -> Type["ClusterParameters"]: ...
 
+    def __repr__(self):
+        return f"{type(self).__name__}"
+
 
 cdef class FitterExtCommonNNInterface(FitterExtInterface):
 
@@ -140,11 +144,11 @@ cdef class FitterExtCommonNNInterface(FitterExtInterface):
 
     def make_parameters(
             self, *args, **kwargs) -> Type["ClusterParameters"]:
-        return FitterCommonNN.make_parameters(*args, **kwargs)
+        return FitterCommonNN.make_parameters(self, *args, **kwargs)
 
 
     def get_fit_signature(self):
-        return FitterCommonNN.get_fit_signature()
+        return FitterCommonNN.get_fit_signature(self)
 
 
 class Predictor(ABC):
@@ -200,6 +204,9 @@ class Predictor(ABC):
             )
 
         return cluster_params
+
+    def __repr__(self):
+        return f"{type(self).__name__}"
 
 
 class FitterCommonNNBFS(FitterCommonNN):
