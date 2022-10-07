@@ -19,7 +19,18 @@ cdef class Bundle:
         AVALUE _lambda
 
     cdef object __weakref__
+
     cpdef void isolate(
         self,
         bint purge=*,
         bint isolate_input_data=*)
+
+
+cpdef void isolate(
+    Bundle bundle,
+    bint purge=*,
+    bint isolate_input_data=*)
+
+
+cpdef void check_children(
+    Bundle bundle, AINDEX member_cutoff, bint needs_folding=*)
