@@ -7,6 +7,22 @@ from commonnn import _types
 
 
 @pytest.mark.parametrize(
+    "neighbours_type",
+    [
+        (_types.NeighboursList),
+        (_types.NeighboursSet),
+        (_types.NeighboursExtVector),
+        (_types.NeighboursExtVectorUnorderedSet),
+        (_types.NeighboursExtSet),
+        (_types.NeighboursExtUnorderedSet)
+    ]
+)
+def test_init_neighbours(neighbours_type, file_regression):
+    neighbours = neighbours_type()
+    file_regression.check(f"{neighbours!r}\n{neighbours!s}")
+
+
+@pytest.mark.parametrize(
     "neighbours_type,args,kwargs,n_points,ordered",
     [
         (_types.NeighboursList, ([0, 1, 3],), {}, 3, True),

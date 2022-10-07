@@ -4,6 +4,20 @@ from commonnn import _types
 
 
 @pytest.mark.parametrize(
+    "queue_type",
+    [
+        (_types.QueueFIFODeque),
+        (_types.QueueExtFIFOQueue),
+        (_types.QueueExtLIFOVector),
+        (_types.PriorityQueueMaxHeap)
+    ]
+)
+def test_init_queue(queue_type, file_regression):
+    q = queue_type()
+    file_regression.check(f"{q!r}\n{q!s}")
+
+
+@pytest.mark.parametrize(
     "queue_type,kind",
     [
         (_types.QueueFIFODeque, "fifo"),

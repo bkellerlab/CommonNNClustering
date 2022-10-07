@@ -442,19 +442,21 @@ cdef class InputDataExtInterface:
 
     cdef void _compute_distances(self, InputDataExtInterface input_data) nogil: ...
 
+    # TODO: remove no cover pragma once concrete type is available
     def compute_distances(self, InputDataExtInterface input_data):
-        self._compute_distances(input_data)
+        self._compute_distances(input_data)  # pragma: no cover
 
     cdef void _compute_neighbourhoods(
             self,
             InputDataExtInterface input_data, AVALUE r,
             ABOOL is_sorted, ABOOL is_selfcounting) nogil: ...
 
+    # TODO: remove no cover pragma once concrete type is available
     def compute_neighbourhoods(
             self,
             InputDataExtInterface input_data, AVALUE r,
             ABOOL is_sorted, ABOOL is_selfcounting):
-        self._compute_neighbourhoods(input_data, r, is_sorted, is_selfcounting)
+        self._compute_neighbourhoods(input_data, r, is_sorted, is_selfcounting)  # pragma: no cover
 
     @classmethod
     def get_builder_kwargs(cls):
@@ -574,7 +576,7 @@ cdef class NeighboursExtInterface:
     def contains(self, member: int):
         return self._contains(member)
 
-    def __str__(self):
+    def __repr__(self):
         return f"{type(self).__name__}"
 
     @classmethod
@@ -909,6 +911,7 @@ class PriorityQueue(ABC):
         return []
 
 
+# TODO: Remove no cover pragma once concrete type is available
 cdef class PriorityQueueExtInterface:
 
     cdef void _reset(self) nogil: ...
@@ -918,26 +921,26 @@ cdef class PriorityQueueExtInterface:
     cdef AINDEX _size(self) nogil: ...
 
     def push(self, a: int, b: int, weight: float):
-        self._push(a, b, weight)
+        self._push(a, b, weight)  # pragma: no cover
 
     def pop(self) -> (int, int, float):
-        return self._pop()
+        return self._pop()  # pragma: no cover
 
     def is_empty(self) -> bool:
-        return self._is_empty()
+        return self._is_empty()  # pragma: no cover
 
     def size(self) -> int:
-        return self._size()
+        return self._size()  # pragma: no cover
 
     def reset(self) -> None:
-        return self._reset()
+        return self._reset()  # pragma: no cover
 
     def __repr__(self):
-        return f"{type(self).__name__}"
+        return f"{type(self).__name__}"  # pragma: no cover
 
     @classmethod
     def get_builder_kwargs(cls):
-        return []
+        return []  # pragma: no cover
 
 
 class InputDataComponentsSequence(InputDataComponents):

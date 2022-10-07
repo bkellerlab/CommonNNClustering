@@ -4,6 +4,21 @@ from commonnn import _types
 
 
 @pytest.mark.parametrize(
+    "checker_type",
+    [
+        (_types.SimilarityCheckerContains),
+        (_types.SimilarityCheckerSwitchContains),
+        (_types.SimilarityCheckerExtContains),
+        (_types.SimilarityCheckerExtSwitchContains),
+        (_types.SimilarityCheckerExtScreensorted)
+    ]
+)
+def test_init_checker(checker_type, file_regression):
+    checker = checker_type()
+    file_regression.check(f"{checker!r}\n{checker!s}")
+
+
+@pytest.mark.parametrize(
     "checker_type,checker_is_ext,needs_sorted",
     [
         (_types.SimilarityCheckerContains, False, False),
