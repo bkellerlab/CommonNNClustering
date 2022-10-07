@@ -282,13 +282,14 @@ class Builder:
 
         kwargs.update(data_kwargs)
 
+        # TODO: Remove no cover pragma if an input data type with builder kwargs is implemented
         if hasattr(component_type, "get_builder_kwargs"):
             for component_kw, alternative in (
                     component_type.get_builder_kwargs()):
-                component = self.make_component(
+                component = self.make_component(  # pragma: no cover
                     component_kw, alternative, prev_kw=["input_data"]
                 )
-                if component is not object:
+                if component is not object:  # pragma: no cover
                     kwargs[component_kw] = component
 
         return component_type(*args, **kwargs)

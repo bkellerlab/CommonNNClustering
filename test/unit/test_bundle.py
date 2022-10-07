@@ -1,5 +1,9 @@
-import enum
-from selectors import EpollSelector
+try:
+    import networkx as nx
+    NX_FOUND = True
+except ModuleNotFoundError:
+    NX_FOUND = False
+
 import numpy as np
 import pytest
 
@@ -242,13 +246,89 @@ def test_bfs():
     )
 
     expected = ["root", "1", "2", "3", "3.1", "3.2"]
-    got = _bundle.bfs(root)
-
-    for i, leaf in enumerate(got):
-        assert leaf.alias == expected[i]
+    got = list(b.alias for b in _bundle.bfs(root))
+    assert got == expected
 
     expected = ["1", "2", "3.1", "3.2"]
-    got = _bundle.bfs_leafs(root)
+    got = list(b.alias for b in _bundle.bfs_leafs(root))
+    assert got == expected
 
-    for i, leaf in enumerate(got):
-        assert leaf.alias == expected[i]
+
+def test_check_children():
+    if not NX_FOUND:
+        pytest.skip("Test function requires pandas")
+
+    root = _bundle.Bundle(
+        alias="root",
+        children={
+            1: _bundle.Bundle(
+                alias="pseudo_root",
+                graph=nx.Graph(),
+                children={
+                    1: _bundle.Bundle(alias="1", graph=nx.Graph()),
+                    2: _bundle.Bundle(alias="2", graph=nx.Graph()),
+                    3: _bundle.Bundle(
+                        alias="3",
+                        graph=nx.Graph(),
+                        children={
+                            1: _bundle.Bundle(alias="3.1", graph=nx.Graph()),
+                            2: _bundle.Bundle(
+                                alias="3.2",
+                                graph=nx.Graph(),
+                                children={
+                                    1: _bundle.Bundle(alias="3.2.1", graph=nx.Graph()),
+                                    2: _bundle.Bundle(alias="3.2.2", graph=nx.Graph()),
+                                }
+                            ),
+                        }
+                    ),
+                }
+            )
+        }
+    )
+
+    root["1.3.2.1"]._lambda = 5
+    root["1.3.2.2"]._lambda = 5
+    root["1.3.1"]._lambda = 4
+    root["1.3.2"]._lambda = 2
+    root["1.3"]._lambda = 2
+    root["1.2"]._lambda = 3
+    root["1.1"]._lambda = 3
+    root["1"]._lambda = 2
+    root._lambda = 2
+
+    _bundle.check_children(root, member_cutoff=0, needs_folding=True)
+
+    expected = ["root", "1", "2", "3.1", "3.2.1", "3.2.2"]
+    got = list(b.alias for b in _bundle.bfs(root))
+    assert got == expected
+
+    _bundle.check_children(root, member_cutoff=1, needs_folding=True)
+
+    expected = ["root"]
+    got = list(b.alias for b in _bundle.bfs(root))
+    assert got == expected
+
+
+def test_check_children_remove_lonechild():
+    if not NX_FOUND:
+        pytest.skip("Test function requires pandas")
+
+    root = _bundle.Bundle(
+        alias="root",
+        children={
+            1: _bundle.Bundle(
+                alias="1",
+                graph=nx.Graph(),
+                children={
+                    1: _bundle.Bundle(alias="1.1", graph=nx.Graph()),
+                    2: _bundle.Bundle(alias="1.2", graph=nx.Graph()),
+                }
+            )
+        }
+    )
+
+    _bundle.check_children(root, member_cutoff=0, needs_folding=False)
+    expected = ["1.1", "1.2"]
+    got = [b.alias for b in root.children.values()]
+    assert got == expected

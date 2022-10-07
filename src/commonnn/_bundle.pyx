@@ -364,7 +364,7 @@ cpdef void check_children(
     if needs_folding:
         leafs = []
         queue = deque()
-        for child in bundle._children.values():
+        for child in bundle.children.values():
             if child._lambda == bundle._lambda:
                 queue.append(child)
             else:
@@ -372,7 +372,7 @@ cpdef void check_children(
 
         while queue:
             candidate = queue.popleft()
-            for child in candidate._children.values():
+            for child in candidate.children.values():
                 if child._lambda == bundle._lambda:
                     queue.append(child)
                 else:
@@ -386,18 +386,17 @@ cpdef void check_children(
 
     bundle._children = {
         k: v
-        for k, v in enumerate(bundle._children.values(), 1)
+        for k, v in enumerate(bundle.children.values(), 1)
         if len(v._graph) >= member_cutoff
         }
 
     if len(bundle._children) == 1:
         child = bundle._children.popitem()[1]
-        for label, grandchild in enumerate(child._children.values(), 1):
+        for label, grandchild in enumerate(child.children.values(), 1):
             bundle._children[label] = grandchild
             bundle._lambda = child._lambda
 
-    # TODO: (option) do parent weakreference later
-    for child in bundle._children.values():
+    for child in bundle.children.values():
         child._parent = weakref.proxy(bundle)
 
 

@@ -35,6 +35,8 @@ def test_init_builder():
 @pytest.mark.parametrize(
     "recipe,make,expected",
     [
+        ({}, "queue", object),
+        ({"queue": None}, "queue", None),
         ({"queue": "fifo"}, "queue", _types.QueueExtFIFOQueue),
         ({"queue": _types.QueueFIFODeque}, "queue", _types.QueueFIFODeque),
         ({"queue": (_types.QueueExtLIFOVector, ([1, 2, 3],), {})}, "queue", _types.QueueExtLIFOVector),
@@ -95,18 +97,22 @@ def test_init_builder():
 def test_make_components(recipe, make, expected):
     builder = recipes.Builder(recipe)
     component = builder.make_component(make)
-    assert isinstance(component, expected)
+    assert (component is None) or (isinstance(component, expected))
 
 
 @pytest.mark.parametrize(
     "recipe,data_kind,preparation_hook,expected",
     [
+        pytest.param(
+            {}, "components", None, None,
+            marks=[pytest.mark.raises(exception=LookupError)]
+        ),
         (
             {"input": _types.InputDataComponentsSequence}, "components", None,
             _types.InputDataComponentsSequence
         ),
         (
-            {"input": _types.InputDataSklearnKDTree}, "components", "components_array_from_parts",
+            {"input": (_types.InputDataSklearnKDTree, (), {"leaf_size": 10})}, "components", "components_array_from_parts",
             _types.InputDataSklearnKDTree
         ),
         (
@@ -114,7 +120,7 @@ def test_make_components(recipe, make, expected):
             _types.InputDataExtComponentsMemoryview
         ),
         (
-            {"input": "distances_mview", "prep": "components_array_from_parts"}, "distances", None,
+            {"input": ("distances_mview", (), {}), "prep": "components_array_from_parts"}, "distances", None,
             _types.InputDataExtDistancesMemoryview
         ),
         (
