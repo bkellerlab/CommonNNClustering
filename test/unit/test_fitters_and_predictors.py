@@ -1,5 +1,9 @@
+from asyncio import base_futures
+import numpy as np
 import pytest
 
+from commonnn import recipes
+from commonnn._primitive_types import P_AVALUE
 from commonnn import _fit, _types
 
 
@@ -66,3 +70,19 @@ def test_make_parameters(fitter_type, args, expected):
 
     assert isinstance(cluster_params, fitter._parameter_type)
     assert expected == cluster_params.to_dict()
+
+
+def test_fit(basic_components):
+    data = np.array(basic_components, order="c", dtype=P_AVALUE)
+    builder = recipes.Builder()
+    input_data = builder.make_input_data(data)
+    fitter = builder.make_component("fitter")
+    assert fitter is not None
+    cluster_params = fitter.make_parameters(radius_cutoff=1.5, similarity_cutoff=1)
+    labels = _types.Labels.from_length(input_data.n_points)
+    expected = np.array([1, 1, 1, 1, 1, 0, 0, 0, 0, 2, 2, 2])
+    fitter.fit(input_data, labels, cluster_params)
+    print(fitter)
+    print(cluster_params)
+    print(labels)
+    np.testing.assert_array_equal(labels.labels, expected)
