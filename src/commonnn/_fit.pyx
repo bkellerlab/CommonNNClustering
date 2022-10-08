@@ -159,54 +159,31 @@ class Predictor(ABC):
             self,
             input_data: Type['InputData'],
             predictand_input_data: Type['InputData'],
-            neighbours_getter: Type['NeighboursGetter'],
-            predictand_neighbours_getter: Type['NeighboursGetter'],
-            distance_getter: Type['DistanceGetter'],
-            predictand_distance_getter: Type['DistanceGetter'],
-            neighbours: Type['Neighbours'],
-            neighbour_neighbours: Type['Neighbours'],
-            metric: Type['Metric'],
-            similarity_checker: Type['SimilarityChecker'],
             labels: Type['Labels'],
             predictand_labels: Type['Labels'],
             cluster_params: Type['ClusterParameters']):
-        """Generic cluster label prediction"""
+        """Generic clustering"""
 
+    @abstractmethod
     def make_parameters(
-            self,
-            radius_cutoff: float,
-            similarity_cutoff: int,
-            start_label: int) -> Type["ClusterParameters"]:
-
-        try:
-            used_metric = self._neighbours_getter._distance_getter._metric
-        except AttributeError:
-            pass
-        else:
-            radius_cutoff = used_metric.adjust_radius(radius_cutoff)
-
-        _support_cutoff = similarity_cutoff
-        try:
-            is_selfcounting = self._neighbours_getter.is_selfcounting
-        except AttributeError:
-            pass
-        else:
-            if is_selfcounting:
-                _support_cutoff += 1
-                similarity_cutoff += 2
-
-        cluster_params = ClusterParameters(
-            radius_cutoff,
-            similarity_cutoff,
-            similarity_cutoff,  # similarity_cutoff_continuous not in use right now
-            _support_cutoff,
-            start_label,
-            )
-
-        return cluster_params
+            self, *args, **kwargs) -> Type["ClusterParameters"]:
+        """Create fitter specific cluster parameters"""
 
     def __repr__(self):
         return f"{type(self).__name__}"
+
+
+class PredictorCommonNN(Predictor):
+
+    _parameter_type = CommonNNParameters
+
+    def make_parameters(
+            self, *args, **kwargs) -> Type["ClusterParameters"]:
+        return FitterCommonNN.make_parameters(self, *args, **kwargs)
+
+
+    def get_fit_signature(self):
+        return FitterCommonNN.get_fit_signature(self)
 
 
 class FitterCommonNNBFS(FitterCommonNN):
@@ -692,10 +669,6 @@ class FitterCommonNNBFSDebug(FitterCommonNN):
 Fitter.register(FitterExtCommonNNBFS)
 
 
-class HierarchicalFitterJP:
-    pass
-
-
 class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
     """Concrete implementation of the fitter interface
 
@@ -1151,7 +1124,7 @@ class HierarchicalFitterRepeat(HierarchicalFitter):
             previous_labels = current_labels
 
 
-class PredictorCommonNNFirstmatch(Predictor):
+class PredictorCommonNNFirstmatch(PredictorCommonNN):
 
     def __init__(
             self,
