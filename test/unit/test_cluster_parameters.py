@@ -25,6 +25,12 @@ def test_abstract_init():
 )
 def test_commonnn_paramters_from_mapping(parameters, file_regression):
     cluster_params = CommonNNParameters.from_mapping(parameters)
+
     repr_ = f"{cluster_params!r}"
     str_ = f"{cluster_params!s}"
     file_regression.check(f"{repr_}\n{str_}")
+
+    for pn, pv in parameters.items():
+        assert getattr(cluster_params, pn) == pv
+        setattr(cluster_params, pn, pv * 2)
+        assert getattr(cluster_params, pn) == pv * 2
