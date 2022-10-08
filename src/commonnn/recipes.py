@@ -341,7 +341,7 @@ REGISTERED_RECIPES = {
 
 
 def get_registered_recipe(key):
-    return REGISTERED_RECIPES[key.lower()]
+    return {k: v for k, v in REGISTERED_RECIPES[key.lower()].items()}
 
 
 # Provides alternative (short) identifiers for types
