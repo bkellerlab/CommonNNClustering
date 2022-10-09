@@ -1,0 +1,3 @@
+PredictorCommonNNFirstmatch
+PredictorCommonNNFirstmatch(ngetter=None, ngetter_other=None, na=None, nb=None, checker=None)
+fit(radius_cutoff: float, similarity_cutoff: int, _support_cutoff: Optional[int] = <similarity_cutoff>, start_label: Optional[int] = 1)

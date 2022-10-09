@@ -33,16 +33,3 @@ cdef class FitterExtCommonNNBFS(FitterExtCommonNNInterface):
         NeighboursExtInterface _neighbour_neighbours
         SimilarityCheckerExtInterface _similarity_checker
         QueueExtInterface _queue
-
-
-cdef class FitterExtCommonNNBFSDebug(FitterExtCommonNNInterface):
-    cdef:
-        bint _verbose
-        bint _yielding
-
-    cdef public:
-        NeighboursGetterExtInterface _neighbours_getter
-        NeighboursExtInterface _neighbours
-        NeighboursExtInterface _neighbour_neighbours
-        SimilarityCheckerExtInterface _similarity_checker
-        QueueExtInterface _queue

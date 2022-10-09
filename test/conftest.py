@@ -56,6 +56,7 @@ def basic_components():
         [5.5, -1.5],  # 11
     ]
 
+
 @pytest.fixture
 def basic_distances():
     return [

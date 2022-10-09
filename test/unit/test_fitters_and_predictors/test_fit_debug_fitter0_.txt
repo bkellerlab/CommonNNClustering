@@ -1,0 +1,173 @@
+{'reason': 'assigned_source', 'init_point': 0, 'point': None, 'member': None}
+{'reason': 'assigned_neighbour', 'init_point': 0, 'point': 0, 'member': 1}
+{'reason': 'assigned_neighbour', 'init_point': 0, 'point': 0, 'member': 2}
+{'reason': 'assigned_neighbour', 'init_point': 0, 'point': 0, 'member': 3}
+{'reason': 'assigned_neighbour', 'init_point': 0, 'point': 0, 'member': 4}
+{'reason': 'assigned_source', 'init_point': 9, 'point': None, 'member': None}
+{'reason': 'assigned_neighbour', 'init_point': 9, 'point': 4, 'member': 10}
+{'reason': 'assigned_neighbour', 'init_point': 9, 'point': 4, 'member': 11}
+
+CommonNN clustering - FitterCommonNNBFSDebug
+================================================================================
+12 points
+radius_cutoff                : 2.25
+similarity_cutoff            : 3
+_support_cutoff              : 2
+start_label                  : 1
+
+New source: 0
+    ... new cluster 1
+    ... loop over 5 neighbours
+        ... current neighbour 0
+        ... already visited
+
+        ... current neighbour 1
+        ... successful check!
+
+        ... current neighbour 2
+        ... successful check!
+
+        ... current neighbour 3
+        ... successful check!
+
+        ... current neighbour 4
+        ... successful check!
+
+    ... Next point: 1
+    ... loop over 4 neighbours
+        ... current neighbour 0
+        ... already visited
+
+        ... current neighbour 1
+        ... already visited
+
+        ... current neighbour 2
+        ... already visited
+
+        ... current neighbour 5
+        ... not enough neighbours
+
+    ... Next point: 2
+    ... loop over 5 neighbours
+        ... current neighbour 0
+        ... already visited
+
+        ... current neighbour 1
+        ... already visited
+
+        ... current neighbour 2
+        ... already visited
+
+        ... current neighbour 3
+        ... already visited
+
+        ... current neighbour 4
+        ... already visited
+
+    ... Next point: 3
+    ... loop over 4 neighbours
+        ... current neighbour 0
+        ... already visited
+
+        ... current neighbour 2
+        ... already visited
+
+        ... current neighbour 3
+        ... already visited
+
+        ... current neighbour 4
+        ... already visited
+
+    ... Next point: 4
+    ... loop over 4 neighbours
+        ... current neighbour 0
+        ... already visited
+
+        ... current neighbour 2
+        ... already visited
+
+        ... current neighbour 3
+        ... already visited
+
+        ... current neighbour 4
+        ... already visited
+
+    ... finished cluster 1
+================================================================================
+
+New source: 1
+    ... already visited
+
+
+New source: 2
+    ... already visited
+
+
+New source: 3
+    ... already visited
+
+
+New source: 4
+    ... already visited
+
+
+New source: 5
+    ... already visited
+
+
+New source: 6
+    ... not enough neighbours
+
+
+New source: 7
+    ... not enough neighbours
+
+
+New source: 8
+    ... not enough neighbours
+
+
+New source: 9
+    ... new cluster 2
+    ... loop over 3 neighbours
+        ... current neighbour 9
+        ... already visited
+
+        ... current neighbour 10
+        ... successful check!
+
+        ... current neighbour 11
+        ... successful check!
+
+    ... Next point: 10
+    ... loop over 3 neighbours
+        ... current neighbour 9
+        ... already visited
+
+        ... current neighbour 10
+        ... already visited
+
+        ... current neighbour 11
+        ... already visited
+
+    ... Next point: 11
+    ... loop over 3 neighbours
+        ... current neighbour 9
+        ... already visited
+
+        ... current neighbour 10
+        ... already visited
+
+        ... current neighbour 11
+        ... already visited
+
+    ... finished cluster 2
+================================================================================
+
+New source: 10
+    ... already visited
+
+
+New source: 11
+    ... already visited
+

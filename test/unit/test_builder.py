@@ -87,6 +87,13 @@ def test_init_builder():
         ),
         (
             {
+                "fitter": _fit.FitterCommonNNBFS, "fitter.na": "vector", "fitter.checker": "contains", "fitter.q": "fifo",
+                "fitter.ngetter": "brute_force", "fitter.ngetter.dgetter": "metric", "fitter.ngetter.dgetter.metric": "dummy"
+            },
+            "fitter", _fit.FitterCommonNNBFS
+        ),
+        (
+            {
                 "fitter": _fit.FitterCommonNNBFSDebug, "fitter.na": "vector", "fitter.checker": "contains", "fitter.q": "fifo",
                 "fitter.ngetter": "brute_force", "fitter.ngetter.dgetter": "metric", "fitter.ngetter.dgetter.metric": "dummy"
             },
