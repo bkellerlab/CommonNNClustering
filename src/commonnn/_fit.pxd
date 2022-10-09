@@ -17,7 +17,7 @@ from commonnn._types cimport (
 )
 
 cdef class FitterExtInterface:
-    cdef void _fit(
+    cdef void _fit_inner(
             self,
             InputDataExtInterface input_data,
             Labels labels,

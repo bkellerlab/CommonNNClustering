@@ -99,7 +99,7 @@ def test_fit(fitter, basic_components):
     cluster_params = fitter.make_parameters(radius_cutoff=1.5, similarity_cutoff=1)
     labels = _types.Labels.from_length(input_data.n_points)
     expected = np.array([1, 1, 1, 1, 1, 0, 0, 0, 0, 2, 2, 2])
-    fitter.fit(input_data, labels, cluster_params)
+    fitter._fit(input_data, labels, cluster_params)
     np.testing.assert_array_equal(labels.labels, expected)
 
 
@@ -119,7 +119,7 @@ def test_fit_debug(fitter, basic_components, file_regression, capsys):
     cluster_params = fitter.make_parameters(radius_cutoff=1.5, similarity_cutoff=1)
     labels = _types.Labels.from_length(input_data.n_points)
     yielded = "\n".join(
-        str(x) for x in fitter.fit_debug(input_data, labels, cluster_params)
-        )
+        str(x) for x in fitter._fit_debug(input_data, labels, cluster_params)
+    )
     captured = capsys.readouterr()
     file_regression.check(yielded + "\n\n" + captured.out)

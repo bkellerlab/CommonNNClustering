@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from collections.abc import MutableSequence
-
-import numpy as np
+from collections import Counter
+import functools
+import time
 
 try:
     import pandas as pd
@@ -40,6 +41,11 @@ class Record(ABC):
             slot: getattr(self, slot)
             for slot in self.__slots__
         }
+
+    @classmethod
+    @abstractmethod
+    def from_bundle(cls, bundle, cluster_params=None, **kwargs):
+        """Create record from (clustered) bundle data"""
 
 
 class CommonNNRecord(Record):
@@ -110,6 +116,35 @@ class CommonNNRecord(Record):
             f'{"-" * 95}\n'
         )
         return printable
+
+    @classmethod
+    def from_bundle(cls, bundle, cluster_params=None, **kwargs):
+        n_noise = 0
+        frequencies = Counter(bundle._labels.labels)
+
+        if 0 in frequencies:
+            n_noise = frequencies.pop(0)
+
+        n_largest = frequencies.most_common(1)[0][1] if frequencies else 0
+
+        if cluster_params is not None:
+            params = cluster_params.to_dict()
+        else:
+            params = {}
+
+        params.update(kwargs)
+
+        return cls(
+            bundle._input_data.n_points,
+            params.get("radius_cutoff"),
+            params.get("similarity_cutoff"),
+            params.get("member_cutoff"),
+            params.get("max_clusters"),
+            len(bundle._labels.to_set() - {0}),
+            n_largest / bundle._input_data.n_points,
+            n_noise / bundle._input_data.n_points,
+            params.get("execution_time"),
+            )
 
 
 class Summary(MutableSequence):
@@ -202,3 +237,16 @@ def make_typed_DataFrame(columns, dtypes, content=None):
     })
 
     return df
+
+
+def timed(function):
+    """Decorator to measure execution time"""
+
+    @functools.wraps(function)
+    def wrapper(*args, **kwargs):
+        go = time.time()
+        wrapped_return = function(*args, **kwargs)
+        stop = time.time()
+
+        return wrapped_return, stop - go
+    return wrapper

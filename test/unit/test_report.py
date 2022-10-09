@@ -1,3 +1,5 @@
+import time
+
 try:
     import pandas as pd
     PANDAS_FOUND = True
@@ -96,3 +98,15 @@ def test_summary_to_DataFrame():
     tdf = summary.to_DataFrame()
     assert len(tdf) == 5
     assert tdf["n_points"][0] == 1
+
+
+def test_timed_decorator():
+    def some_function():
+        time.sleep(0.01)
+
+    decorated = report.timed(some_function)
+    decorated_result = decorated()
+
+    assert isinstance(decorated_result, tuple)
+    assert decorated_result[0] is None
+    assert isinstance(decorated_result[1], float)

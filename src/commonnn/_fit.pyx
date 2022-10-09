@@ -16,8 +16,9 @@ except ModuleNotFoundError as error:
 
 import numpy as np
 
+from commonnn import report
 from commonnn._primitive_types import P_AINDEX, P_AVALUE, P_ABOOL
-from commonnn._bundle cimport check_children
+from commonnn._bundle cimport check_children, Bundle
 from commonnn._types import (
     InputData,
     InputDataComponents,
@@ -41,16 +42,20 @@ class Fitter(ABC):
     """Defines the fitter interface"""
 
     @abstractmethod
-    def fit(
+    def fit(self, Bundle bundle, *, **kwargs):
+        """Generic clustering outer function"""
+
+    @abstractmethod
+    def _fit(
             self,
             input_data: Type['InputData'],
             labels: Type['Labels'],
             cluster_params: Type['ClusterParameters']):
-        """Generic clustering"""
+        """Generic clustering inner function"""
 
     @abstractmethod
     def make_parameters(
-            self, *args, **kwargs) -> Type["ClusterParameters"]:
+            self, *, **kwargs) -> Type["ClusterParameters"]:
         """Create fitter specific cluster parameters"""
 
     def __repr__(self):
@@ -61,11 +66,58 @@ class FitterCommonNN(Fitter):
     """Defines the fitter interface"""
 
     _parameter_type = CommonNNParameters
+    _record_type = report.CommonNNRecord
+
+    def fit(
+            self, Bundle bundle, *, purge=True, info=True,
+            **kwargs) -> (float, Type["ClusterParameters"]):
+
+        cdef set old_label_set, new_label_set
+
+        if (bundle._labels is None) or purge or (
+                not bundle._labels.meta.get("frozen", False)):
+
+            bundle._labels = Labels(
+                np.zeros(bundle._input_data.n_points, order="C", dtype=P_AINDEX)
+                )
+            old_label_set = set()
+            current_start = 1
+        else:
+            old_label_set = bundle._labels.to_set()
+            if "start_label" not in kwargs:
+                kwargs["start_label"] = max(old_label_set) + 1
+
+        cluster_params = self.make_parameters(**kwargs)
+
+        _, execution_time = report.timed(
+            self._fit(bundle._input_data, bundle._labels, cluster_params)
+        )
+
+        if info:
+            new_label_set = bundle._labels.to_set()
+            params = {
+                k: (cluster_params.radius_cutoff, cluster_params.similarity_cutoff)
+                for k in new_label_set - old_label_set
+                if k != 0
+                }
+            meta = {
+                "params": params,
+                "reference": weakref.proxy(bundle),
+                "origin": "fit"
+            }
+            old_params = bundle._labels.meta.get("params", {})
+            old_params.update(meta["params"])
+            meta["params"] = old_params
+            bundle._labels.meta.update(meta)
+
+        return execution_time, cluster_params
 
     def make_parameters(
-            self, *args, **kwargs) -> Type["ClusterParameters"]:
+            self, *, similarity_offset=0, **kwargs) -> Type["ClusterParameters"]:
 
         cluster_params = self._parameter_type.from_mapping(kwargs)
+        cluster_params.similarity_cutoff -= similarity_offset
+        assert cluster_params.similarity_cutoff >= 0
 
         try:
             used_metric = self._neighbours_getter._distance_getter._metric
@@ -113,27 +165,29 @@ class HierarchicalFitter(ABC):
     """Defines the hfitter interface"""
 
     @abstractmethod
-    def fit(self, Bundle bundle, **kwargs):
+    def fit(self, Bundle bundle, *, **kwargs):
         """Generic clustering"""
 
 
 cdef class FitterExtInterface:
-    def fit(
-        self,
-        InputDataExtInterface input_data,
-        Labels labels,
-        ClusterParameters cluster_params):
+    def fit(self, Bundle bundle, *, **kwargs): ...
 
-        self._fit(input_data, labels, cluster_params)
+    def _fit(
+            self,
+            input_data: Type['InputData'],
+            labels: Type['Labels'],
+            cluster_params: Type['ClusterParameters']):
 
-    cdef void _fit(
+        self._fit_inner(input_data, labels, cluster_params)
+
+    cdef void _fit_inner(
             self,
             InputDataExtInterface input_data,
             Labels labels,
             ClusterParameters cluster_params) nogil: ...
 
     def make_parameters(
-            self, *args, **kwargs) -> Type["ClusterParameters"]: ...
+            self, *, **kwargs) -> Type["ClusterParameters"]: ...
 
     def __repr__(self):
         return f"{type(self).__name__}"
@@ -142,11 +196,14 @@ cdef class FitterExtInterface:
 cdef class FitterExtCommonNNInterface(FitterExtInterface):
 
     _parameter_type = CommonNNParameters
+    _record_type = report.CommonNNRecord
+
+    def fit(self, Bundle bundle, *, **kwargs) -> float:
+        return Fitter.CommonNN.fit(self, bundle, **kwargs)
 
     def make_parameters(
-            self, *args, **kwargs) -> Type["ClusterParameters"]:
-        return FitterCommonNN.make_parameters(self, *args, **kwargs)
-
+            self, *, **kwargs) -> Type["ClusterParameters"]:
+        return FitterCommonNN.make_parameters(self, **kwargs)
 
     def get_fit_signature(self):
         return FitterCommonNN.get_fit_signature(self)
@@ -238,7 +295,7 @@ class FitterCommonNNBFS(FitterCommonNN):
             ("queue", None),
             ]
 
-    def fit(
+    def _fit(
             self,
             object input_data,
             Labels labels,
@@ -385,7 +442,7 @@ class FitterCommonNNBFSDebug(FitterCommonNN):
             ("queue", None),
             ]
 
-    def fit(
+    def _fit(
             self,
             object input_data,
             Labels labels,
@@ -402,9 +459,9 @@ class FitterCommonNNBFSDebug(FitterCommonNN):
                 :obj:`commonnn._types.ClusterParameters`.
         """
 
-        deque(self.fit_debug(input_data, labels, cluster_params), maxlen=0)
+        deque(self._fit_debug(input_data, labels, cluster_params), maxlen=0)
 
-    def fit_debug(
+    def _fit_debug(
             self,
             object input_data,
             Labels labels,
@@ -603,7 +660,7 @@ cdef class FitterExtCommonNNBFS(FitterExtCommonNNInterface):
             ("queue", None),
             ]
 
-    cdef void _fit(
+    cdef void _fit_inner(
             self,
             InputDataExtInterface input_data,
             Labels labels,
@@ -749,7 +806,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             ("priority_queue_tree", "priority_queue")
             ]
 
-    def fit(self, object bundle, **kwargs):
+    def fit(self, Bundle bundle, **kwargs):
 
         radius_cutoff = kwargs["radius_cutoff"]
         member_cutoff = kwargs.get("member_cutoff")
