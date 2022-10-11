@@ -144,7 +144,7 @@ class CommonNNRecord(Record):
             n_largest / bundle._input_data.n_points,
             n_noise / bundle._input_data.n_points,
             params.get("execution_time"),
-            )
+        )
 
 
 class Summary(MutableSequence):
