@@ -291,12 +291,19 @@ class Clustering:
 
     def fit_hierarchical(
             self,
+            *args,
             purge=True,
             bundle=None,
-            **fitter_kwargs):
+            **kwargs):
         """Execute hierarchical clustering procedure
+
         Keyword args:
-            depend on self._hierarchical_fitter
+            purge: Reset children dictionary of root bundle
+            bundle: Root bundle
+
+        Note:
+            Used arguments and further keyword arguments depend on the
+            used hierarchical fitter.
         """
 
         if bundle is None:
@@ -305,4 +312,4 @@ class Clustering:
         if purge or (bundle._children is None):
             bundle._children = {}
 
-        self._hierarchical_fitter.fit(bundle, **fitter_kwargs)
+        self._hierarchical_fitter.fit(bundle, *args, **kwargs)

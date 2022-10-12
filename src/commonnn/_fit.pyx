@@ -55,7 +55,7 @@ class Fitter(ABC):
 
     @abstractmethod
     def make_parameters(
-            self, *, **kwargs) -> Type["ClusterParameters"]:
+            self, **kwargs) -> Type["ClusterParameters"]:
         """Create fitter specific cluster parameters"""
 
     def __repr__(self):
@@ -113,7 +113,7 @@ class FitterCommonNN(Fitter):
         return execution_time, cluster_params
 
     def make_parameters(
-            self, *, similarity_offset=0, **kwargs) -> Type["ClusterParameters"]:
+            self, similarity_offset=0, **kwargs) -> Type["ClusterParameters"]:
 
         cluster_params = self._parameter_type.from_mapping(kwargs)
         cluster_params.similarity_cutoff -= similarity_offset
@@ -162,10 +162,10 @@ class FitterCommonNN(Fitter):
 
 
 class HierarchicalFitter(ABC):
-    """Defines the hfitter interface"""
+    """Defines the hierarchical fitter interface"""
 
     @abstractmethod
-    def fit(self, Bundle bundle, *, **kwargs):
+    def fit(self, Bundle bundle, *args, **kwargs):
         """Generic clustering"""
 
 
@@ -187,7 +187,7 @@ cdef class FitterExtInterface:
             ClusterParameters cluster_params) nogil: ...
 
     def make_parameters(
-            self, *, **kwargs) -> Type["ClusterParameters"]: ...
+            self, **kwargs) -> Type["ClusterParameters"]: ...
 
     def __repr__(self):
         return f"{type(self).__name__}"
@@ -202,7 +202,7 @@ cdef class FitterExtCommonNNInterface(FitterExtInterface):
         return FitterCommonNN.fit(self, bundle, **kwargs)
 
     def make_parameters(
-            self, *, **kwargs) -> Type["ClusterParameters"]:
+            self, **kwargs) -> Type["ClusterParameters"]:
         return FitterCommonNN.make_parameters(self, **kwargs)
 
     def get_fit_signature(self):
@@ -224,7 +224,7 @@ class Predictor(ABC):
 
     @abstractmethod
     def make_parameters(
-            self, *args, **kwargs) -> Type["ClusterParameters"]:
+            self, **kwargs) -> Type["ClusterParameters"]:
         """Create fitter specific cluster parameters"""
 
     def __repr__(self):
@@ -236,8 +236,8 @@ class PredictorCommonNN(Predictor):
     _parameter_type = CommonNNParameters
 
     def make_parameters(
-            self, *args, **kwargs) -> Type["ClusterParameters"]:
-        return FitterCommonNN.make_parameters(self, *args, **kwargs)
+            self, **kwargs) -> Type["ClusterParameters"]:
+        return FitterCommonNN.make_parameters(self, **kwargs)
 
 
     def get_fit_signature(self):
@@ -1051,106 +1051,76 @@ class HierarchicalFitterRepeat(HierarchicalFitter):
             ("fitter", None),
             ]
 
-    def fit(self, Bundle bundle, **kwargs):
+    def fit(
+            self, Bundle bundle,
+            radius_cutoffs,
+            similarity_cutoffs,
+            *,
+            sort_by_size=False,
+            member_cutoff=None,
+            max_clusters=None,
+            similarity_cutoff=None,
+            info=True,
+            v=False,
+            **kwargs):
 
-        radius_cutoff = kwargs["radius_cutoff"]
-        similarity_cutoff = kwargs["similarity_cutoff"]
-        member_cutoff = kwargs.get("member_cutoff")
-        max_clusters = kwargs.get("max_clusters")
-        similarity_offset = kwargs.get("similarity_offset")
-        sort_by_size = kwargs.get("sort_by_size", True)
-        info = kwargs.get("info", True)
-        v = kwargs.get("v", True)
+        if not isinstance(radius_cutoffs, Iterable):
+            radius_cutoffs = [radius_cutoffs]
+        radius_cutoffs = [float(x) for x in radius_cutoffs]
 
-        self._fit(
-            bundle,
-            radius_cutoff,
-            similarity_cutoff,
-            member_cutoff,
-            max_clusters,
-            similarity_offset,
-            sort_by_size,
-            info,
-            v
-            )
+        if not isinstance(similarity_cutoffs, Iterable):
+            similarity_cutoffs = [similarity_cutoffs]
+        similarity_cutoffs = [int(x) for x in similarity_cutoffs]
 
-    def _fit(
-            self,
-            bundle: Type["Bundle"],
-            radius_cutoff: Union[float, Iterable[float]],
-            similarity_cutoff: Union[int, Iterable[int]],
-            member_cutoff: int = None,
-            max_clusters: int = None,
-            similarity_offset: int = None,
-            sort_by_size: bool = True,
-            info: bool = True,
-            v: bool = True):
+        if len(radius_cutoffs) == 1:
+            radius_cutoffs *= len(similarity_cutoffs)
 
-        if not isinstance(radius_cutoff, Iterable):
-            radius_cutoff = [radius_cutoff]
+        if len(similarity_cutoffs) == 1:
+            similarity_cutoffs *= len(radius_cutoffs)
 
-        radius_cutoff = [float(x) for x in radius_cutoff]
-
-        if not isinstance(similarity_cutoff, Iterable):
-            similarity_cutoff = [similarity_cutoff]
-
-        similarity_cutoff = [int(x) for x in similarity_cutoff]
-
-        if len(radius_cutoff) == 1:
-            radius_cutoff *= len(similarity_cutoff)
-
-        if len(similarity_cutoff) == 1:
-            similarity_cutoff *= len(radius_cutoff)
-
-        cdef AINDEX step, n_steps = len(radius_cutoff)
-        assert n_steps == len(similarity_cutoff)
-
-        radius_cutoff
-        similarity_cutoff
-
-        cdef CommonNNParameters cluster_params
-        cdef AINDEX start_label = 1
-
-        if similarity_offset is None:
-            similarity_offset = 0
+        cdef AINDEX step, n_steps = len(radius_cutoffs)
+        assert n_steps == len(similarity_cutoffs)
 
         cdef AINDEX n, n_points = bundle._input_data._n_points
 
-        cdef Labels previous_labels = Labels(
+        cdef Labels current_labels, previous_labels = Labels(
             np.ones(n_points, order="C", dtype=P_AINDEX)
             )
-        cdef Labels current_labels
-
         cdef AINDEX c_label, p_label
 
         cdef stdumap[AINDEX, stdvector[AINDEX]] parent_labels_map
         cdef stdumap[AINDEX, stdvector[AINDEX]].iterator p_it
+        cdef stdvector[AINDEX] labels_vector
+        cdef Labels labels_container
+        cdef AINDEX* _labels
+        cdef AINDEX lvs
+        cdef AINDEX lvi
 
-        cdef dict terminal_clusterings = {1: bundle}
-        cdef dict new_terminal_clusterings
+        cdef dict terminal_bundles = {1: bundle}
+        cdef dict new_terminal_bundles
 
         for step in range(n_steps):
 
             if v:
                 print(
                     f"Running step {step:<5} "
-                    f"(r = {radius_cutoff[step]}, "
-                    f"c = {similarity_cutoff[step]})"
+                    f"(r = {radius_cutoffs[step]}, "
+                    f"c = {similarity_cutoffs[step]})"
                     )
 
-            new_terminal_clusterings = {}
+            new_terminal_bundles = {}
 
             current_labels = Labels(
                 np.zeros(n_points, order="C", dtype=P_AINDEX)
                 )
 
             cluster_params = self._fitter.make_parameters(
-                radius_cutoff=radius_cutoff[step],
-                similarity_cutoff = similarity_cutoff[step] - similarity_offset,
-                start_label=start_label
+                radius_cutoff=radius_cutoffs[step],
+                similarity_cutoff = similarity_cutoffs[step],
+                **kwargs
                 )
 
-            self._fitter.fit(
+            self._fitter._fit(
                 bundle._input_data,
                 current_labels,
                 cluster_params
@@ -1162,11 +1132,10 @@ class HierarchicalFitterRepeat(HierarchicalFitter):
             parent_labels_map.clear()
 
             for n in range(n_points):
-                c_label = current_labels._labels[n]
                 p_label = previous_labels._labels[n]
-
                 if p_label == 0:
                     continue
+                c_label = current_labels._labels[n]
 
                 parent_labels_map[p_label].push_back(c_label)
 
@@ -1176,31 +1145,37 @@ class HierarchicalFitterRepeat(HierarchicalFitter):
 
                 # !!! Python interaction
                 # TODO: fix warning: comparison of integer expressions of different signedness: 'Py_ssize_t' {aka 'long int'} and 'size_t'
-                parent_clustering = terminal_clusterings[p_label]
-                parent_clustering._labels = Labels.from_sequence(parent_labels_map[p_label])
+                parent_bundle = terminal_bundles[p_label]
+                labels_vector =  dereference(p_it).second
+                lvs = labels_vector.size()
+                labels_container = Labels.from_length(lvs)
+                _labels = &labels_container._labels[0]
+                parent_bundle._labels = labels_container
+                for lvi in range(lvs):
+                    _labels[lvi] = labels_vector[lvi]
 
                 if info:
                     params = {
-                        k: (radius_cutoff[step], similarity_cutoff[step])
-                        for k in parent_clustering._labels.to_set()
+                        k: (radius_cutoffs[step], similarity_cutoffs[step])
+                        for k in parent_bundle._labels.to_set()
                         if k != 0
                         }
-                    parent_clustering._labels.meta.update({
+                    parent_bundle._labels.meta.update({
                         "params": params,
-                        "reference": weakref.proxy(parent_clustering),
+                        "reference": weakref.proxy(parent_bundle),
                         "origin": "fit"
                     })
 
-                parent_clustering.isolate(isolate_input_data=False)
+                parent_bundle.isolate(isolate_input_data=False)
 
-                for c_label, child_clustering in parent_clustering._children.items():
+                for c_label, child_bundle in parent_bundle._children.items():
                     if c_label == 0:
                         continue
-                    new_terminal_clusterings[c_label] = child_clustering
+                    new_terminal_bundles[c_label] = child_bundle
 
                 preincrement(p_it)
 
-            terminal_clusterings = new_terminal_clusterings
+            terminal_bundles = new_terminal_bundles
             previous_labels = current_labels
 
 
