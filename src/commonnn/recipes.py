@@ -369,7 +369,7 @@ COMPONENT_ALT_KW_MAP = {
 # Provides alternative equivalent types
 COMPONENT_KW_TYPE_ALIAS_MAP = {
     "neighbour_neighbours": "neighbours",
-    "neighbour_getter_other": "neighbours_getter",
+    "neighbours_getter_other": "neighbours_getter",
     "priority_queue_tree": "priority_queue"
 }
 
@@ -425,5 +425,8 @@ COMPONENT_NAME_TYPE_MAP = {
     "hierarchical_fitter": {
         "repeat": _fit.HierarchicalFitterRepeat,
         "mst": _fit.HierarchicalFitterCommonNNMSTPrim,
+    },
+    "predictor": {
+        "firstmatch": _fit.PredictorCommonNNFirstmatch
     }
 }

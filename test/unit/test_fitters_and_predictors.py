@@ -13,6 +13,8 @@ from commonnn import _fit, _types
         (_fit.FitterCommonNNBFSDebug, (None, None, None, None, None)),
         (_fit.FitterExtCommonNNBFS, (None, None, None, None, None)),
         (_fit.PredictorCommonNNFirstmatch, (None, None, None, None, None)),
+        (_fit.HierarchicalFitterRepeat, (None,)),
+        (_fit.HierarchicalFitterCommonNNMSTPrim, (None, None, None, None, None, None)),
     ]
 )
 def test_init_fitter(fitter_type, args, file_regression):
@@ -162,3 +164,51 @@ def test_fit_via_clustering(
     clustering.fit(radius_cutoff=1.5, similarity_cutoff=1, **fit_kwargs)
     expected = np.array([1, 1, 1, 1, 1, 0, 0, 0, 0, 2, 2, 2])
     np.testing.assert_array_equal(clustering.labels, expected)
+
+
+def test_fit_repeat_via_clustering(basic_components):
+    data = np.array(basic_components, order="c", dtype=P_AVALUE)
+    builder = recipes.Builder()
+    builder.recipe["hierarchical_fitter.fitter"] = _fit.FitterExtCommonNNBFS
+    builder.recipe["hierarchical_fitter"] = _fit.HierarchicalFitterRepeat
+
+    copied = {}
+    for k, v in builder.recipe.items():
+        if k.startswith("fitter."):
+            copied["hierarchical_fitter." + k] = v
+    builder.recipe.update(copied)
+
+    hfitter = builder.make_component("hierarchical_fitter")
+    clustering = cluster.Clustering(data, hierarchical_fitter=hfitter)
+    assert clustering._hierarchical_fitter is not None
+    clustering.fit_hierarchical(
+        radius_cutoffs=1.5, similarity_cutoffs=[0, 1],
+        sort_by_size=True
+    )
+    expected = np.array([1, 1, 1, 1, 1, 1, 0, 3, 3, 2, 2, 2])
+    np.testing.assert_array_equal(clustering.labels, expected)
+
+    expected = np.array([1, 1, 1, 1, 1, 0])
+    np.testing.assert_array_equal(clustering[1].labels, expected)
+
+    expected = np.array([2, 2, 2])
+    np.testing.assert_array_equal(clustering[2].labels, expected)
+
+
+def test_predict_via_clustering(basic_components):
+    data = np.array(basic_components, order="c", dtype=P_AVALUE)
+    clustering = cluster.Clustering(data)
+    other = cluster.Clustering(data)
+    clustering.fit(radius_cutoff=1.5, similarity_cutoff=1)
+
+    clustering._predictor = _fit.PredictorCommonNNFirstmatch(
+        clustering._fitter._neighbours_getter,
+        other._fitter._neighbours_getter,
+        clustering._fitter._neighbours,
+        clustering._fitter._neighbour_neighbours,
+        clustering._fitter._similarity_checker
+    )
+    clustering.predict(other.root, radius_cutoff=1.5, similarity_cutoff=1)
+
+    expected = np.array([1, 1, 1, 1, 1, 0, 0, 0, 0, 2, 2, 2])
+    np.testing.assert_array_equal(other.labels, expected)

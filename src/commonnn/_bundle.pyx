@@ -310,7 +310,7 @@ cpdef void isolate(
             parent_indices
             )
         parent_alias = bundle.alias if bundle.alias is not None else ""
-        bundle._children[label].alias += f"{parent_alias}.{label}"
+        bundle._children[label].alias = f"{parent_alias}.{label}"
 
         if not isolate_input_data:
             continue

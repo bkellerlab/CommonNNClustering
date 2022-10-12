@@ -40,51 +40,10 @@ from commonnn.report import Record, Summary
 
 
 class Clustering:
-    r"""Represents a clustering endeavour
+    r"""Organises a clustering
 
-    A clustering object is made by aggregation of all necessary parts to
+    Aggregates all necessary types to
     carry out a clustering of input data points.
-
-    Keyword args:
-        data:
-            The data points to be clustered. Can be one of
-                * `None`:
-                    Plain initialisation without input data.
-                * A :class:`~commonnn._bundle.Bundle`:
-                    Initialisation with a ready-made input data bundle.
-                * Any object implementing the input data data interface
-                  (see :class:`~commonnn._types.InputData` or
-                  :class:`~commonnn._types.InputDataExtInterface`):
-                    In this case, additional keyword arguments can be passed
-                    via `bundle_kwargs` which are used to initialise a
-                    :class:`~commonnn._bundle.Bundle` from the input data,
-                    e.g. `labels`, `children`, etc.
-                * Raw input data: Takes the input data type and a preparation
-                  hook from the `recipe` and wraps the raw data.
-        fitter:
-            Executes the clustering procedure. Can be
-                * Any object implementing the fitter interface (see :class:`~commonnn._fit.Fitter` or
-                  :class:`~commonnn._fit.FitterExtInterface`).
-                * None:
-                    In this case, the fitter is tried to be build from the `recipe` or left
-                    as `None`.
-        hierarchical_fitter:
-            Like `fitter` but for hierarchical clustering (see
-            :class:`~commonnn._fit.HierarchicalFitter` or
-            :class:`~commonnn._fit.HierarchicalFitterExtInterface`).
-        predictor:
-            Translates a clustering result from one bundle to another. Treated like
-            `fitter` (see
-            :class:`~commonnn._fit.Predictor` or
-            :class:`~commonnn._fit.PredictorExtInterface`).
-        bundle_kwargs: Used to create a :class:`~commonnn._bundle.Bundle`
-            if `data` is neither a bundle nor `None`.
-        recipe:
-            Used to assemble a fitter etc. and to wrap raw input data. Can be
-                * A string corresponding to a registered default recipe (see
-                    :obj:`~commonnn.recipes.REGISTERED_RECIPES`
-                )
-                * A recipe, i.e. a mapping of component keywords to component types
     """
 
     def __init__(
@@ -96,6 +55,48 @@ class Clustering:
             bundle_kwargs=None,
             recipe=None,
             **recipe_kwargs):
+        """
+        Keyword args:
+            data:
+                The data points to be clustered. Can be one of
+                    * `None`:
+                        Plain initialisation without input data.
+                    * A :class:`~commonnn._bundle.Bundle`:
+                        Initialisation with a ready-made input data bundle.
+                    * Any object implementing the input data interface
+                    (see :class:`~commonnn._types.InputData` or
+                    :class:`~commonnn._types.InputDataExtInterface`):
+                        in this case, additional keyword arguments can be passed
+                        via `bundle_kwargs` which are used to initialise a
+                        :class:`~commonnn._bundle.Bundle` from the input data,
+                        e.g. `labels`, `children`, etc.
+                    * Raw input data: Takes the input data type and a preparation
+                    hook from the `recipe` and wraps the raw data.
+            fitter:
+                Executes the clustering procedure. Can be
+                    * Any object implementing the fitter interface (see :class:`~commonnn._fit.Fitter` or
+                    :class:`~commonnn._fit.FitterExtInterface`).
+                    * None:
+                        In this case, the fitter is tried to be build from the `recipe` or left
+                        as `None`.
+            hierarchical_fitter:
+                Like `fitter` but for hierarchical clustering (see
+                :class:`~commonnn._fit.HierarchicalFitter` or
+                :class:`~commonnn._fit.HierarchicalFitterExtInterface`).
+            predictor:
+                Translates a clustering result from one bundle to another. Treated like
+                `fitter` (see
+                :class:`~commonnn._fit.Predictor` or
+                :class:`~commonnn._fit.PredictorExtInterface`).
+            bundle_kwargs: Used to create a :class:`~commonnn._bundle.Bundle`
+                if `data` is neither a bundle nor `None`.
+            recipe:
+                Used to assemble a fitter etc. and to wrap raw input data. Can be
+                    * A string corresponding to a registered default recipe (see
+                        :obj:`~commonnn.recipes.REGISTERED_RECIPES`
+                    )
+                    * A recipe, i.e. a mapping of component keywords to component types
+        """
 
         builder = recipes.Builder(recipe, **recipe_kwargs)
 
@@ -126,6 +127,7 @@ class Clustering:
 
             if isinstance(kw, kw_type):
                 setattr(self, f"_{component_kw}", kw)
+                continue
 
             if kw is not None:
                 builder.recipe[component_kw] = kw
@@ -144,7 +146,7 @@ class Clustering:
     def labels(self):
         """
         Direct access to :obj:`~commonnn._types.Labels.labels`
-        holding cluster label assignments for points in :obj:`~commonnn._types.InputData`
+        holding cluster label assignments for points in :obj:`~commonnn._types.InputData`,
         stored on the root :obj:`~commonnn._bundle.Bundle`.
         """
         if self._bundle is None:
@@ -157,7 +159,7 @@ class Clustering:
     def labels(self, value):
         """
         Direct access to :obj:`~commonnn._types.Labels`
-        holding cluster label assignments for points in :obj:`~commonnn._types.InputData`
+        holding cluster label assignments for points in :obj:`~commonnn._types.InputData`,
         stored on the root :obj:`~commonnn._bundle.Bundle`.
         """
         if self._bundle is None:
@@ -189,16 +191,17 @@ class Clustering:
     def children(self):
         """
         Return a mapping of child cluster labels to
-        :obj:`commonnn.cluster.Clustering` instances representing
-        the children of this clustering.
+        :obj:`commonnn._bundle.Bundle` instances representing
+        the children of this clustering (the root bundle).
         """
         return self._bundle._children
 
     @property
     def summary(self):
         """
-        Return an instance of :obj:`commonnn.cluster.Summary`
-        collecting clustering results for this clustering.
+        Return an instance of :obj:`commonnn.report.Summary`
+        collecting clustering result records for this clustering
+        (the root bundle).
         """
         return self._bundle._summary
 
@@ -206,14 +209,17 @@ class Clustering:
         attr_str = ", ".join([
             f"input_data={self._bundle._input_data}",
             f"fitter={self._fitter}",
-            f"hfitter={self._hierarchical_fitter}",
+            f"hierarchical_fitterh={self._hierarchical_fitter}",
             f"predictor={self._predictor}",
         ])
 
         return f"{type(self).__name__}({attr_str})"
 
-    def __getitem__(self, value):
-        return self._bundle.get_child(value)
+    def __getitem__(self, key):
+        return self._bundle.get_child(key)
+
+    def __setitem___(self, key, value):
+        self._bundle.add_child(key, value)
 
     def _fit(
             self,
@@ -313,3 +319,20 @@ class Clustering:
             bundle._children = {}
 
         self._hierarchical_fitter.fit(bundle, *args, **kwargs)
+
+    def predict(
+            self, other, *, bundle=None, **kwargs):
+        """Execute prediction procedure
+
+        Args:
+            other: :obj:`commonnn._bundle.Bundle` instance for
+                which cluster labels should be predicted.
+
+        Keyword args:
+            bundle: Bundle to predict from. If None, uses the root bundle.
+        """
+
+        if bundle is None:
+            bundle = self._bundle
+
+        self._predictor.predict(bundle, other, **kwargs)

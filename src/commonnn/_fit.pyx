@@ -168,6 +168,9 @@ class HierarchicalFitter(ABC):
     def fit(self, Bundle bundle, *args, **kwargs):
         """Generic clustering"""
 
+    def __repr__(self):
+        return f"{type(self).__name__}"
+
 
 cdef class FitterExtInterface:
     def fit(self, Bundle bundle, *, **kwargs): ...
@@ -213,14 +216,18 @@ class Predictor(ABC):
     """Defines the predictor interface"""
 
     @abstractmethod
-    def predict(
+    def predict(self, Bundle bundle, Bundle other, *, **kwargs):
+        """Generic prediction"""
+
+    @abstractmethod
+    def _predict(
             self,
             input_data: Type['InputData'],
             predictand_input_data: Type['InputData'],
             labels: Type['Labels'],
             predictand_labels: Type['Labels'],
             cluster_params: Type['ClusterParameters']):
-        """Generic clustering"""
+        """Generic prediction"""
 
     @abstractmethod
     def make_parameters(
@@ -234,6 +241,49 @@ class Predictor(ABC):
 class PredictorCommonNN(Predictor):
 
     _parameter_type = CommonNNParameters
+
+    def predict(
+            self, Bundle bundle, Bundle other, *,
+            clusters=None, purge=True, info=True, **kwargs):
+
+        if (other._labels is None) or purge or (
+                not other._labels.meta.get("frozen", False)):
+            other._labels = Labels(
+                np.zeros(other._input_data.n_points, order="C", dtype=P_AINDEX)
+                )
+
+        cluster_params = self.make_parameters(
+            **kwargs
+            )
+
+        if clusters is None:
+           clusters = bundle._labels.to_set() - {0}
+
+        other._labels.consider_set = clusters
+
+        _, execution_time = report.timed(self._predict)(
+            bundle._input_data, other._input_data,
+            bundle._labels, other._labels,
+            cluster_params
+        )
+
+        if info:
+            params = {
+                k: (cluster_params.radius_cutoff, cluster_params.similarity_cutoff)
+                for k in clusters
+                if k != 0
+                }
+            meta = {
+                "params": params,
+                "reference": weakref.proxy(bundle),
+                "origin": "predict",
+            }
+            old_params = other._labels.meta.get("params", {})
+            old_params.update(meta["params"])
+            meta["params"] = old_params
+            other._labels.meta.update(meta)
+
+        other._labels.meta["frozen"] = True
 
     def make_parameters(
             self, **kwargs) -> Type["ClusterParameters"]:
@@ -790,7 +840,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             f"nb={self._neighbour_neighbours}",
             f"checker={self._similarity_checker}",
             f"prioq={self._priority_queue}",
-            f"prioq (tree)={self._priority_queue_tree}"
+            f"prioq_tree={self._priority_queue_tree}"
         ])
 
         return f"{type(self).__name__}({attr_str})"
@@ -1143,8 +1193,6 @@ class HierarchicalFitterRepeat(HierarchicalFitter):
             while (p_it != parent_labels_map.end()):
                 p_label = dereference(p_it).first
 
-                # !!! Python interaction
-                # TODO: fix warning: comparison of integer expressions of different signedness: 'Py_ssize_t' {aka 'long int'} and 'size_t'
                 parent_bundle = terminal_bundles[p_label]
                 labels_vector =  dereference(p_it).second
                 lvs = labels_vector.size()
@@ -1159,7 +1207,7 @@ class HierarchicalFitterRepeat(HierarchicalFitter):
                         k: (radius_cutoffs[step], similarity_cutoffs[step])
                         for k in parent_bundle._labels.to_set()
                         if k != 0
-                        }
+                    }
                     parent_bundle._labels.meta.update({
                         "params": params,
                         "reference": weakref.proxy(parent_bundle),
@@ -1216,7 +1264,7 @@ class PredictorCommonNNFirstmatch(PredictorCommonNN):
             ("similarity_checker", None),
             ]
 
-    def predict(
+    def _predict(
             self,
             object input_data,
             object predictand_input_data,

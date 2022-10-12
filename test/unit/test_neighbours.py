@@ -56,8 +56,10 @@ def test_neighbours(neighbours_type, args, kwargs, n_points, ordered):
 
     expected = set(list(args[0]) + [5])
     members = list(range(n_points))
-    random.shuffle(members)
-    for i in members:
+    shuffled_members = [x for x in members]
+    while members == shuffled_members:
+        random.shuffle(shuffled_members)
+    for i in shuffled_members:
         assert neighbours.get_member(i) in expected
 
     assert neighbours.contains(5)

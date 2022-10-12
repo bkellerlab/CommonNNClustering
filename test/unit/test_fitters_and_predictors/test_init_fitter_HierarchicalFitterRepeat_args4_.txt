@@ -1,0 +1,2 @@
+HierarchicalFitterRepeat
+HierarchicalFitterRepeat(fitter=None)

@@ -1,0 +1,2 @@
+HierarchicalFitterCommonNNMSTPrim
+HierarchicalFitterCommonNNMSTPrim(ngetter=None, na=None, nb=None, checker=None, prioq=None, prioq_tree=None)

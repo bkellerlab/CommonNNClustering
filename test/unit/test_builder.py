@@ -99,6 +99,35 @@ def test_init_builder():
             },
             "fitter", _fit.FitterCommonNNBFSDebug
         ),
+        (
+            {
+                "hierarchical_fitter": "repeat",
+                "hierarchical_fitter.fitter": "bfs", "hierarchical_fitter.fitter.na": "vector",
+                "hierarchical_fitter.fitter.checker": "contains", "hierarchical_fitter.fitter.q": "fifo",
+                "hierarchical_fitter.fitter.ngetter": "brute_force", "hierarchical_fitter.fitter.ngetter.dgetter": "metric",
+                "hierarchical_fitter.fitter.ngetter.dgetter.metric": "dummy"
+            },
+            "hierarchical_fitter", _fit.HierarchicalFitterRepeat
+        ),
+        (
+            {
+                "hierarchical_fitter": "mst",
+                "hierarchical_fitter.na": "vector",
+                "hierarchical_fitter.checker": "contains",
+                "hierarchical_fitter.prioq": "maxheap",
+                "hierarchical_fitter.ngetter": "lookup"
+            },
+            "hierarchical_fitter", _fit.HierarchicalFitterCommonNNMSTPrim
+        ),
+        (
+            {
+                "predictor": _fit.PredictorCommonNNFirstmatch,
+                "predictor.na": "vector",
+                "predictor.checker": "contains",
+                "predictor.ngetter": "lookup"
+            },
+            "predictor", _fit.PredictorCommonNNFirstmatch
+        ),
     ]
 )
 def test_make_components(recipe, make, expected):
