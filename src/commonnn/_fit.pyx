@@ -89,9 +89,9 @@ class FitterCommonNN(Fitter):
 
         cluster_params = self.make_parameters(**kwargs)
 
-        _, execution_time = report.timed(
-            self._fit(bundle._input_data, bundle._labels, cluster_params)
-        )
+        _, execution_time = report.timed(self._fit)(
+            bundle._input_data, bundle._labels, cluster_params
+            )
 
         if info:
             new_label_set = bundle._labels.to_set()
@@ -199,7 +199,7 @@ cdef class FitterExtCommonNNInterface(FitterExtInterface):
     _record_type = report.CommonNNRecord
 
     def fit(self, Bundle bundle, *, **kwargs) -> float:
-        return Fitter.CommonNN.fit(self, bundle, **kwargs)
+        return FitterCommonNN.fit(self, bundle, **kwargs)
 
     def make_parameters(
             self, *, **kwargs) -> Type["ClusterParameters"]:

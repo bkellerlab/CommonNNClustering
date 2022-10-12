@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 
-from commonnn import recipes
-from commonnn._primitive_types import P_AVALUE
+from commonnn import cluster, recipes
+from commonnn._primitive_types import P_AVALUE, P_AINDEX,  P_ABOOL
 from commonnn import _fit, _types
 
 
@@ -123,3 +123,42 @@ def test_fit_debug(fitter, basic_components, file_regression, capsys):
     )
     captured = capsys.readouterr()
     file_regression.check(yielded + "\n\n" + captured.out)
+
+
+@pytest.mark.parametrize(
+    "fitter",
+    [
+        (_fit.FitterCommonNNBFSDebug, (), {"verbose": False, "yielding": False}),
+        (_fit.FitterCommonNNBFS, (), {}),
+        (_fit.FitterExtCommonNNBFS, (), {}),
+    ]
+)
+@pytest.mark.parametrize(
+    "old_labels,consider,fit_kwargs,labels_meta",
+    [
+        (None, None, {}, {}),
+        (
+            np.array([1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0], dtype=P_AINDEX),
+            np.array([0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1], dtype=P_ABOOL),
+            {"purge": False}, {"frozen": "True"}
+        )
+    ]
+)
+def test_fit_via_clustering(
+        fitter, old_labels, consider, fit_kwargs, labels_meta, basic_components):
+    data = np.array(basic_components, order="c", dtype=P_AVALUE)
+    clustering = cluster.Clustering(data, fitter=fitter)
+    assert clustering._fitter is not None
+
+    if old_labels is not None:
+        clustering._bundle.labels = _types.Labels(
+            old_labels, consider=consider
+        )
+
+        meta = clustering._bundle._labels.meta
+        meta.update(labels_meta)
+        clustering._bundle._labels._meta = meta
+
+    clustering.fit(radius_cutoff=1.5, similarity_cutoff=1, **fit_kwargs)
+    expected = np.array([1, 1, 1, 1, 1, 0, 0, 0, 0, 2, 2, 2])
+    np.testing.assert_array_equal(clustering.labels, expected)

@@ -9,7 +9,7 @@ import weakref
 try:
     import matplotlib as mpl
     import matplotlib.pyplot as plt
-    from . import plot
+    # from . import plot
     MPL_FOUND = True
 except ModuleNotFoundError as error:
     print("Optional dependency module not found: ", error)
