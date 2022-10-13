@@ -16,7 +16,6 @@ except ModuleNotFoundError:
 from commonnn import helper
 from commonnn._primitive_types import P_AINDEX, P_AVALUE, P_ABOOL
 
-from libc.math cimport sqrt as csqrt, pow as cpow, fabs as cfabs
 from cython.operator cimport dereference, preincrement
 
 

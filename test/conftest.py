@@ -8,9 +8,9 @@ try:
 except ModuleNotFoundError:
     SKLEARN_FOUND = False
 
-# from commonnn import cluster
+from commonnn import cluster
 from commonnn._primitive_types import P_AINDEX
-# from commonnn._bundle import Bundle
+from commonnn._bundle import Bundle
 from commonnn._types import Labels, ReferenceIndices
 
 
@@ -93,65 +93,66 @@ def basic_neighbourhoods():
     ]
 
 
+def make_empty_clustering():
+    return cluster.Clustering()
 
 
-# def make_empty_clustering():
-#     return cluster.Clustering()
-# 
-# 
-# def make_hierarchical_clustering_a():
-#     bundle = Bundle(
-#         labels=Labels(
-#             np.array([0, 0, 1, 1, 0, 0, 1, 2, 1, 1, 1, 2, 2, 1, 0], dtype=P_AINDEX)
-#         )
-#     )
-#     clustering = cluster.Clustering(bundle)
-# 
-#     for i in [0, 1, 2]:
-#         bundle.add_child(i)
-# 
-#     bundle._children[1]._labels = Labels(
-#         np.array([0, 1, 0, 2, 2, 2, 1], dtype=P_AINDEX)
-#     )
-#     bundle._children[1]._reference_indices = ReferenceIndices(
-#         np.array([2, 3, 6, 8, 9, 10, 13]),
-#         np.array([2, 3, 6, 8, 9, 10, 13])
-#     )
-# 
-#     for i in [0, 1, 2]:
-#         bundle.get_child(1).add_child(i)
-# 
-#     bundle.get_child([1, 2])._labels = Labels(
-#         np.array([2, 1, 0], dtype=P_AINDEX)
-#     )
-#     bundle.get_child([1, 2])._reference_indices = ReferenceIndices(
-#         np.array([8, 9, 10]),
-#         np.array([3, 4, 5])
-#     )
-# 
-#     return clustering
-# 
-# 
-# def make_trivial_clustering():
-# 
-#     bundle = Bundle(
-#         labels=Labels(
-#             np.array([0, 0, 0, 0, 0, 0, 0, 0], dtype=P_AINDEX)
-#         )
-#     )
-#     clustering = cluster.Clustering(bundle)
-# 
-#     return clustering
-# 
-# 
-# registered_clustering_map = {
-#     "empty": make_empty_clustering,
-#     "hierarchical_a": make_hierarchical_clustering_a,
-#     "trivial": make_trivial_clustering,
-# }
-# 
-# 
-# @pytest.fixture
-# def registered_clustering(request):
-#     key = request.node.funcargs.get("case_key")
-#     return registered_clustering_map[key]()
+def make_hierarchical_clustering_a():
+    bundle = Bundle(
+        labels=Labels(
+            np.array([0, 0, 1, 1, 0, 0, 1, 2, 1, 1, 1, 2, 2, 1, 0], dtype=P_AINDEX),
+            meta={"origin": "fit", "params": {k: (1., 1) for k in range(3)}}
+        )
+    )
+    clustering = cluster.Clustering(bundle)
+
+    for i in [0, 1, 2]:
+        bundle.add_child(i)
+
+    bundle[1]._labels = Labels(
+        np.array([0, 1, 0, 2, 2, 2, 1], dtype=P_AINDEX),
+        meta={"origin": "fit", "params": {k: (1., 2) for k in range(3)}}
+    )
+    bundle[1]._reference_indices = ReferenceIndices(
+        np.array([2, 3, 6, 8, 9, 10, 13]),
+        np.array([2, 3, 6, 8, 9, 10, 13])
+    )
+
+    for i in [0, 1, 2]:
+        bundle[1].add_child(i)
+
+    bundle.get_child([1, 2])._labels = Labels(
+        np.array([2, 1, 0], dtype=P_AINDEX),
+        meta={"origin": "fit", "params": {k: (1., 3) for k in range(3)}}
+    )
+    bundle.get_child([1, 2])._reference_indices = ReferenceIndices(
+        np.array([8, 9, 10]),
+        np.array([3, 4, 5])
+    )
+
+    return clustering
+
+
+def make_trivial_clustering():
+
+    bundle = Bundle(
+        labels=Labels(
+            np.array([0, 0, 0, 0, 0, 0, 0, 0], dtype=P_AINDEX)
+        )
+    )
+    clustering = cluster.Clustering(bundle)
+
+    return clustering
+
+
+registered_clustering_map = {
+    "empty": make_empty_clustering,
+    "hierarchical_a": make_hierarchical_clustering_a,
+    "trivial": make_trivial_clustering,
+}
+
+
+@pytest.fixture
+def registered_clustering(request):
+    key = request.node.funcargs.get("case_key")
+    return registered_clustering_map[key]()

@@ -266,6 +266,9 @@ cdef class Bundle:
         """
         isolate(self, purge, isolate_input_data)
 
+    cpdef void reel(self, AINDEX depth: int = UINT_MAX):
+        reel(self, depth)
+
 
 cpdef void isolate(
         Bundle bundle,
@@ -352,6 +355,77 @@ cpdef void isolate(
     return
 
 
+cpdef void reel(Bundle bundle, AINDEX depth: int = UINT_MAX):
+    """Wrap up label assignments of lower hierarchy levels
+
+    Args:
+        depth: How many lower levels to consider. If `None`,
+        consider all.
+    """
+
+    assert depth > 0
+
+    _reel(bundle, depth)
+
+    return
+
+
+cdef inline void _reel(Bundle parent, AINDEX depth):
+    cdef AINDEX n, m,
+    cdef AINDEXindex, label, old_label, new_label, parent_index, n_clusters
+    cdef Labels parent_labels, child_labels
+    cdef AINDEX* plabels_ptr
+    cdef AINDEX* clabels_ptr
+    cdef Bundle child
+    cdef dict meta, params
+
+    if not parent._children:
+        return
+
+    depth -= 1
+
+    parent_labels = parent._labels
+    plabels_ptr = &parent_labels._labels[0]
+    n = parent_labels._labels.shape[0]
+
+    meta = parent_labels.meta
+    meta["origin"] = "reel"
+    parent_labels._meta = meta
+
+    for label, child in parent._children.items():
+        if child._labels is None:
+            continue
+
+        if (depth > 0):
+            _reel(child, depth)
+
+        n_clusters = maxint(plabels_ptr, n)
+
+        child_labels = child._labels
+        clabels_ptr = &child_labels._labels[0]
+        m = child_labels._labels.shape[0]
+
+        for index in range(m):
+            old_label = clabels_ptr[index]
+            if old_label == 0:
+                new_label = 0
+            else:
+                new_label = old_label + n_clusters
+
+            parent_index = child.parent_indices[index]
+            plabels_ptr[parent_index] = new_label
+
+        try:
+            _ = parent_labels.meta["params"].pop(label)
+        except KeyError:
+            pass
+
+        params = child_labels.meta.get("params", {})
+        for old_label, p in params.items():
+            if old_label == 0: continue
+            parent_labels.meta["params"][old_label + n_clusters] = p
+
+
 cpdef void check_children(
         Bundle bundle,
         AINDEX member_cutoff,
@@ -428,3 +502,70 @@ def bfs_leafs(Bundle root):
         else:
             for child in children.values():
                 q.append(child)
+
+
+def trim_shrinking(Bundle bundle):
+    """Scan cluster hierarchy for removable nodes
+
+    If a cluster does only shrink (i.e. has only one actual child with
+    lower or equal member count) and does not split at any later point,
+    it children will be removed.
+    """
+    def _trim_shrinking(Bundle bundle, new=True):
+
+        if not bundle._children:
+            splits = will_split = False
+        else:
+            label_set = bundle._labels.set
+            label_set.discard(0)
+
+            if len(label_set) <= 1:
+                splits = False
+            else:
+                splits = True
+
+            will_split = []
+            for child in bundle._children.values():
+                will_split.append(
+                    _trim_shrinking(child, new=splits)
+                    )
+
+            will_split = any(will_split)
+
+        keep = new or will_split or splits
+        if not keep:
+            bundle._labels = None
+            bundle._children = {}
+
+        return keep
+
+    _trim_shrinking(bundle)
+
+    return
+
+def trim_trivial(bundle=None):
+    """Scan cluster hierarchy for removable nodes
+
+    If the cluster label assignments on a clustering are all zero
+    (noise), the clustering is considered trivial.  In this case,
+    the labels and children are reset to `None`.
+    """
+
+    def _trim_trivial(Bundle bundle):
+        if bundle._labels is None:
+            return
+
+        if bundle._labels.set == {0}:
+            bundle._labels = None
+            bundle._children = {}
+            return
+
+        if not bundle._children:
+            return
+
+        for child in bundle._children.values():
+            _trim_trivial(child)
+
+    _trim_trivial(bundle)
+
+    return

@@ -36,3 +36,13 @@ cdef AINDEX* _allocate_and_fill_aindex_array(AINDEX n, list values):
         ptr[i] = values[i]
 
     return ptr
+
+
+cdef inline AINDEX maxint(AINDEX* array, AINDEX n) nogil:
+    cdef AINDEX i, maximum = 0
+
+    for i in range(n):
+        if array[i] > maximum:
+            maximum = array[i]
+
+    return maximum

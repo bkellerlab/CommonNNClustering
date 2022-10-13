@@ -1,4 +1,4 @@
-from commonnn._primitive_types cimport AVALUE, AINDEX, ABOOL
+from commonnn._primitive_types cimport AVALUE, AINDEX, ABOOL, UINT_MAX
 from commonnn._bundle cimport Bundle, isolate
 from commonnn._types cimport ClusterParameters, Labels, ReferenceIndices
 

@@ -230,6 +230,30 @@ def test_isolate(
     file_regression.check(report)
 
 
+@pytest.mark.parametrize(
+    "case_key,depth,expected,expected_params",
+    [
+        (
+            "hierarchical_a", 1,
+            [0, 0, 0, 3, 0, 0, 0, 2, 4, 4, 4, 2, 2, 3, 0],
+            {0: (1., 1), 2: (1., 1), 3: (1., 2), 4: (1., 2)}
+        ),
+        (
+            "hierarchical_a", None,
+            [0, 0, 0, 3, 0, 0, 0, 2, 6, 5, 0, 2, 2, 3, 0],
+            {0: (1., 1), 2: (1., 1), 3: (1., 2), 5: (1., 3), 6: (1., 3)}
+        )
+    ]
+)
+def test_reel(case_key, registered_clustering, depth, expected, expected_params):
+    registered_clustering.reel(depth=depth)
+    np.testing.assert_array_equal(
+        registered_clustering._bundle.labels,
+        expected
+    )
+    assert registered_clustering._bundle._labels.meta["params"] == expected_params
+
+
 def test_bfs():
     root = _bundle.Bundle(
         children={

@@ -33,6 +33,7 @@ except ModuleNotFoundError as error:
     PANDAS_FOUND = False
 
 from commonnn._primitive_types import P_AINDEX, P_AVALUE, P_ABOOL
+from commonnn import _bundle
 from commonnn._fit import Fitter, HierarchicalFitter, Predictor
 from commonnn._types import InputData
 from commonnn import recipes
@@ -336,3 +337,56 @@ class Clustering:
             bundle = self._bundle
 
         self._predictor.predict(bundle, other, **kwargs)
+
+
+    def trim(self, Bundle bundle, protocol="shrinking", **kwargs):
+
+        if bundle is None:
+            bundle = self._bundle
+
+        if callable(protocol):
+            protocol(bundle, **kwargs)
+            return
+
+        if protocol == "shrinking":
+            _bundle.trim_shrinking(bundle)
+        elif protocol == "trivial":
+            _bundle.trim_trivial(bundle)
+        else:
+            raise ValueError(f"Unknown protocol {protocol}")
+
+
+    def isolate(
+            self,
+            bint purge: bool = True,
+            bint isolate_input_data: bool = True,
+            bundle=None) -> None:
+        """Create child clusterings from cluster labels
+
+        Args:
+            purge: If `True`, creates a new mapping for the children of this
+                clustering.
+            isolate_input_data: If `True`, attaches a subset of the input data
+                of this clustering to the child.
+            bundle: A bundle to operate on. If `None` uses the root bundle.
+        """
+
+        if bundle is None:
+            bundle = self._bundle
+
+        bundle.isolate(purge, isolate_input_data)
+
+        return
+
+    def reel(
+            self,
+            depth: Optional[int] = None,
+            bundle=None) -> None:
+
+        if bundle is None:
+            bundle = self._bundle
+
+        if depth is None:
+            depth = UINT_MAX
+
+        bundle.reel(depth)

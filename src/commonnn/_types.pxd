@@ -2,6 +2,7 @@ from commonnn._primitive_types cimport AINDEX, AVALUE, ABOOL
 from commonnn._primitive_types cimport _allocate_and_fill_aindex_array, _allocate_and_fill_avalue_array
 
 from libc.stdlib cimport malloc, free
+from libc.math cimport sqrt as csqrt, pow as cpow, fabs as cfabs
 from libcpp.unordered_set cimport unordered_set as stduset
 from libcpp.set cimport set as stdset
 from libcpp.vector cimport vector as stdvector
