@@ -140,6 +140,7 @@ class FitterCommonNN(Fitter):
     def get_fit_signature(self):
         fparams = []
         for pn in self._parameter_type._fparam_names:
+            # TODO/TEST: Not tested because there is no default float parameter yet
             if pn in self._parameter_type._defaults:
                 p = self._parameter_type._defaults[pn]
                 if isinstance(p, str):
@@ -800,22 +801,17 @@ Fitter.register(FitterExtCommonNNBFS)
 
 
 class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
-    """Concrete implementation of the fitter interface
+    """Concrete implementation of the hierarchical fitter interface
 
-    Args:
-        neighbours_getter: Any object implementing the neighbours getter
-            interface.
-        neighbours: Any object implementing the neighbours
-            interface.
-        neighbour_neighbourss: Any object implementing the neighbours
-            interface.
-        similarity_checker: Any object implementing the similarity checker
-            interface.
-        priority_queue:
-            Any object implementing the prioqueue interface (max heap).
-        priority_queue_tree:
-            Any object implementing the prioqueue interface (max heap).
+    Builds a minimum spanning tree on the density estimate
+    using Prim's algorithm and
+    creates a cluster hierarchy via single linkage clustering.
+
+    Note:
+        This is still experimental.
     """
+
+    _parameter_type = RadiusParameters
 
     def __init__(
             self,
@@ -825,6 +821,22 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             similarity_checker: Type["SimilarityChecker"],
             priority_queue: Type["PriorityQueue"],
             priority_queue_tree: Type["PriorityQueue"]):
+        """
+        Args:
+            neighbours_getter: Any object implementing the neighbours getter
+                interface.
+            neighbours: Any object implementing the neighbours
+                interface.
+            neighbour_neighbours: Any object implementing the neighbours
+                interface.
+            similarity_checker: Any object implementing the similarity checker
+                interface.
+            priority_queue:
+                Any object implementing the prioqueue interface (max heap).
+            priority_queue_tree:
+                Any object implementing the prioqueue interface (max heap).
+        """
+
         self._neighbours_getter = neighbours_getter
         self._neighbours = neighbours
         self._neighbour_neighbours = neighbour_neighbours
@@ -856,37 +868,27 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             ("priority_queue_tree", "priority_queue")
             ]
 
-    def fit(self, Bundle bundle, **kwargs):
+    def make_parameters(
+            self, **kwargs) -> Type["ClusterParameters"]:
+        cluster_params = self._parameter_type.from_mapping(kwargs)
 
-        radius_cutoff = kwargs["radius_cutoff"]
-        member_cutoff = kwargs.get("member_cutoff")
-        max_clusters = kwargs.get("max_clusters")
-        similarity_offset = kwargs.get("similarity_offset")
-        sort_by_size = kwargs.get("sort_by_size", True)
-        info = kwargs.get("info", True)
-        v = kwargs.get("v", True)
+        try:
+            used_metric = self._neighbours_getter._distance_getter._metric
+        except AttributeError:
+            pass
+        else:
+            cluster_params.radius_cutoff = used_metric.adjust_radius(cluster_params.radius_cutoff)
 
-        self._fit(
-            bundle,
-            radius_cutoff,
-            member_cutoff,
-            max_clusters,
-            similarity_offset,
-            sort_by_size,
-            info,
-            v
-            )
+        return cluster_params
 
-    def _fit(
-            self,
-            bundle,
-            radius_cutoff: float,
+    def fit(
+            self, Bundle bundle, *,
+            sort_by_size: bool = True,
             member_cutoff: int = None,
             max_clusters: int = None,
-            similarity_offset: int = None,
-            sort_by_size: bool = True,
             info: bool = True,
-            v: bool = True):
+            v: bool = True,
+            **kwargs):
 
         if not NX_FOUND:
             raise ModuleNotFoundError("No module named 'networkx'")
@@ -910,13 +912,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
         cdef AVALUE weight
         cdef AINDEX bundle_index, point, member, _member_cutoff, label
 
-        cdef ClusterParameters cluster_params
-
-        # TODO: Relevant? Is not used. Might be used to modify dens.estimate
-        if similarity_offset is None:
-            similarity_offset = 0
-
-        cluster_params = self.make_parameters(radius_cutoff, 0, 1)
+        cluster_params = self.make_parameters(**kwargs)
 
         if member_cutoff is None:
             member_cutoff = 10
@@ -994,21 +990,15 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
 
                     self._priority_queue.push(b, member, weight)
 
+        if v:
+            print("Finished building MST")
+
         # Build hierarchy from MST
         cdef AINDEX[::1] parent_indicator = np.arange(n_points)
         cdef AINDEX[::1] root_clabel_indicator = np.arange(n_points)
         cdef dict top_bundles = {}
         cdef ABOOL[::1] checked = np.zeros(n_points - 1, dtype=bool)
         cdef Bundle top, left, right
-
-        def get_root(AINDEX p):
-            cdef AINDEX parent
-            parent = parent_indicator[p]
-            while parent != p:
-                p = parent
-                parent = parent_indicator[p]
-            return p
-
         cdef AVALUE current_weight = INFTY
         cdef bint needs_folding = False
 
@@ -1016,8 +1006,8 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
         for i in range(self._priority_queue_tree.size()):
             a, b, weight = self._priority_queue_tree.pop()
 
-            ra = get_root(a)
-            rb = get_root(b)
+            ra = get_root(a, parent_indicator)
+            rb = get_root(b, parent_indicator)
             la = root_clabel_indicator[ra]
             lb = root_clabel_indicator[rb]
 
@@ -1040,14 +1030,18 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             if (la >= n_points):
                 left = top_bundles[la - n_points]
                 top._graph.add_edges_from(left._graph.edges(data=True))
-                top._children[label] = left
+                children = top.children
+                children[label] = left
+                top._children =  children
                 del top_bundles[la - n_points]
                 label += 1
 
             if (lb >= n_points):
                 right = top_bundles[lb - n_points]
                 top._graph.add_edges_from(right._graph.edges(data=True))
-                top._children[label] = right
+                children = top.children
+                children[label] = right
+                top._children =  children
                 del top_bundles[lb - n_points]
 
             parent_indicator[ra] = rb
@@ -1068,7 +1062,9 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             for top in top_bundles.values():
                 if len(top._graph) >= member_cutoff:
                     bundle._graph.add_edges_from(bundle._graph.edges(data=True))
-                    bundle._children[count] = top
+                    children = bundle.children
+                    children[count] = top
+                    bundle._children =  children
                     count += 1
 
             for child in bundle._children.values():
@@ -1078,6 +1074,9 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             top = top_bundles[n_points - 2]
             bundle._graph = top._graph
             bundle._lambda = top._lambda
+
+        if v:
+            print("Finished building hierarchy")
 
 
 class HierarchicalFitterRepeat(HierarchicalFitter):
@@ -1109,7 +1108,6 @@ class HierarchicalFitterRepeat(HierarchicalFitter):
             sort_by_size=False,
             member_cutoff=None,
             max_clusters=None,
-            similarity_cutoff=None,
             info=True,
             v=False,
             **kwargs):
@@ -1325,3 +1323,12 @@ class PredictorCommonNNFirstmatch(PredictorCommonNN):
                     break
 
         return
+
+
+cdef inline AINDEX get_root(AINDEX p, AINDEX[::1] parent_indicator) nogil:
+    cdef AINDEX parent
+    parent = parent_indicator[p]
+    while parent != p:
+        p = parent
+        parent = parent_indicator[p]
+    return p

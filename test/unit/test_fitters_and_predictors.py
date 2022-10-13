@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 
 from commonnn import cluster, recipes
-from commonnn._primitive_types import P_AVALUE, P_AINDEX,  P_ABOOL
-from commonnn import _fit, _types
+from commonnn._primitive_types import P_AVALUE, P_AINDEX, P_ABOOL
+from commonnn import _bundle, _fit, _types
 
 
 @pytest.mark.parametrize(
@@ -127,6 +127,8 @@ def test_fit_debug(fitter, basic_components, file_regression, capsys):
     file_regression.check(yielded + "\n\n" + captured.out)
 
 
+# TODO: The following tests may already count as integration tests
+
 @pytest.mark.parametrize(
     "fitter",
     [
@@ -212,3 +214,16 @@ def test_predict_via_clustering(basic_components):
 
     expected = np.array([1, 1, 1, 1, 1, 0, 0, 0, 0, 2, 2, 2])
     np.testing.assert_array_equal(other.labels, expected)
+
+
+def test_fit_hierarchical_prim_via_clustering(basic_components):
+    data = np.array(basic_components, order="c", dtype=P_AVALUE)
+    clustering = cluster.Clustering(data, recipe="coordinates_mst")
+    clustering.fit_hierarchical(radius_cutoff=1.5, member_cutoff=1)
+    labels = _types.Labels.from_length(data.shape[0])
+    for i, b in enumerate(_bundle.bfs(clustering.root)):
+        for n in b.graph.nodes:
+            labels.labels[n] = i
+    labels.sort_by_size()
+    expected = np.array([1, 1, 1, 1, 1, 1, 0, 3, 3, 2, 2, 2])
+    np.testing.assert_array_equal(labels.labels, expected)

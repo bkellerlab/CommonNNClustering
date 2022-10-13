@@ -18,7 +18,7 @@ cdef class ClusterParameters:
         AINDEX *iparams
 
 cdef class CommonNNParameters(ClusterParameters): pass
-
+cdef class RadiusParameters(ClusterParameters): pass
 
 cdef class Labels:
     cdef public:

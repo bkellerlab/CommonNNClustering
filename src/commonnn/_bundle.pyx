@@ -161,7 +161,7 @@ cdef class Bundle:
         return attr_str
 
     def __repr__(self):
-        return f"{type(self).__name__}(alias={self.alias!r}, hierarchy_lavel={self._hierarchy_level})"
+        return f"{type(self).__name__}(alias={self.alias!r}, hierarchy_level={self._hierarchy_level})"
 
     def get_child(self, label):
         """Retrieve a child of this bundle

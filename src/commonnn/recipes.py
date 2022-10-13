@@ -336,7 +336,18 @@ REGISTERED_RECIPES = {
         "fitter.na": "vector",
         "fitter.checker": "screen",
         "fitter.queue": "fifo",
-    }
+    },
+    "coordinates_mst": {
+        "input_data": "components_mview",
+        "preparation_hook": "components_array_from_parts",
+        "hfitter": "mst",
+        "hfitter.ngetter": "brute_force",
+        "hfitter.na": "vuset",
+        "hfitter.checker": "switch",
+        "hfitter.prioq": "maxheap",
+        "hfitter.ngetter.dgetter": "metric",
+        "hfitter.ngetter.dgetter.metric": "euclidean_r",
+    },
 }
 
 

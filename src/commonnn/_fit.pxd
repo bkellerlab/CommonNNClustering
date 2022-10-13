@@ -5,7 +5,10 @@ from libcpp.unordered_map cimport unordered_map as stdumap
 from libcpp.unordered_set cimport unordered_set as stduset
 
 from commonnn._primitive_types cimport AVALUE, AINDEX, ABOOL
-from commonnn._types cimport ClusterParameters, CommonNNParameters, Labels, ReferenceIndices
+from commonnn._types cimport (
+    ClusterParameters, CommonNNParameters, RadiusParameters,
+    Labels, ReferenceIndices
+)
 from commonnn._bundle cimport Bundle
 from commonnn._types cimport (
     InputDataExtInterface,
@@ -33,3 +36,6 @@ cdef class FitterExtCommonNNBFS(FitterExtCommonNNInterface):
         NeighboursExtInterface _neighbour_neighbours
         SimilarityCheckerExtInterface _similarity_checker
         QueueExtInterface _queue
+
+
+cdef AINDEX get_root(AINDEX p, AINDEX[::1] parent_indicator) nogil

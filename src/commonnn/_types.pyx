@@ -133,6 +133,23 @@ cdef class CommonNNParameters(ClusterParameters):
         self.iparams[2] = value
 
 
+cdef class RadiusParameters(ClusterParameters):
+    _fparam_names = ["radius_cutoff"]
+    _iparam_names = []
+
+    _defaults = {
+        "radius_cutoff": 0.2
+    }
+
+    @property
+    def radius_cutoff(self):
+        return self.fparams[0]
+
+    @radius_cutoff.setter
+    def radius_cutoff(self, value):
+        self.fparams[0] = value
+
+
 cdef class Labels:
     """Represents cluster label assignments"""
 
