@@ -120,9 +120,7 @@ cdef class Bundle:
 
     @summary.setter
     def summary(self, value):
-        if value is None:
-            value = Summary()
-        if not isinstance(value, MutableSequence):
+        if (value is not None) and (not isinstance(value, MutableSequence)):
             raise TypeError("Expected a mutable sequence")
         self._summary = value
 

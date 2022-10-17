@@ -173,7 +173,7 @@ class Clustering:
             return None
         if self._bundle._input_data is None:
             return None
-        return self._bundle._input_data.data
+        return self._bundle._input_data.to_components_array()
 
     @property
     def fitter(self):
@@ -284,6 +284,9 @@ class Clustering:
             bundle._labels.sort_by_size(member_cutoff, max_clusters)
 
         if record:
+            if bundle._summary is None:
+                bundle._summary = Summary(record_type=self._fitter._record_type)
+
             rec = self._fitter._record_type.from_bundle(
                 bundle, cluster_params,
                 member_cutoff=member_cutoff,
@@ -643,7 +646,7 @@ class Clustering:
             raise ModuleNotFoundError("No module named 'matplotlib'")
 
         if (bundle._input_data is None) or (
-                not bundle._input_data.meta.get("access_coords", False)):
+                not bundle._input_data.meta.get("access_components", False)):
             raise ValueError(
                 "No data point coordinates found to evaluate."
             )

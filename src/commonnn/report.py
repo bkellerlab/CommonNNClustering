@@ -167,7 +167,7 @@ class Summary(MutableSequence):
         return self._list.__getitem__(key)
 
     def __setitem__(self, key, item):
-        if isinstance(item, self._record_type):
+        if type(item) == self._record_type:
             self._list.__setitem__(key, item)
         else:
             raise TypeError(
@@ -184,7 +184,7 @@ class Summary(MutableSequence):
         return self._list.__str__()
 
     def insert(self, index, item):
-        if isinstance(item, self._record_type):
+        if type(item) == self._record_type:
             self._list.insert(index, item)
         else:
             raise TypeError(

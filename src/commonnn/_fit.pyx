@@ -110,14 +110,18 @@ class FitterCommonNN(Fitter):
             meta["params"] = old_params
             bundle._labels.meta.update(meta)
 
-        return execution_time, cluster_params
+        return execution_time, self.make_parameters(original=True, **kwargs)
 
     def make_parameters(
-            self, similarity_offset=0, **kwargs) -> Type["ClusterParameters"]:
+            self, similarity_offset=0, original=False, **kwargs) -> Type["ClusterParameters"]:
 
         cluster_params = self._parameter_type.from_mapping(kwargs)
         cluster_params.similarity_cutoff -= similarity_offset
+
         assert cluster_params.similarity_cutoff >= 0
+
+        if original:
+            return cluster_params
 
         try:
             used_metric = self._neighbours_getter._distance_getter._metric
@@ -253,9 +257,7 @@ class PredictorCommonNN(Predictor):
                 np.zeros(other._input_data.n_points, order="C", dtype=P_AINDEX)
                 )
 
-        cluster_params = self.make_parameters(
-            **kwargs
-            )
+        cluster_params = self.make_parameters(**kwargs)
 
         if clusters is None:
            clusters = bundle._labels.to_set() - {0}
