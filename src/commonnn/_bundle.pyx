@@ -191,7 +191,7 @@ cdef class Bundle:
 
         if isinstance(label, int):
             try:
-                return self._children[label]
+                return self.children[label]
             except KeyError:
                 raise KeyError(
                     f"Clustering {self.alias!r} has no child with label {label}"
@@ -511,33 +511,38 @@ def trim_shrinking(Bundle bundle):
     lower or equal member count) and does not split at any later point,
     it children will be removed.
     """
-    def _trim_shrinking(Bundle bundle, new=True):
+    def _trim_shrinking(Bundle bundle):
 
         if not bundle._children:
             splits = will_split = False
+            print(f"{bundle.alias} has no children")
         else:
             label_set = bundle._labels.set
             label_set.discard(0)
 
             if len(label_set) <= 1:
                 splits = False
+                print(f"{bundle.alias} has not enough children")
             else:
                 splits = True
+                print(f"{bundle.alias} splits")
 
             will_split = []
-            for child in bundle._children.values():
+            for child in bundle.children.values():
                 will_split.append(
-                    _trim_shrinking(child, new=splits)
-                    )
+                    _trim_shrinking(child)
+                )
 
             will_split = any(will_split)
+            print(f"Will a child of {bundle.alias} split? {will_split}")
 
-        keep = new or will_split or splits
+        keep = will_split or splits
+        print(f"Keep {bundle.alias}? {keep}")
         if not keep:
             bundle._labels = None
-            bundle._children = {}
+            bundle._children = None
 
-        return keep
+        return will_split or splits
 
     _trim_shrinking(bundle)
 
@@ -557,13 +562,10 @@ def trim_trivial(bundle=None):
 
         if bundle._labels.set == {0}:
             bundle._labels = None
-            bundle._children = {}
+            bundle._children = None
             return
 
-        if not bundle._children:
-            return
-
-        for child in bundle._children.values():
+        for child in bundle.children.values():
             _trim_trivial(child)
 
     _trim_trivial(bundle)

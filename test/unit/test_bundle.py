@@ -356,3 +356,66 @@ def test_check_children_remove_lonechild():
     expected = ["1.1", "1.2"]
     got = [b.alias for b in root.children.values()]
     assert got == expected
+
+
+def test_trim_shrinking():
+    bundle = _bundle.Bundle(
+        alias="root",
+        labels=np.array([0, 2, 2, 2, 0, 1, 1, 1, 1]),
+        children={
+            1: _bundle.Bundle(alias="1"),
+            2: _bundle.Bundle(
+                alias="2",
+                labels=np.array([1, 1, 0]),
+                children={
+                    1: _bundle.Bundle(
+                        alias="2.1",
+                        labels=np.array([0, 0]),
+                        children={
+                            0: _bundle.Bundle(alias="2.1.0")
+                        }
+                    ),
+                }
+            ),
+        }
+    )
+
+    _bundle.trim_shrinking(bundle)
+
+    assert bundle[1].alias == "1"
+    assert bundle[2].alias == "2"
+    assert len(bundle["2"].children) == 0
+    with pytest.raises(KeyError):
+        _ = bundle["2.1"]
+
+
+def test_trim_trivial():
+    bundle = _bundle.Bundle(
+        alias="root",
+        labels=np.array([0, 2, 2, 2, 0, 1, 1, 1, 1]),
+        children={
+            1: _bundle.Bundle(alias="1"),
+            2: _bundle.Bundle(
+                alias="2",
+                labels=np.array([1, 1, 0]),
+                children={
+                    1: _bundle.Bundle(
+                        alias="2.1",
+                        labels=np.array([0, 0]),
+                        children={
+                            0: _bundle.Bundle(alias="2.1.0")
+                        }
+                    ),
+                }
+            ),
+        }
+    )
+
+    _bundle.trim_trivial(bundle)
+
+    assert bundle[1].alias == "1"
+    assert bundle[2].alias == "2"
+    assert bundle["2.1"].alias == "2.1"
+    with pytest.raises(KeyError):
+        _ = bundle["2.1.0"]
+    assert len(bundle["2.1"].children) == 0
