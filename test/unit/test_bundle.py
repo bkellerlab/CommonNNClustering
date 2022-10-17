@@ -23,7 +23,7 @@ def test_bundle_init(file_regression):
     assert bundle.parent is None
     assert bundle.children == {}
     assert bundle.meta == {}
-    assert isinstance(bundle.summary, Summary)
+    assert bundle.summary is None
     file_regression.check(f"{bundle!r}\n\n{bundle.info()}")
 
 
