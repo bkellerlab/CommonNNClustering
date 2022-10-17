@@ -1,0 +1,13 @@
+div.body {
+    min-width: 450px;
+    max-width: 925px;
+}
+
+div.body h1,
+div.body h2,
+div.body h3,
+div.body h4,
+div.body h5,
+div.body h6 {
+    text-align: left;
+}

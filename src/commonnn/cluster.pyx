@@ -414,12 +414,11 @@ class Clustering:
         Args:
             ax: Matplotlib Axes to plot on.  If `None`, a new Figure
                 with Axes will be created.
-            quantity: Record value to
-                visualise:
-                    * "time"
-                    * "clusters"
-                    * "largest"
-                    * "noise"
+            quantity: Record value to visualise:
+                * "time"
+                * "clusters"
+                * "largest"
+                * "noise"
             treat_nan: If not `None`, use this value to pad nan-values.
             ax_props: Used to style `ax`.
             contour_props: Passed on to contour.
@@ -597,13 +596,13 @@ class Clustering:
                 Uses `annotate_pos` to determinte the position of the
                 annotations.
             annotate_pos:
-                Where to put the cluster number annotation.
-                Can be one of:
+                Where to put the cluster number annotation. Can be one of:
                     * "mean", Use the cluster mean
                     * "random", Use a random point of the cluster
                     * dict `{1: (x, y), ...}`, Use a specific coordinate
                         tuple for each cluster. Omitted labels will be placed
                         randomly.
+
             annotate_props:
                 Dictionary of keyword arguments passed to
                 :func:`ax.annotate`.

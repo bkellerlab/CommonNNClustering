@@ -1092,7 +1092,7 @@ cdef class InputDataExtComponentsMemoryview(InputDataExtInterface):
         """Yield data by parts
 
         Returns:
-            Generator of 2D :obj:`numpy.ndarray`s (parts)
+            Generator of 2D :obj:`numpy.ndarray` (parts)
         """
 
         assert self.n_points > 0
@@ -1981,11 +1981,13 @@ class NeighboursGetterBruteForce(NeighboursGetter):
 
 cdef class NeighboursGetterExtBruteForce(NeighboursGetterExtInterface):
     """Implements the neighbours getter interface
+
     This getter retrieves the neighbours of a point by comparing the
     distances (from a distance getter) between the point and all
     other points to the radius cutoff (:math:`r_{ij} \leq r`).
     The resulting neighbour containers are in general not sorted and
     include points as their own neighbour (self counting).
+
     Args:
         distance_getter: An object implementing the distance getter
             interface. Has to be a Cython extension type.
@@ -2679,6 +2681,7 @@ Metric.register(MetricExtEuclideanPeriodicReduced)
 
 class SimilarityCheckerContains(SimilarityChecker):
     r"""Implements the similarity checker interface
+
     Strategy:
         Loops over members of one neighbours container and checks
         if they are contained in the other neighbours container.  Breaks
@@ -2742,6 +2745,7 @@ class SimilarityCheckerContains(SimilarityChecker):
 
 class SimilarityCheckerSwitchContains(SimilarityChecker):
     r"""Implements the similarity checker interface
+
     Strategy:
         Loops over members of one neighbours container and checks
         if they are contained in the other neighbours container.  Breaks
@@ -2815,6 +2819,7 @@ class SimilarityCheckerSwitchContains(SimilarityChecker):
 
 cdef class SimilarityCheckerExtContains(SimilarityCheckerExtInterface):
     r"""Implements the similarity checker interface
+
     Strategy:
         Loops over members of one neighbours container and checks
         if they are contained in the other neighbours container.  Breaks
@@ -2877,6 +2882,7 @@ cdef class SimilarityCheckerExtContains(SimilarityCheckerExtInterface):
 
 cdef class SimilarityCheckerExtSwitchContains(SimilarityCheckerExtInterface):
     r"""Implements the similarity checker interface
+
     Strategy:
         Loops over members of one neighbours container and checks
         if they are contained in the other neighbours container.  Breaks
@@ -2954,6 +2960,7 @@ cdef class SimilarityCheckerExtSwitchContains(SimilarityCheckerExtInterface):
 
 cdef class SimilarityCheckerExtScreensorted(SimilarityCheckerExtInterface):
     r"""Implements the similarity checker interface
+
     Strategy:
         Loops over members of two neighbour containers alternatingly
         and checks if neighbours are contained in both containers.

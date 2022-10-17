@@ -1,0 +1,854 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "consecutive-penguin",
+   "metadata": {},
+   "source": [
+    "# Advanced usage "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "tutorial-emergency",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-09-28T09:23:54.350238Z",
+     "start_time": "2021-09-28T09:23:54.346679Z"
+    }
+   },
+   "source": [
+    "Go to:\n",
+    "    \n",
+    "  - [Notebook configuration](advanced_usage.ipynb#Notebook-configuration)\n",
+    "  - [Clustering initialisation](advanced_usage.ipynb#Clustering-initialisation)\n",
+    "    - [Short initialisation](advanced_usage.ipynb#Short-initialisation-for-point-coordinates)\n",
+    "    - [Manual custom initialisation](advanced_usage.ipynb#Manual-custom-initialisation)\n",
+    "    - [Initialisation via a builder](advanced_usage.ipynb#Initialisation-via-a-builder)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "handmade-composer",
+   "metadata": {},
+   "source": [
+    "## Notebook configuration"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "representative-danger",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:08.931563Z",
+     "start_time": "2021-10-04T16:21:07.394310Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import sys\n",
+    "\n",
+    "import numpy as np\n",
+    "\n",
+    "import cnnclustering\n",
+    "from cnnclustering import cluster, hooks\n",
+    "from cnnclustering import _types, _fit"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "surprising-antenna",
+   "metadata": {},
+   "source": [
+    "Print Python and package version information:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "technical-compilation",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:08.937050Z",
+     "start_time": "2021-10-04T16:21:08.933354Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Python:  3.8.8 | packaged by conda-forge | (default, Feb 20 2021, 16:22:27)  [GCC 9.3.0]\n",
+      "Packages:\n",
+      "    numpy: 1.20.2\n",
+      "    cnnclustering: 0.4.3\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Version information\n",
+    "print(\"Python: \", *sys.version.split(\"\\n\"))\n",
+    "\n",
+    "print(\"Packages:\")\n",
+    "for package in [np, cnnclustering]:\n",
+    "    print(f\"    {package.__name__}: {package.__version__}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "respected-vampire",
+   "metadata": {},
+   "source": [
+    "## Clustering initialisation"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "aggressive-nudist",
+   "metadata": {},
+   "source": [
+    "### Short initialisation for point coordinates"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "productive-swing",
+   "metadata": {},
+   "source": [
+    "In the [Basic usage](basic_usage.ipynb) tutorial, we saw how to create a `Clustering` object from a list of point coordinates."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "dental-fourth",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:08.944830Z",
+     "start_time": "2021-10-04T16:21:08.940985Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# Three dummy points in three dimensions\n",
+    "points = [\n",
+    "    [0, 0, 0],\n",
+    "    [1, 1, 1],\n",
+    "    [2, 2, 2]\n",
+    "]\n",
+    "clustering = cluster.Clustering(points)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "premier-hammer",
+   "metadata": {},
+   "source": [
+    "The created `clustering` object is now ready to execute a clustering on the provided input data. In fact, this default initialisation works in the same way with any Python sequence of sequences."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "plain-darwin",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:08.953026Z",
+     "start_time": "2021-10-04T16:21:08.946249Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# Ten random points in four dimensions\n",
+    "points = np.random.random((10, 4))\n",
+    "clustering = cluster.Clustering(points)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "young-replica",
+   "metadata": {},
+   "source": [
+    "Please note, that this does only yield meaningful results if the input data does indeed contain point coordinates. When a `Clustering` is initialised like this, quite a few steps are carried out in the background to ensure the correct assembly of the object. To be specific, the following things are taken care of:\n",
+    "\n",
+    "  - The *raw* input data (here `points`) is wrapped into a generic input data object (a concrete implementation of the abstract class `_types.InputData`)\n",
+    "  - A generic fitter object (a concrete implementation of the abstract class `_fit.Fitter`) is selected and associated with the clustering\n",
+    "     - The fitter is equipped with other necessary building blocks\n",
+    "     \n",
+    "In consequence, the created `clustering` object carries a set of other objects that control how a clustering of the input data is executed."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "jewish-albuquerque",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:08.961594Z",
+     "start_time": "2021-10-04T16:21:08.954555Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Clustering(input_data=InputDataExtComponentsMemoryview, fitter=FitterExtBFS(ngetter=NeighboursGetterExtBruteForce(dgetter=DistanceGetterExtMetric(metric=MetricExtEuclideanReduced), sorted=False, selfcounting=True), na=NeighboursExtVectorCPPUnorderedSet, nb=NeighboursExtVectorCPPUnorderedSet, checker=SimilarityCheckerExtSwitchContains, queue=QueueExtFIFOQueue), predictor=None)\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(clustering)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "geographic-bikini",
+   "metadata": {},
+   "source": [
+    "To understand the setup steps and the different kinds of partaking objects better, lets have a closer look at the default constructor for the `Clustering` class in the next section."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "satisfactory-stevens",
+   "metadata": {},
+   "source": [
+    "### Manual custom initialisation"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "prescribed-kruger",
+   "metadata": {},
+   "source": [
+    "The init method of the `Clustering` class has the following signature:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "id": "blank-uncertainty",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:08.970261Z",
+     "start_time": "2021-10-04T16:21:08.963307Z"
+    },
+    "scrolled": false
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Clustering.__init__(self, input_data=None, fitter=None, predictor=None, labels=None, unicode alias: str = u'root', parent=None, **kwargs)\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(cluster.Clustering.__init__.__doc__, end=\"\\n\\n\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "exempt-moment",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T10:46:47.829146Z",
+     "start_time": "2021-10-04T10:46:47.818867Z"
+    }
+   },
+   "source": [
+    "A `Clustering` does optionally accept a value for the `input_data` and the `fitter` keyword argument (let's ignore the others for now). A plain instance of the class can be created just like this: "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "id": "appreciated-glasgow",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:08.977681Z",
+     "start_time": "2021-10-04T16:21:08.972039Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Clustering(input_data=None, fitter=None, predictor=None)\n"
+     ]
+    }
+   ],
+   "source": [
+    "plain_clustering = cluster.Clustering()\n",
+    "print(plain_clustering)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "convertible-brain",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T11:04:16.299058Z",
+     "start_time": "2021-10-04T11:04:16.293867Z"
+    }
+   },
+   "source": [
+    "Naturally, this object is not set up for an actual clustering."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "id": "distinguished-receiver",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:09.185052Z",
+     "start_time": "2021-10-04T16:21:08.979826Z"
+    }
+   },
+   "outputs": [
+    {
+     "ename": "AttributeError",
+     "evalue": "'NoneType' object has no attribute 'n_points'",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[1;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[1;31mAttributeError\u001b[0m                            Traceback (most recent call last)",
+      "\u001b[1;32m<ipython-input-8-33a427bb7428>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m\u001b[0m\n\u001b[1;32m----> 1\u001b[1;33m \u001b[0mplain_clustering\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0mfit\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;36m0.1\u001b[0m\u001b[1;33m,\u001b[0m \u001b[1;36m2\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m",
+      "\u001b[1;32msrc/cnnclustering/cluster.pyx\u001b[0m in \u001b[0;36mcnnclustering.cluster.Clustering.fit\u001b[1;34m()\u001b[0m\n",
+      "\u001b[1;31mAttributeError\u001b[0m: 'NoneType' object has no attribute 'n_points'"
+     ]
+    }
+   ],
+   "source": [
+    "plain_clustering.fit(0.1, 2)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "cognitive-apparel",
+   "metadata": {},
+   "source": [
+    "Starting from scratch, we need to provide some input data and associate it with the clustering. Trying to use just *raw* input data for this, however, will result in an error:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "id": "refined-spray",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:09.196141Z",
+     "start_time": "2021-10-04T16:21:09.186656Z"
+    }
+   },
+   "outputs": [
+    {
+     "ename": "TypeError",
+     "evalue": "Can't use object of type ndarray as input data. Expected type InputData.",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[1;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[1;31mTypeError\u001b[0m                                 Traceback (most recent call last)",
+      "\u001b[1;32m<ipython-input-9-74ffe4d30bb9>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m\u001b[0m\n\u001b[1;32m----> 1\u001b[1;33m \u001b[0mplain_clustering\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0minput_data\u001b[0m \u001b[1;33m=\u001b[0m \u001b[0mpoints\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m",
+      "\u001b[1;32msrc/cnnclustering/cluster.pyx\u001b[0m in \u001b[0;36mcnnclustering.cluster.Clustering.input_data\u001b[1;34m()\u001b[0m\n",
+      "\u001b[1;31mTypeError\u001b[0m: Can't use object of type ndarray as input data. Expected type InputData."
+     ]
+    }
+   ],
+   "source": [
+    "plain_clustering.input_data = points"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "internal-bottle",
+   "metadata": {},
+   "source": [
+    "<div class=\"alert alert-info\">\n",
+    "\n",
+    "**Info:** If you know what you are doing, you can still associate arbitrary input data to a clustering by assigning to `Clustering._input_data` directly.\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "czech-howard",
+   "metadata": {},
+   "source": [
+    "We need to provide a valid input data object instead. The recommended type for point coordinates that can be constructed from a 2D NumPy array is `_types.InputDataExtComponentsMemoryview`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "extensive-worthy",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:09.199904Z",
+     "start_time": "2021-10-04T16:21:09.197526Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "plain_clustering.input_data = _types.InputDataExtComponentsMemoryview(points)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "dense-compact",
+   "metadata": {},
+   "source": [
+    "This input data type is used to wrap the raw data and allows generic access to it which is needed for the clustering. For more information on what exactly has to be implemented by a valid input data type, see the [Demonstration of (generic) interfaces](interface_demo.ipynb) tutorial. We could have chosen to pass a valid input data type to a `Clustering` directly on initialisation:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "usual-barcelona",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:09.207825Z",
+     "start_time": "2021-10-04T16:21:09.201372Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Clustering(input_data=InputDataExtComponentsMemoryview, fitter=None, predictor=None)\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\n",
+    "    cluster.Clustering(\n",
+    "        _types.InputDataExtComponentsMemoryview(points)\n",
+    "    )\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "developmental-campbell",
+   "metadata": {},
+   "source": [
+    "As you see, this initialisation creates a `Clustering` that carries the input data wrapped in a suitable type, but nothing else. This is different from the starting example where we passed *raw* data on initialisation which triggered the assembly of a bunch of other objects."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "illegal-antigua",
+   "metadata": {},
+   "source": [
+    "So we are not done yet and clustering is not possible because we are still missing a fitter that controls how the clustering should be actually done."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "id": "valid-receiver",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:09.222843Z",
+     "start_time": "2021-10-04T16:21:09.209130Z"
+    }
+   },
+   "outputs": [
+    {
+     "ename": "AttributeError",
+     "evalue": "'NoneType' object has no attribute 'fit'",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[1;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[1;31mAttributeError\u001b[0m                            Traceback (most recent call last)",
+      "\u001b[1;32m<ipython-input-12-33a427bb7428>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m\u001b[0m\n\u001b[1;32m----> 1\u001b[1;33m \u001b[0mplain_clustering\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0mfit\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;36m0.1\u001b[0m\u001b[1;33m,\u001b[0m \u001b[1;36m2\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m",
+      "\u001b[1;32msrc/cnnclustering/cluster.pyx\u001b[0m in \u001b[0;36mcnnclustering.cluster.Clustering.fit\u001b[1;34m()\u001b[0m\n",
+      "\u001b[1;31mAttributeError\u001b[0m: 'NoneType' object has no attribute 'fit'"
+     ]
+    }
+   ],
+   "source": [
+    "plain_clustering.fit(0.1, 2)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "virgin-retreat",
+   "metadata": {},
+   "source": [
+    "The default fitter for any common-nearest-neighbours clustering is `_fit.FitterExtBFS`. If we want to initialise this fitter, we additionally need to provide the following building blocks that we need to pass as the following arguments:\n",
+    "\n",
+    "  - `neighbours_getter`: A generic object that defines how neighbourhood information can be retrieved from the input data object. Needs to be a concrete implementation of the abstract class `_types.NeighboursGetter`.\n",
+    "  - `neighbours`: A generic object to hold the retrieved neighbourhood of one point. Filled by the `neighbours_getter`. Needs to be a concrete implementation of the abstract class `_types.Neighbours`.\n",
+    "  - `neighbour_neighbours`: As `neighbours`. This fitter uses exactly two containers to store the neighbourhoods of two points.\n",
+    "  - `similarity_checker`: A generic object that controls how the common-nearest-neighbours similarity criterion (at least *c* common neighbours) is checked. Needs to be a concrete implementation of the abstract class `_types.SimilarityChecker`. \n",
+    "  - `queue`: A generic queuing structure needed for the breadth-first-search approach implemented by the fitter. Needs to be a concrete implementation of the abstract class `_types.Queue`.\n",
+    "  \n",
+    "So let's create these building blocks to prepare a fitter for the clustering. Note, that the by default recommended neighbours getter (`_types.NeighboursGetterExtBruteForce`) does in turn require a distance getter (that controls how pairwise distances for points in the input data are retrieved) which again expects us to define a metric. For the neighbours containers we choose a type that wraps a C++ vector. The similarity check will be done by a set of containment checks and the queuing structure will be a C++ queue."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "polish-medicaid",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:09.227636Z",
+     "start_time": "2021-10-04T16:21:09.224374Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# Choose Euclidean metric\n",
+    "metric = _types.MetricExtEuclidean()\n",
+    "distance_getter = _types.DistanceGetterExtMetric(metric)\n",
+    "\n",
+    "# Make neighbours getter\n",
+    "neighbours_getter = _types.NeighboursGetterExtBruteForce(\n",
+    "    distance_getter\n",
+    ")\n",
+    "\n",
+    "# Make fitter\n",
+    "fitter = _fit.FitterExtBFS(\n",
+    "    neighbours_getter,\n",
+    "    _types.NeighboursExtVector(),\n",
+    "    _types.NeighboursExtVector(),\n",
+    "    _types.SimilarityCheckerExtContains(),\n",
+    "    _types.QueueExtFIFOQueue()\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "wrong-comfort",
+   "metadata": {},
+   "source": [
+    "This fitter can now be associated with our clustering. With everything in place, a clustering can be finally executed."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 14,
+   "id": "organized-quantum",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:09.235400Z",
+     "start_time": "2021-10-04T16:21:09.229445Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "plain_clustering.fitter = fitter"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "id": "cellular-daisy",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:09.243955Z",
+     "start_time": "2021-10-04T16:21:09.236606Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "-----------------------------------------------------------------------------------------------\n",
+      "#points   r         c         min       max       #clusters %largest  %noise    time     \n",
+      "10        0.100     2         None      None      0         0.000     1.000     00:00:0.000\n",
+      "-----------------------------------------------------------------------------------------------\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "plain_clustering.fit(0.1, 2)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "approximate-composer",
+   "metadata": {},
+   "source": [
+    "The described manual way to initialise a `Clustering` instance is very flexible as the user can cherry pick exactly the desired types to modify the different contributing pieces. On the other hand, this approach can be fairly tedious and error prone. In the next section we will see how we solved this problem by facilitating the aggregation of a clustering according to pre-defined schemes."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "promising-framing",
+   "metadata": {},
+   "source": [
+    "### Initialisation via a builder"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "spiritual-namibia",
+   "metadata": {},
+   "source": [
+    "We did see so far how to assemble a `Clustering` instance from scratch by selecting the individual clustering components manually. In the beginning we did also see that we could create a `Clustering` seemingly automatically if we just pass *raw* data to the constructor. To fill the gap, let's now have a look at how a `Clustering` can be created via a builder. A builder is a helper object that serves the purpose of correctly creating a `Clustering` based on some preset requirements, a so called *recipe*. When we try to initialise a `Clustering` with *raw* input data (that is not wrapped in a valid generic input data type), a `ClusteringBuilder` instance actually tries to take over behind the scenes.\n",
+    "\n",
+    "The `ClusteringBuilder` class has the following initialisation signature:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "chubby-midwest",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:09.251936Z",
+     "start_time": "2021-10-04T16:21:09.245254Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "ClusteringBuilder.__init__(self, data, preparation_hook=None, registered_recipe_key=None, clustering_type=None, alias=None, parent=None, **recipe)\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(cluster.ClusteringBuilder.__init__.__doc__)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "first-panel",
+   "metadata": {},
+   "source": [
+    "It requires some *raw* input data as the first argument. Apart from that one can use these optional keyword arguments to modify its behaviour:\n",
+    "\n",
+    "  - `preparation_hook`: A function that accepts raw input data, does some optional preprocessing and returns data suitable for the initialisation of a generic input data type plus a dictionary containing meta information. If `None`, the current default for this is `hooks.prepare_points_from_parts` which prepares point coordinates for any input data type accepting a 2D NumPy array. If no processing of the raw input data is desired, use `hooks.prepare_pass`. The default preparation hook can be set via the class attribute `_default_preparation_hook` (must be a staticmethod).\n",
+    "  - `registered_recipe_key`: A string identifying a pre-defined clustering building block recipe. If this is `None`, the current default is `\"coordinates\"` which can be overridden by the class attribute `_default_recipe_key `. The recipe key is passed to `hooks.get_registered_recipe` to retrieve the actual recipe. The key `\"none\"` provides an empty recipe.\n",
+    "  - `clustering_type`: The type of clustering to create. The current default (and the only available option out of the box) is `Clustering` and can be overridden via the class attribute `_default_clustering`. This allows the use of the builder for the creation of other clusterings, e.g. for subclasses of `Clustering`.\n",
+    "  - `alias`/`parent`: Are directly passed to the created clustering.\n",
+    "  - `**recipe`: Other keyword arguments are interpreted as modifications to the default recipe (retrieved by `registered_recipe_key`).  "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "settled-capital",
+   "metadata": {},
+   "source": [
+    "To start with the examination of these options, we should look into what is actually meant by a clustering recipe. A recipe is basically a nested mapping of clustering component strings (matching the corresponding keyword arguments used on clustering/component initialisation, e.g. `\"input_data\"` or `\"neighbours\"`) to the generic types (classes not instances) that should be use in the corresponding place. A recipe could for example look like this: "
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "suffering-video",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:09.258659Z",
+     "start_time": "2021-10-04T16:21:09.253256Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "recipe = {\n",
+    "    \"input_data\": _types.InputDataExtComponentsMemoryview,\n",
+    "    \"fitter\": \"bfs\",\n",
+    "    \"fitter.getter\": \"brute_force\",\n",
+    "    \"fitter.getter.dgetter\": \"metric\",\n",
+    "    \"fitter.getter.dgetter.metric\": \"euclidean\",\n",
+    "    \"fitter.na\": (\"vector\", (1000,), {}),\n",
+    "    \"fitter.checker\": \"contains\",\n",
+    "    \"fitter.queue\": \"fifo\"\n",
+    "}"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "obvious-consolidation",
+   "metadata": {},
+   "source": [
+    "In this recipe, the generic type supposed to wrap the input data is specified explicitly as the class object. Alternatively, strings can be used to specify a type in shorthand notation. Which abbreviations are understood is defined in the `hooks.COMPONENT_NAME_TYPE_MAP`. In the fitter case, `bfs` is translated into `_fit.FitterExtBFS`. Dot notation is used to indicate nested dependencies, e.g. to define components needed to create other components. Similarly, shorthand notation is supported for the component key, as shown with `fitter.getter` which stands in for the neighbours getter required by the fitter. Abbreviations on the key side are defined in `hooks.COMPONENT_ALT_KW_MAP`. For the `\"fitter.na\"` component (one of the neighbours container type needed that the fitter needs), we have a tuple as the value in the mapping. This is interpreted as a component string identifier, followed by an arguments tuple, and a keyword arguments dictionary used in the initialisation of the corresponding component. Note also, that the recipe defines only `\"fitter.na\"` (`neighbours`) and not `\"fitter.nb\"` (`neighbour_neighbours`) in which case the same type will be used for both components. Those fallback relation ships are defined in `hooks.COMPONENT_KW_TYPE_ALIAS_MAP`.\n",
+    "\n",
+    "This recipe can be now passed to a builder. Calling the `build` method of a builder will create and return a `Clustering`:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "id": "worldwide-hunger",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:09.267455Z",
+     "start_time": "2021-10-04T16:21:09.259876Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Clustering(input_data=InputDataExtComponentsMemoryview, fitter=FitterExtBFS(ngetter=NeighboursGetterExtBruteForce(dgetter=DistanceGetterExtMetric(metric=MetricExtEuclidean), sorted=False, selfcounting=True), na=NeighboursExtVector, nb=NeighboursExtVector, checker=SimilarityCheckerExtContains, queue=QueueExtFIFOQueue), predictor=None)\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\n",
+    "    cluster.ClusteringBuilder(\n",
+    "        points,\n",
+    "        preparation_hook=hooks.prepare_pass,\n",
+    "        registered_recipe_key=\"none\",\n",
+    "        **recipe\n",
+    "    ).build()\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "delayed-triumph",
+   "metadata": {},
+   "source": [
+    "For the initial example of using point coordinates in a sequence of sequences, the builder part is equivalent to:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "id": "lonely-enzyme",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:09.274218Z",
+     "start_time": "2021-10-04T16:21:09.269104Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Clustering(input_data=InputDataExtComponentsMemoryview, fitter=FitterExtBFS(ngetter=NeighboursGetterExtBruteForce(dgetter=DistanceGetterExtMetric(metric=MetricExtEuclideanReduced), sorted=False, selfcounting=True), na=NeighboursExtVectorCPPUnorderedSet, nb=NeighboursExtVectorCPPUnorderedSet, checker=SimilarityCheckerExtSwitchContains, queue=QueueExtFIFOQueue), predictor=None)\n"
+     ]
+    }
+   ],
+   "source": [
+    "# The recipe registered as \"coordinates\":\n",
+    "# {\n",
+    "#     \"input_data\": \"components_mview\",\n",
+    "#     \"fitter\": \"bfs\",\n",
+    "#     \"fitter.ngetter\": \"brute_force\",\n",
+    "#     \"fitter.na\": \"vuset\",\n",
+    "#     \"fitter.checker\": \"switch\",\n",
+    "#     \"fitter.queue\": \"fifo\",\n",
+    "#     \"fitter.ngetter.dgetter\": \"metric\",\n",
+    "#     \"fitter.ngetter.dgetter.metric\": \"euclidean_r\",\n",
+    "# }\n",
+    "\n",
+    "print(\n",
+    "    cluster.ClusteringBuilder(\n",
+    "        points,\n",
+    "        registered_recipe_key=\"coordinates\",\n",
+    "    ).build()\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "affecting-quebec",
+   "metadata": {},
+   "source": [
+    "It is possible to modify a given recipe with the explicit use of keyword arguments. Note, that in this case dots should be replaced by a double underscore:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 20,
+   "id": "federal-potato",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:21:09.281017Z",
+     "start_time": "2021-10-04T16:21:09.275747Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Clustering(input_data=InputDataExtComponentsMemoryview, fitter=FitterExtBFS(ngetter=NeighboursGetterExtBruteForce(dgetter=DistanceGetterExtMetric(metric=MetricExtPrecomputed), sorted=False, selfcounting=True), na=NeighboursExtVectorCPPUnorderedSet, nb=NeighboursExtVectorCPPUnorderedSet, checker=SimilarityCheckerExtSwitchContains, queue=QueueExtFIFOQueue), predictor=None)\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(\n",
+    "    cluster.ClusteringBuilder(\n",
+    "        points,\n",
+    "        registered_recipe_key=\"coordinates\",\n",
+    "        fitter__ngetter__dgetter__metric=\"precomputed\"\n",
+    "    ).build()\n",
+    ")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "based-orlando",
+   "metadata": {},
+   "source": [
+    "The above modification makes the recipe match the `\"distances\"` recipe. Other readily available recipes are `\"neighbourhoods\"` and `\"sorted_neighbourhoods\"`. The users are encouraged to modify those to their liking or to define their own custom recipes."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "interpreted-colony",
+   "metadata": {},
+   "source": [
+    "Newly defined types that should be usable in a builder controlled aggregation need to implement a classmethod `get_builder_kwargs() -> list` that provides a list of component identifiers necessary to initialise an object of itself."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "md38",
+   "language": "python",
+   "name": "md38"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.8"
+  },
+  "toc": {
+   "base_numbering": 1,
+   "nav_menu": {},
+   "number_sections": true,
+   "sideBar": true,
+   "skip_h1_title": true,
+   "title_cell": "Contents",
+   "title_sidebar": "Contents",
+   "toc_cell": false,
+   "toc_position": {
+    "height": "calc(100% - 180px)",
+    "left": "10px",
+    "top": "150px",
+    "width": "304.312px"
+   },
+   "toc_section_display": true,
+   "toc_window_display": true
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

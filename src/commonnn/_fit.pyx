@@ -1326,7 +1326,7 @@ class PredictorCommonNNFirstmatch(PredictorCommonNN):
 
         return
 
-
+# TODO: Create union find and/or graph type
 cdef inline AINDEX get_root(AINDEX p, AINDEX[::1] parent_indicator) nogil:
     cdef AINDEX parent
     parent = parent_indicator[p]

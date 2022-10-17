@@ -1,0 +1,854 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Advanced usage &#8212; CommonNN Clustering  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Demonstration of (generic) interfaces" href="interface_demo.html" />
+    <link rel="prev" title="Clustering of scikit-learn toy data sets" href="scikit_learn_datasets.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.jp-RenderedHTMLCommon thead,
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+.jp-RenderedHTMLCommon th,
+div.rendered_html th {
+  font-weight: bold;
+}
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+.jp-RenderedHTMLCommon tbody tr:hover,
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<style>
+    .nbinput .prompt,
+    .nboutput .prompt {
+        display: none;
+    }
+</style><section id="Advanced-usage">
+<h1>Advanced usage<a class="headerlink" href="#Advanced-usage" title="Permalink to this heading">¶</a></h1>
+<p>Go to:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#Notebook-configuration"><span class="std std-ref">Notebook configuration</span></a></p></li>
+<li><p><a class="reference internal" href="#Clustering-initialisation"><span class="std std-ref">Clustering initialisation</span></a></p>
+<ul>
+<li><p><a class="reference internal" href="#Short-initialisation-for-point-coordinates"><span class="std std-ref">Short initialisation</span></a></p></li>
+<li><p><a class="reference internal" href="#Manual-custom-initialisation"><span class="std std-ref">Manual custom initialisation</span></a></p></li>
+<li><p><a class="reference internal" href="#Initialisation-via-a-builder"><span class="std std-ref">Initialisation via a builder</span></a></p></li>
+</ul>
+</li>
+</ul>
+<section id="Notebook-configuration">
+<h2>Notebook configuration<a class="headerlink" href="#Notebook-configuration" title="Permalink to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">cnnclustering</span>
+<span class="kn">from</span> <span class="nn">cnnclustering</span> <span class="kn">import</span> <span class="n">cluster</span><span class="p">,</span> <span class="n">hooks</span>
+<span class="kn">from</span> <span class="nn">cnnclustering</span> <span class="kn">import</span> <span class="n">_types</span><span class="p">,</span> <span class="n">_fit</span>
+</pre></div>
+</div>
+</div>
+<p>Print Python and package version information:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Version information</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Python: &quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">sys</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Packages:&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="p">[</span><span class="n">np</span><span class="p">,</span> <span class="n">cnnclustering</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">package</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">package</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Python:  3.8.8 | packaged by conda-forge | (default, Feb 20 2021, 16:22:27)  [GCC 9.3.0]
+Packages:
+    numpy: 1.20.2
+    cnnclustering: 0.4.3
+</pre></div></div>
+</div>
+</section>
+<section id="Clustering-initialisation">
+<h2>Clustering initialisation<a class="headerlink" href="#Clustering-initialisation" title="Permalink to this heading">¶</a></h2>
+<section id="Short-initialisation-for-point-coordinates">
+<h3>Short initialisation for point coordinates<a class="headerlink" href="#Short-initialisation-for-point-coordinates" title="Permalink to this heading">¶</a></h3>
+<p>In the <a class="reference internal" href="basic_usage.html"><span class="doc">Basic usage</span></a> tutorial, we saw how to create a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> object from a list of point coordinates.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Three dummy points in three dimensions</span>
+<span class="n">points</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="p">]</span>
+<span class="n">clustering</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>The created <code class="docutils literal notranslate"><span class="pre">clustering</span></code> object is now ready to execute a clustering on the provided input data. In fact, this default initialisation works in the same way with any Python sequence of sequences.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Ten random points in four dimensions</span>
+<span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">4</span><span class="p">))</span>
+<span class="n">clustering</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>Please note, that this does only yield meaningful results if the input data does indeed contain point coordinates. When a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> is initialised like this, quite a few steps are carried out in the background to ensure the correct assembly of the object. To be specific, the following things are taken care of:</p>
+<ul class="simple">
+<li><p>The <em>raw</em> input data (here <code class="docutils literal notranslate"><span class="pre">points</span></code>) is wrapped into a generic input data object (a concrete implementation of the abstract class <code class="docutils literal notranslate"><span class="pre">_types.InputData</span></code>)</p></li>
+<li><p>A generic fitter object (a concrete implementation of the abstract class <code class="docutils literal notranslate"><span class="pre">_fit.Fitter</span></code>) is selected and associated with the clustering</p>
+<ul>
+<li><p>The fitter is equipped with other necessary building blocks</p></li>
+</ul>
+</li>
+</ul>
+<p>In consequence, the created <code class="docutils literal notranslate"><span class="pre">clustering</span></code> object carries a set of other objects that control how a clustering of the input data is executed.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">clustering</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Clustering(input_data=InputDataExtComponentsMemoryview, fitter=FitterExtBFS(ngetter=NeighboursGetterExtBruteForce(dgetter=DistanceGetterExtMetric(metric=MetricExtEuclideanReduced), sorted=False, selfcounting=True), na=NeighboursExtVectorCPPUnorderedSet, nb=NeighboursExtVectorCPPUnorderedSet, checker=SimilarityCheckerExtSwitchContains, queue=QueueExtFIFOQueue), predictor=None)
+</pre></div></div>
+</div>
+<p>To understand the setup steps and the different kinds of partaking objects better, lets have a closer look at the default constructor for the <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> class in the next section.</p>
+</section>
+<section id="Manual-custom-initialisation">
+<h3>Manual custom initialisation<a class="headerlink" href="#Manual-custom-initialisation" title="Permalink to this heading">¶</a></h3>
+<p>The init method of the <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> class has the following signature:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Clustering.__init__(self, input_data=None, fitter=None, predictor=None, labels=None, unicode alias: str = u&#39;root&#39;, parent=None, **kwargs)
+
+</pre></div></div>
+</div>
+<p>A <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> does optionally accept a value for the <code class="docutils literal notranslate"><span class="pre">input_data</span></code> and the <code class="docutils literal notranslate"><span class="pre">fitter</span></code> keyword argument (let’s ignore the others for now). A plain instance of the class can be created just like this:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plain_clustering</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">plain_clustering</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Clustering(input_data=None, fitter=None, predictor=None)
+</pre></div></div>
+</div>
+<p>Naturally, this object is not set up for an actual clustering.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plain_clustering</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-intense-fg ansi-bold">---------------------------------------------------------------------------</span>
+<span class="ansi-red-intense-fg ansi-bold">AttributeError</span>                            Traceback (most recent call last)
+<span class="ansi-green-intense-fg ansi-bold">&lt;ipython-input-8-33a427bb7428&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-intense-fg ansi-bold">----&gt; 1</span><span class="ansi-yellow-intense-fg ansi-bold"> </span>plain_clustering<span class="ansi-yellow-intense-fg ansi-bold">.</span>fit<span class="ansi-yellow-intense-fg ansi-bold">(</span><span class="ansi-cyan-intense-fg ansi-bold">0.1</span><span class="ansi-yellow-intense-fg ansi-bold">,</span> <span class="ansi-cyan-intense-fg ansi-bold">2</span><span class="ansi-yellow-intense-fg ansi-bold">)</span>
+
+<span class="ansi-green-intense-fg ansi-bold">src/cnnclustering/cluster.pyx</span> in <span class="ansi-cyan-fg">cnnclustering.cluster.Clustering.fit</span><span class="ansi-blue-intense-fg ansi-bold">()</span>
+
+<span class="ansi-red-intense-fg ansi-bold">AttributeError</span>: &#39;NoneType&#39; object has no attribute &#39;n_points&#39;
+</pre></div></div>
+</div>
+<p>Starting from scratch, we need to provide some input data and associate it with the clustering. Trying to use just <em>raw</em> input data for this, however, will result in an error:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plain_clustering</span><span class="o">.</span><span class="n">input_data</span> <span class="o">=</span> <span class="n">points</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-intense-fg ansi-bold">---------------------------------------------------------------------------</span>
+<span class="ansi-red-intense-fg ansi-bold">TypeError</span>                                 Traceback (most recent call last)
+<span class="ansi-green-intense-fg ansi-bold">&lt;ipython-input-9-74ffe4d30bb9&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-intense-fg ansi-bold">----&gt; 1</span><span class="ansi-yellow-intense-fg ansi-bold"> </span>plain_clustering<span class="ansi-yellow-intense-fg ansi-bold">.</span>input_data <span class="ansi-yellow-intense-fg ansi-bold">=</span> points
+
+<span class="ansi-green-intense-fg ansi-bold">src/cnnclustering/cluster.pyx</span> in <span class="ansi-cyan-fg">cnnclustering.cluster.Clustering.input_data</span><span class="ansi-blue-intense-fg ansi-bold">()</span>
+
+<span class="ansi-red-intense-fg ansi-bold">TypeError</span>: Can&#39;t use object of type ndarray as input data. Expected type InputData.
+</pre></div></div>
+</div>
+<div class="admonition note">
+<p><strong>Info:</strong> If you know what you are doing, you can still associate arbitrary input data to a clustering by assigning to <code class="docutils literal notranslate"><span class="pre">Clustering._input_data</span></code> directly.</p>
+</div>
+<p>We need to provide a valid input data object instead. The recommended type for point coordinates that can be constructed from a 2D NumPy array is <code class="docutils literal notranslate"><span class="pre">_types.InputDataExtComponentsMemoryview</span></code>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plain_clustering</span><span class="o">.</span><span class="n">input_data</span> <span class="o">=</span> <span class="n">_types</span><span class="o">.</span><span class="n">InputDataExtComponentsMemoryview</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>This input data type is used to wrap the raw data and allows generic access to it which is needed for the clustering. For more information on what exactly has to be implemented by a valid input data type, see the <a class="reference internal" href="interface_demo.html"><span class="doc">Demonstration of (generic) interfaces</span></a> tutorial. We could have chosen to pass a valid input data type to a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> directly on initialisation:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span>
+    <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span>
+        <span class="n">_types</span><span class="o">.</span><span class="n">InputDataExtComponentsMemoryview</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Clustering(input_data=InputDataExtComponentsMemoryview, fitter=None, predictor=None)
+</pre></div></div>
+</div>
+<p>As you see, this initialisation creates a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> that carries the input data wrapped in a suitable type, but nothing else. This is different from the starting example where we passed <em>raw</em> data on initialisation which triggered the assembly of a bunch of other objects.</p>
+<p>So we are not done yet and clustering is not possible because we are still missing a fitter that controls how the clustering should be actually done.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plain_clustering</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-intense-fg ansi-bold">---------------------------------------------------------------------------</span>
+<span class="ansi-red-intense-fg ansi-bold">AttributeError</span>                            Traceback (most recent call last)
+<span class="ansi-green-intense-fg ansi-bold">&lt;ipython-input-12-33a427bb7428&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-intense-fg ansi-bold">----&gt; 1</span><span class="ansi-yellow-intense-fg ansi-bold"> </span>plain_clustering<span class="ansi-yellow-intense-fg ansi-bold">.</span>fit<span class="ansi-yellow-intense-fg ansi-bold">(</span><span class="ansi-cyan-intense-fg ansi-bold">0.1</span><span class="ansi-yellow-intense-fg ansi-bold">,</span> <span class="ansi-cyan-intense-fg ansi-bold">2</span><span class="ansi-yellow-intense-fg ansi-bold">)</span>
+
+<span class="ansi-green-intense-fg ansi-bold">src/cnnclustering/cluster.pyx</span> in <span class="ansi-cyan-fg">cnnclustering.cluster.Clustering.fit</span><span class="ansi-blue-intense-fg ansi-bold">()</span>
+
+<span class="ansi-red-intense-fg ansi-bold">AttributeError</span>: &#39;NoneType&#39; object has no attribute &#39;fit&#39;
+</pre></div></div>
+</div>
+<p>The default fitter for any common-nearest-neighbours clustering is <code class="docutils literal notranslate"><span class="pre">_fit.FitterExtBFS</span></code>. If we want to initialise this fitter, we additionally need to provide the following building blocks that we need to pass as the following arguments:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">neighbours_getter</span></code>: A generic object that defines how neighbourhood information can be retrieved from the input data object. Needs to be a concrete implementation of the abstract class <code class="docutils literal notranslate"><span class="pre">_types.NeighboursGetter</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">neighbours</span></code>: A generic object to hold the retrieved neighbourhood of one point. Filled by the <code class="docutils literal notranslate"><span class="pre">neighbours_getter</span></code>. Needs to be a concrete implementation of the abstract class <code class="docutils literal notranslate"><span class="pre">_types.Neighbours</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">neighbour_neighbours</span></code>: As <code class="docutils literal notranslate"><span class="pre">neighbours</span></code>. This fitter uses exactly two containers to store the neighbourhoods of two points.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">similarity_checker</span></code>: A generic object that controls how the common-nearest-neighbours similarity criterion (at least <em>c</em> common neighbours) is checked. Needs to be a concrete implementation of the abstract class <code class="docutils literal notranslate"><span class="pre">_types.SimilarityChecker</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">queue</span></code>: A generic queuing structure needed for the breadth-first-search approach implemented by the fitter. Needs to be a concrete implementation of the abstract class <code class="docutils literal notranslate"><span class="pre">_types.Queue</span></code>.</p></li>
+</ul>
+<p>So let’s create these building blocks to prepare a fitter for the clustering. Note, that the by default recommended neighbours getter (<code class="docutils literal notranslate"><span class="pre">_types.NeighboursGetterExtBruteForce</span></code>) does in turn require a distance getter (that controls how pairwise distances for points in the input data are retrieved) which again expects us to define a metric. For the neighbours containers we choose a type that wraps a C++ vector. The similarity check will be done by a set of containment checks and the queuing
+structure will be a C++ queue.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Choose Euclidean metric</span>
+<span class="n">metric</span> <span class="o">=</span> <span class="n">_types</span><span class="o">.</span><span class="n">MetricExtEuclidean</span><span class="p">()</span>
+<span class="n">distance_getter</span> <span class="o">=</span> <span class="n">_types</span><span class="o">.</span><span class="n">DistanceGetterExtMetric</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
+
+<span class="c1"># Make neighbours getter</span>
+<span class="n">neighbours_getter</span> <span class="o">=</span> <span class="n">_types</span><span class="o">.</span><span class="n">NeighboursGetterExtBruteForce</span><span class="p">(</span>
+    <span class="n">distance_getter</span>
+<span class="p">)</span>
+
+<span class="c1"># Make fitter</span>
+<span class="n">fitter</span> <span class="o">=</span> <span class="n">_fit</span><span class="o">.</span><span class="n">FitterExtBFS</span><span class="p">(</span>
+    <span class="n">neighbours_getter</span><span class="p">,</span>
+    <span class="n">_types</span><span class="o">.</span><span class="n">NeighboursExtVector</span><span class="p">(),</span>
+    <span class="n">_types</span><span class="o">.</span><span class="n">NeighboursExtVector</span><span class="p">(),</span>
+    <span class="n">_types</span><span class="o">.</span><span class="n">SimilarityCheckerExtContains</span><span class="p">(),</span>
+    <span class="n">_types</span><span class="o">.</span><span class="n">QueueExtFIFOQueue</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>This fitter can now be associated with our clustering. With everything in place, a clustering can be finally executed.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plain_clustering</span><span class="o">.</span><span class="n">fitter</span> <span class="o">=</span> <span class="n">fitter</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">plain_clustering</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+-----------------------------------------------------------------------------------------------
+#points   r         c         min       max       #clusters %largest  %noise    time
+10        0.100     2         None      None      0         0.000     1.000     00:00:0.000
+-----------------------------------------------------------------------------------------------
+
+</pre></div></div>
+</div>
+<p>The described manual way to initialise a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> instance is very flexible as the user can cherry pick exactly the desired types to modify the different contributing pieces. On the other hand, this approach can be fairly tedious and error prone. In the next section we will see how we solved this problem by facilitating the aggregation of a clustering according to pre-defined schemes.</p>
+</section>
+<section id="Initialisation-via-a-builder">
+<h3>Initialisation via a builder<a class="headerlink" href="#Initialisation-via-a-builder" title="Permalink to this heading">¶</a></h3>
+<p>We did see so far how to assemble a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> instance from scratch by selecting the individual clustering components manually. In the beginning we did also see that we could create a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> seemingly automatically if we just pass <em>raw</em> data to the constructor. To fill the gap, let’s now have a look at how a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> can be created via a builder. A builder is a helper object that serves the purpose of correctly creating a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> based on some preset requirements, a so
+called <em>recipe</em>. When we try to initialise a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> with <em>raw</em> input data (that is not wrapped in a valid generic input data type), a <code class="docutils literal notranslate"><span class="pre">ClusteringBuilder</span></code> instance actually tries to take over behind the scenes.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">ClusteringBuilder</span></code> class has the following initialisation signature:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">cluster</span><span class="o">.</span><span class="n">ClusteringBuilder</span><span class="o">.</span><span class="fm">__init__</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+ClusteringBuilder.__init__(self, data, preparation_hook=None, registered_recipe_key=None, clustering_type=None, alias=None, parent=None, **recipe)
+</pre></div></div>
+</div>
+<p>It requires some <em>raw</em> input data as the first argument. Apart from that one can use these optional keyword arguments to modify its behaviour:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">preparation_hook</span></code>: A function that accepts raw input data, does some optional preprocessing and returns data suitable for the initialisation of a generic input data type plus a dictionary containing meta information. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the current default for this is <code class="docutils literal notranslate"><span class="pre">hooks.prepare_points_from_parts</span></code> which prepares point coordinates for any input data type accepting a 2D NumPy array. If no processing of the raw input data is desired, use <code class="docutils literal notranslate"><span class="pre">hooks.prepare_pass</span></code>. The default preparation hook can
+be set via the class attribute <code class="docutils literal notranslate"><span class="pre">_default_preparation_hook</span></code> (must be a staticmethod).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">registered_recipe_key</span></code>: A string identifying a pre-defined clustering building block recipe. If this is <code class="docutils literal notranslate"><span class="pre">None</span></code>, the current default is <code class="docutils literal notranslate"><span class="pre">&quot;coordinates&quot;</span></code> which can be overridden by the class attribute <code class="docutils literal notranslate"><span class="pre">_default_recipe_key</span></code>. The recipe key is passed to <code class="docutils literal notranslate"><span class="pre">hooks.get_registered_recipe</span></code> to retrieve the actual recipe. The key <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code> provides an empty recipe.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">clustering_type</span></code>: The type of clustering to create. The current default (and the only available option out of the box) is <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> and can be overridden via the class attribute <code class="docutils literal notranslate"><span class="pre">_default_clustering</span></code>. This allows the use of the builder for the creation of other clusterings, e.g. for subclasses of <code class="docutils literal notranslate"><span class="pre">Clustering</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">alias</span></code>/<code class="docutils literal notranslate"><span class="pre">parent</span></code>: Are directly passed to the created clustering.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">**recipe</span></code>: Other keyword arguments are interpreted as modifications to the default recipe (retrieved by <code class="docutils literal notranslate"><span class="pre">registered_recipe_key</span></code>).</p></li>
+</ul>
+<p>To start with the examination of these options, we should look into what is actually meant by a clustering recipe. A recipe is basically a nested mapping of clustering component strings (matching the corresponding keyword arguments used on clustering/component initialisation, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;input_data&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;neighbours&quot;</span></code>) to the generic types (classes not instances) that should be use in the corresponding place. A recipe could for example look like this:</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">recipe</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;input_data&quot;</span><span class="p">:</span> <span class="n">_types</span><span class="o">.</span><span class="n">InputDataExtComponentsMemoryview</span><span class="p">,</span>
+    <span class="s2">&quot;fitter&quot;</span><span class="p">:</span> <span class="s2">&quot;bfs&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fitter.getter&quot;</span><span class="p">:</span> <span class="s2">&quot;brute_force&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fitter.getter.dgetter&quot;</span><span class="p">:</span> <span class="s2">&quot;metric&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fitter.getter.dgetter.metric&quot;</span><span class="p">:</span> <span class="s2">&quot;euclidean&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fitter.na&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;vector&quot;</span><span class="p">,</span> <span class="p">(</span><span class="mi">1000</span><span class="p">,),</span> <span class="p">{}),</span>
+    <span class="s2">&quot;fitter.checker&quot;</span><span class="p">:</span> <span class="s2">&quot;contains&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fitter.queue&quot;</span><span class="p">:</span> <span class="s2">&quot;fifo&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<p>In this recipe, the generic type supposed to wrap the input data is specified explicitly as the class object. Alternatively, strings can be used to specify a type in shorthand notation. Which abbreviations are understood is defined in the <code class="docutils literal notranslate"><span class="pre">hooks.COMPONENT_NAME_TYPE_MAP</span></code>. In the fitter case, <code class="docutils literal notranslate"><span class="pre">bfs</span></code> is translated into <code class="docutils literal notranslate"><span class="pre">_fit.FitterExtBFS</span></code>. Dot notation is used to indicate nested dependencies, e.g. to define components needed to create other components. Similarly, shorthand notation is
+supported for the component key, as shown with <code class="docutils literal notranslate"><span class="pre">fitter.getter</span></code> which stands in for the neighbours getter required by the fitter. Abbreviations on the key side are defined in <code class="docutils literal notranslate"><span class="pre">hooks.COMPONENT_ALT_KW_MAP</span></code>. For the <code class="docutils literal notranslate"><span class="pre">&quot;fitter.na&quot;</span></code> component (one of the neighbours container type needed that the fitter needs), we have a tuple as the value in the mapping. This is interpreted as a component string identifier, followed by an arguments tuple, and a keyword arguments dictionary used in the
+initialisation of the corresponding component. Note also, that the recipe defines only <code class="docutils literal notranslate"><span class="pre">&quot;fitter.na&quot;</span></code> (<code class="docutils literal notranslate"><span class="pre">neighbours</span></code>) and not <code class="docutils literal notranslate"><span class="pre">&quot;fitter.nb&quot;</span></code> (<code class="docutils literal notranslate"><span class="pre">neighbour_neighbours</span></code>) in which case the same type will be used for both components. Those fallback relation ships are defined in <code class="docutils literal notranslate"><span class="pre">hooks.COMPONENT_KW_TYPE_ALIAS_MAP</span></code>.</p>
+<p>This recipe can be now passed to a builder. Calling the <code class="docutils literal notranslate"><span class="pre">build</span></code> method of a builder will create and return a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code>:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span>
+    <span class="n">cluster</span><span class="o">.</span><span class="n">ClusteringBuilder</span><span class="p">(</span>
+        <span class="n">points</span><span class="p">,</span>
+        <span class="n">preparation_hook</span><span class="o">=</span><span class="n">hooks</span><span class="o">.</span><span class="n">prepare_pass</span><span class="p">,</span>
+        <span class="n">registered_recipe_key</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">recipe</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Clustering(input_data=InputDataExtComponentsMemoryview, fitter=FitterExtBFS(ngetter=NeighboursGetterExtBruteForce(dgetter=DistanceGetterExtMetric(metric=MetricExtEuclidean), sorted=False, selfcounting=True), na=NeighboursExtVector, nb=NeighboursExtVector, checker=SimilarityCheckerExtContains, queue=QueueExtFIFOQueue), predictor=None)
+</pre></div></div>
+</div>
+<p>For the initial example of using point coordinates in a sequence of sequences, the builder part is equivalent to:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># The recipe registered as &quot;coordinates&quot;:</span>
+<span class="c1"># {</span>
+<span class="c1">#     &quot;input_data&quot;: &quot;components_mview&quot;,</span>
+<span class="c1">#     &quot;fitter&quot;: &quot;bfs&quot;,</span>
+<span class="c1">#     &quot;fitter.ngetter&quot;: &quot;brute_force&quot;,</span>
+<span class="c1">#     &quot;fitter.na&quot;: &quot;vuset&quot;,</span>
+<span class="c1">#     &quot;fitter.checker&quot;: &quot;switch&quot;,</span>
+<span class="c1">#     &quot;fitter.queue&quot;: &quot;fifo&quot;,</span>
+<span class="c1">#     &quot;fitter.ngetter.dgetter&quot;: &quot;metric&quot;,</span>
+<span class="c1">#     &quot;fitter.ngetter.dgetter.metric&quot;: &quot;euclidean_r&quot;,</span>
+<span class="c1"># }</span>
+
+<span class="nb">print</span><span class="p">(</span>
+    <span class="n">cluster</span><span class="o">.</span><span class="n">ClusteringBuilder</span><span class="p">(</span>
+        <span class="n">points</span><span class="p">,</span>
+        <span class="n">registered_recipe_key</span><span class="o">=</span><span class="s2">&quot;coordinates&quot;</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Clustering(input_data=InputDataExtComponentsMemoryview, fitter=FitterExtBFS(ngetter=NeighboursGetterExtBruteForce(dgetter=DistanceGetterExtMetric(metric=MetricExtEuclideanReduced), sorted=False, selfcounting=True), na=NeighboursExtVectorCPPUnorderedSet, nb=NeighboursExtVectorCPPUnorderedSet, checker=SimilarityCheckerExtSwitchContains, queue=QueueExtFIFOQueue), predictor=None)
+</pre></div></div>
+</div>
+<p>It is possible to modify a given recipe with the explicit use of keyword arguments. Note, that in this case dots should be replaced by a double underscore:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span>
+    <span class="n">cluster</span><span class="o">.</span><span class="n">ClusteringBuilder</span><span class="p">(</span>
+        <span class="n">points</span><span class="p">,</span>
+        <span class="n">registered_recipe_key</span><span class="o">=</span><span class="s2">&quot;coordinates&quot;</span><span class="p">,</span>
+        <span class="n">fitter__ngetter__dgetter__metric</span><span class="o">=</span><span class="s2">&quot;precomputed&quot;</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Clustering(input_data=InputDataExtComponentsMemoryview, fitter=FitterExtBFS(ngetter=NeighboursGetterExtBruteForce(dgetter=DistanceGetterExtMetric(metric=MetricExtPrecomputed), sorted=False, selfcounting=True), na=NeighboursExtVectorCPPUnorderedSet, nb=NeighboursExtVectorCPPUnorderedSet, checker=SimilarityCheckerExtSwitchContains, queue=QueueExtFIFOQueue), predictor=None)
+</pre></div></div>
+</div>
+<p>The above modification makes the recipe match the <code class="docutils literal notranslate"><span class="pre">&quot;distances&quot;</span></code> recipe. Other readily available recipes are <code class="docutils literal notranslate"><span class="pre">&quot;neighbourhoods&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;sorted_neighbourhoods&quot;</span></code>. The users are encouraged to modify those to their liking or to define their own custom recipes.</p>
+<p>Newly defined types that should be usable in a builder controlled aggregation need to implement a classmethod <code class="docutils literal notranslate"><span class="pre">get_builder_kwargs()</span> <span class="pre">-&gt;</span> <span class="pre">list</span></code> that provides a list of component identifiers necessary to initialise an object of itself.</p>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">CommonNN Clustering</a></h1>
+
+
+
+<p class="blurb">A Python package for common-nearest-neighbour clustering</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=bkellerlab&repo=CommonNNClustering&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../_source/install.html">Installation instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../_source/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../_source/tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="basic_usage.html">Basic usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scikit_learn_datasets.html">Clustering of scikit-learn toy data sets</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Advanced usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interface_demo.html">Demonstration of (generic) interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hierarchical_clustering_basics.html">Hierarchical clustering basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="algorithm_explained.html">Density based clustering basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="md_example.html">Molecular dynamics application example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../_source/api_reference.html">API Reference</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../_source/tutorials.html">Tutorials</a><ul>
+      <li>Previous: <a href="scikit_learn_datasets.html" title="previous chapter">Clustering of scikit-learn toy data sets</a></li>
+      <li>Next: <a href="interface_demo.html" title="next chapter">Demonstration of (generic) interfaces</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Jan-Oliver Kapp-Joswig.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.2.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/tutorial/advanced_usage.ipynb.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

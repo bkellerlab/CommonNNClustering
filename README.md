@@ -83,7 +83,7 @@ array([1, 1, 1, 1, 1, 0, 0, 0, 0, 2, 2, 2])
 
 ```
 
-![quickstart](https://github.com/janjoswig/CommonNNClustering/raw/master/docs/_images/tutorial_basic_usage_30_0.png)
+![quickstart](docsrc/tutorial/quickstart/quickstart_example.png)
 
 Alternative scikit-learn implementation
 ---------------------------------------

@@ -1,0 +1,236 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>_bundle &#8212; CommonNN Clustering  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="report" href="api_report.html" />
+    <link rel="prev" title="plot" href="api_plot.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <span class="target" id="module-commonnn._bundle"><span id="sec-api-bundle"></span></span><section id="bundle">
+<h1>_bundle<a class="headerlink" href="#bundle" title="Permalink to this heading">¶</a></h1>
+<p>Go to:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#sec-api-commonnn-bundle-bundle"><span class="std std-ref">Clustering</span></a></p></li>
+</ul>
+</div></blockquote>
+<section id="sec-api-commonnn-bundle-bundle">
+<span id="id1"></span><h2>Bundle<a class="headerlink" href="#sec-api-commonnn-bundle-bundle" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="commonnn._bundle.Bundle">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._bundle.</span></span><span class="sig-name descname"><span class="pre">Bundle</span></span><a class="headerlink" href="#commonnn._bundle.Bundle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bundles input data and clustering output</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="commonnn._bundle.Bundle.add_child">
+<span class="sig-name descname"><span class="pre">add_child</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bundle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._bundle.Bundle.add_child" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a child for this bundle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>label</strong> – Add child with this label. Compare <a class="reference internal" href="#commonnn._bundle.Bundle.get_child" title="commonnn._bundle.Bundle.get_child"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_child()</span></code></a>
+for which arguments are allowed.</p>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>bundle</strong> – The child to add. If <code class="code docutils literal notranslate"><span class="pre">None</span></code>, creates a new bundle.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the label already exists, the respective child is silently
+overridden. It is not checked if a children mapping exists.</p>
+<p>Overrides parent of the newly added bundle.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="commonnn._bundle.Bundle.alias">
+<span class="sig-name descname"><span class="pre">alias</span></span><a class="headerlink" href="#commonnn._bundle.Bundle.alias" title="Permalink to this definition">¶</a></dt>
+<dd><p>unicode</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>alias</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonnn._bundle.Bundle.get_child">
+<span class="sig-name descname"><span class="pre">get_child</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._bundle.Bundle.get_child" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve a child of this bundle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>label</strong> – <dl class="simple">
+<dt>Can be</dt><dd><ul class="simple">
+<li><p>an integer in which case the child with the respective label is returned</p></li>
+<li><p>a list of integers in which case the hierarchy of children is traversed and the last child is returned</p></li>
+<li><p>a string of integers separated by a dot (e.g. “1.1.2”) which will be interpreted as a  list of integers (e.g. [1, 1, 2])</p></li>
+</ul>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A <a class="reference internal" href="#commonnn._bundle.Bundle" title="commonnn._bundle.Bundle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bundle</span></code></a></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>It is not checked if a children mapping exists.</p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="commonnn._bundle.Bundle.hierarchy_level">
+<span class="sig-name descname"><span class="pre">hierarchy_level</span></span><a class="headerlink" href="#commonnn._bundle.Bundle.hierarchy_level" title="Permalink to this definition">¶</a></dt>
+<dd><p>The level of this clustering in the hierarchical
+tree of clusterings (0 for the root instance).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonnn._bundle.Bundle.info">
+<span class="sig-name descname"><span class="pre">info</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._bundle.Bundle.info" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonnn._bundle.Bundle.isolate">
+<span class="sig-name descname"><span class="pre">isolate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bool</span> <span class="pre">purge:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bool</span> <span class="pre">isolate_input_data:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#commonnn._bundle.Bundle.isolate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a child for each existing cluster label</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>see <code class="xref py py-func docutils literal notranslate"><span class="pre">isolate()</span></code></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonnn._bundle.Bundle.reel">
+<span class="sig-name descname"><span class="pre">reel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">AINDEX</span> <span class="pre">depth:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">UINT_MAX</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#commonnn._bundle.Bundle.reel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">CommonNN Clustering</a></h1>
+
+
+
+<p class="blurb">A Python package for common-nearest-neighbour clustering</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=bkellerlab&repo=CommonNNClustering&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="api_cluster.html">cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_recipes.html">recipes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_plot.html">plot</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">_bundle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_report.html">report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_helper.html">helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_types.html">_types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_fit.html">_fit</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="api_reference.html">API Reference</a><ul>
+      <li>Previous: <a href="api_plot.html" title="previous chapter">plot</a></li>
+      <li>Next: <a href="api_report.html" title="next chapter">report</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Jan-Oliver Kapp-Joswig.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.2.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_source/api_bundle.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

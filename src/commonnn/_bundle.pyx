@@ -163,17 +163,17 @@ cdef class Bundle:
 
     def get_child(self, label):
         """Retrieve a child of this bundle
+
         Args:
             label:
                 Can be
-                    * an integer in which case the child with the respective
-                      label is returned
-                    * a list of integers in which case the hierarchy of children
-                      is traversed and the last child is returned
-                    * a string of integers separated by a dot (e.g. "1.1.2") which
-                      will be interpreted as a  list of integers (e.g. [1, 1, 2])
+                    * an integer in which case the child with the respective label is returned
+                    * a list of integers in which case the hierarchy of children is traversed and the last child is returned
+                    * a string of integers separated by a dot (e.g. "1.1.2") which will be interpreted as a  list of integers (e.g. [1, 1, 2])
+
         Returns:
-            A :obj:`~cnnclustering._bundle.Bundle`
+            A :obj:`~commonnn._bundle.Bundle`
+
         Note:
             It is not checked if a children mapping exists.
         """
