@@ -12,6 +12,7 @@ norecursedirs = ".tox .git docs build htmlcov src"
 addopts = "-v -p no:warnings --doctest-glob='*.md' --ignore=setup.py"
 testpaths = ["test", "."]
 markers = [
+    "matplotlib: requires matplotlib install",
     "sklearn: requires scikit-learn install",
     "pandas: requires pandas install",
     "networkx: requires networkx install",

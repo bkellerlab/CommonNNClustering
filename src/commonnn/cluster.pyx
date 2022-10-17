@@ -9,7 +9,7 @@ import weakref
 try:
     import matplotlib as mpl
     import matplotlib.pyplot as plt
-    # from . import plot
+    from . import plot
     MPL_FOUND = True
 except ModuleNotFoundError as error:
     print("Optional dependency module not found: ", error)
@@ -390,3 +390,531 @@ class Clustering:
             depth = UINT_MAX
 
         bundle.reel(depth)
+
+
+    def summarize(
+            self,
+            ax=None,
+            quantity: str = "execution_time",
+            treat_nan: Optional[Any] = None,
+            convert: Optional[Any] = None,
+            ax_props: Optional[dict] = None,
+            contour_props: Optional[dict] = None,
+            plot_style: str = "contourf",
+            bundle=None):
+        """Generate a 2D plot of record values
+
+        Record values ("time", "clusters", "largest", "noise") are
+        plotted against cluster parameters (radius cutoff *r*
+        and cnn cutoff *c*).
+
+        Args:
+            ax: Matplotlib Axes to plot on.  If `None`, a new Figure
+                with Axes will be created.
+            quantity: Record value to
+                visualise:
+                    * "time"
+                    * "clusters"
+                    * "largest"
+                    * "noise"
+            treat_nan: If not `None`, use this value to pad nan-values.
+            ax_props: Used to style `ax`.
+            contour_props: Passed on to contour.
+        """
+
+        if not MPL_FOUND:
+            raise ModuleNotFoundError("No module named 'matplotlib'")
+
+        if bundle is None:
+            bundle = self._bundle
+
+        if (self._bundle._summary is None) or (len(self._bundle._summary._list) == 0):
+            raise LookupError(
+                "No records in summary"
+                )
+
+        ax_props_defaults = {
+            "xlabel": "$r$",
+            "ylabel": "$c$",
+        }
+
+        if ax_props is not None:
+            ax_props_defaults.update(ax_props)
+
+        contour_props_defaults = {
+                "cmap": mpl.cm.inferno,
+            }
+
+        if contour_props is not None:
+            contour_props_defaults.update(contour_props)
+
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
+
+        plotted = plot.plot_summary(
+            ax, bundle._summary.to_DataFrame(),
+            quantity=quantity,
+            treat_nan=treat_nan,
+            convert=convert,
+            contour_props=contour_props_defaults,
+            plot_style=plot_style,
+            )
+
+        ax.set(**ax_props_defaults)
+
+        return plotted
+
+    def pie(self, ax=None, pie_props=None, bundle=None):
+        """Make a pie plot of the cluster hierarchy based on assigned labels"""
+
+        if not MPL_FOUND:
+            raise ModuleNotFoundError("No module named 'matplotlib'")
+
+        if bundle is None:
+            bundle = self._bundle
+
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
+
+        plot.pie(bundle, ax=ax, pie_props=pie_props)
+
+        return
+
+    def tree(
+            self,
+            ax=None,
+            ignore=None,
+            pos_props=None,
+            draw_props=None,
+            bundle=None):
+        """Make a layer plot of the cluster hierarchy"""
+
+        if not MPL_FOUND:
+            raise ModuleNotFoundError("No module named 'matplotlib'")
+
+        if bundle is None:
+            bundle = self._bundle
+
+        graph = self.to_nx_DiGraph(ignore=ignore, bundle=bundle)
+
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
+
+        pos_props_defaults = {
+            "source": "1",
+        }
+
+        if pos_props is not None:
+            pos_props_defaults.update(pos_props)
+
+        shortened_labels = {}
+        for key in graph.nodes.keys():
+            skey = key.rsplit(".", 1)
+            shortened_labels[key] = skey[len(skey) - 1]
+
+        draw_props_defaults = {
+            "labels": shortened_labels,
+            "with_labels": True,
+            "node_shape": "s",
+            "edgecolors": "k",
+        }
+
+        if draw_props is not None:
+            draw_props_defaults.update(draw_props)
+
+        plot.plot_graph_sugiyama_straight(
+            graph, ax=ax,
+            pos_props=pos_props_defaults,
+            draw_props=draw_props_defaults,
+        )
+
+        return
+
+    def evaluate(
+            self,
+            ax=None,
+            clusters: Optional[Container[int]] = None,
+            original: bool = False,
+            plot_style: str = 'dots',
+            parts: Optional[Tuple[Optional[int]]] = None,
+            points: Optional[Tuple[Optional[int]]] = None,
+            dim: Optional[Tuple[int, int]] = None,
+            mask: Optional[Sequence[Union[bool, int]]] = None,
+            ax_props: Optional[dict] = None,
+            annotate: bool = True,
+            annotate_pos: Union[str, dict] = "mean",
+            annotate_props: Optional[dict] = None,
+            plot_props: Optional[dict] = None,
+            plot_noise_props: Optional[dict] = None,
+            hist_props: Optional[dict] = None,
+            free_energy: bool = True,
+            bundle=None):
+
+        """Make 2D plot of an original data set or a cluster result
+
+        Args:
+            ax: The `Axes` instance to which to add the plot.  If
+            `None`, a new `Figure` with `Axes` will be created.
+            clusters:
+                Cluster numbers to include in the plot.  If `None`,
+                consider all.
+            original:
+                Allows to plot the original data instead of a cluster
+                result.  Overrides `clusters`.  Will be considered
+                `True`, if no cluster result is present.
+            plot_style:
+                The kind of plotting method to use:
+                    * "dots", :func:`ax.plot`
+                    * "scatter", :func:`ax.scatter`
+                    * "contour", :func:`ax.contour`
+                    * "contourf", :func:`ax.contourf`
+            parts:
+                Use a slice (start, stop, stride) on the data parts
+                before plotting. Will be applied before a slice on `points`.
+            points:
+                Use a slice (start, stop, stride) on the data points
+                before plotting.
+            dim:
+                Use these two dimensions for plotting.  If `None`, uses
+                (0, 1).
+            mask:
+                Sequence of boolean or integer values used for optional
+                fancy indexing on the point data array.  Note, that this
+                is applied after regular slicing (e.g. via `points`) and
+                requires a copy of the indexed data (may be slow and
+                memory intensive for big data sets).
+            annotate:
+                If there is a cluster result, plot the cluster numbers.
+                Uses `annotate_pos` to determinte the position of the
+                annotations.
+            annotate_pos:
+                Where to put the cluster number annotation.
+                Can be one of:
+                    * "mean", Use the cluster mean
+                    * "random", Use a random point of the cluster
+                    * dict `{1: (x, y), ...}`, Use a specific coordinate
+                        tuple for each cluster. Omitted labels will be placed
+                        randomly.
+            annotate_props:
+                Dictionary of keyword arguments passed to
+                :func:`ax.annotate`.
+            ax_props:
+                Dictionary of `ax` properties to apply after
+                plotting via :func:`ax.set(**ax_props)`.  If `None`,
+                uses defaults that can be also defined in
+                the configuration file (*Note yet implemented*).
+            plot_props:
+                Dictionary of keyword arguments passed to various
+                functions (:func:`plot.plot_dots` etc.) with different
+                meaning to format cluster plotting.  If `None`, uses
+                defaults that can be also defined in
+                the configuration file (*Note yet implemented*).
+            plot_noise_props:
+                Like `plot_props` but for formatting noise point
+                plotting.
+            hist_props:
+               Dictionary of keyword arguments passed to functions that
+               involve the computing of a histogram via
+               `numpy.histogram2d`.
+            free_energy:
+                If `True`, converts computed histograms to pseudo free
+                energy surfaces.
+
+        Returns:
+            Figure, Axes and a list of plotted elements
+
+        Note:
+            Requires coordinate access on the input data via
+            :meth:`~_types.InputData.to_components_array`.
+            Also requires :meth:`~_types.InputData.by_parts` if
+            option `parts` is used.
+        """
+
+        if bundle is None:
+            bundle = self._bundle
+
+        if not MPL_FOUND:
+            raise ModuleNotFoundError("No module named 'matplotlib'")
+
+        if (bundle._input_data is None) or (
+                not bundle._input_data.meta.get("access_coords", False)):
+            raise ValueError(
+                "No data point coordinates found to evaluate."
+            )
+
+        if dim is None:
+            dim = (0, 1)
+        elif dim[1] < dim[0]:
+            dim = dim[::-1]  # Problem with wraparound=False?
+
+        if parts is not None:
+            by_parts = list(bundle._input_data.by_parts())[slice(*parts)]
+            data = np.vstack(by_parts)
+        else:
+            data = bundle._input_data.to_components_array()
+
+        if points is None:
+            points = (None, None, None)
+
+        # Slicing without copying
+        data = data[
+            slice(*points),
+            slice(dim[0], dim[1] + 1, dim[1] - dim[0])
+            ]
+
+        if mask is not None:
+            data = data[mask]
+
+        # Plot original set or points per cluster?
+        cluster_map = None
+        if not original:
+            if bundle._labels is not None:
+                cluster_map = bundle._labels.mapping
+                if clusters is None:
+                    clusters = list(cluster_map.keys())
+            else:
+                original = True
+
+        ax_props_defaults = {
+            "xlabel": "$x$",
+            "ylabel": "$y$",
+        }
+
+        if ax_props is not None:
+            ax_props_defaults.update(ax_props)
+
+        annotate_props_defaults = {}
+
+        if annotate_props is not None:
+            annotate_props_defaults.update(annotate_props)
+
+        if ax is None:
+            fig, ax = plt.subplots()
+        else:
+            fig = ax.get_figure()
+
+        if plot_style == "dots":
+            plot_props_defaults = {
+                'lw': 0,
+                'marker': '.',
+                'markersize': 5,
+                'markeredgecolor': 'none',
+                }
+
+            if plot_props is not None:
+                plot_props_defaults.update(plot_props)
+
+            plot_noise_props_defaults = {
+                'color': 'none',
+                'lw': 0,
+                'marker': '.',
+                'markersize': 4,
+                'markerfacecolor': 'k',
+                'markeredgecolor': 'none',
+                'alpha': 0.3
+                }
+
+            if plot_noise_props is not None:
+                plot_noise_props_defaults.update(plot_noise_props)
+
+            plotted = plot.plot_dots(
+                ax=ax, data=data, original=original,
+                cluster_map=cluster_map,
+                clusters=clusters,
+                dot_props=plot_props_defaults,
+                dot_noise_props=plot_noise_props_defaults,
+                annotate=annotate, annotate_pos=annotate_pos,
+                annotate_props=annotate_props_defaults
+                )
+
+        elif plot_style == "scatter":
+            plot_props_defaults = {
+                's': 10,
+            }
+
+            if plot_props is not None:
+                plot_props_defaults.update(plot_props)
+
+            plot_noise_props_defaults = {
+                'color': 'k',
+                's': 10,
+                'alpha': 0.5
+            }
+
+            if plot_noise_props is not None:
+                plot_noise_props_defaults.update(plot_noise_props)
+
+            plotted = plot.plot_scatter(
+                ax=ax, data=data, original=original,
+                cluster_map=cluster_map,
+                clusters=clusters,
+                scatter_props=plot_props_defaults,
+                scatter_noise_props=plot_noise_props_defaults,
+                annotate=annotate, annotate_pos=annotate_pos,
+                annotate_props=annotate_props_defaults
+                )
+
+        if plot_style in ["contour", "contourf", "histogram"]:
+
+            hist_props_defaults = {
+                "avoid_zero_count": False,
+                "mass": True,
+                "mids": True
+            }
+
+            if hist_props is not None:
+                hist_props_defaults.update(hist_props)
+
+            if plot_style == "contour":
+
+                plot_props_defaults = {
+                    "cmap": mpl.cm.inferno,
+                }
+
+                if plot_props is not None:
+                    plot_props_defaults.update(plot_props)
+
+                plot_noise_props_defaults = {
+                    "cmap": mpl.cm.Greys,
+                }
+
+                if plot_noise_props is not None:
+                    plot_noise_props_defaults.update(plot_noise_props)
+
+                plotted = plot.plot_contour(
+                    ax=ax, data=data, original=original,
+                    cluster_map=cluster_map,
+                    clusters=clusters,
+                    contour_props=plot_props_defaults,
+                    contour_noise_props=plot_noise_props_defaults,
+                    hist_props=hist_props_defaults, free_energy=free_energy,
+                    annotate=annotate, annotate_pos=annotate_pos,
+                    annotate_props=annotate_props_defaults
+                    )
+
+            elif plot_style == "contourf":
+                plot_props_defaults = {
+                    "cmap": mpl.cm.inferno,
+                }
+
+                if plot_props is not None:
+                    plot_props_defaults.update(plot_props)
+
+                plot_noise_props_defaults = {
+                    "cmap": mpl.cm.Greys,
+                }
+
+                if plot_noise_props is not None:
+                    plot_noise_props_defaults.update(plot_noise_props)
+
+                plotted = plot.plot_contourf(
+                    ax=ax, data=data, original=original,
+                    cluster_map=cluster_map,
+                    clusters=clusters,
+                    contour_props=plot_props_defaults,
+                    contour_noise_props=plot_noise_props_defaults,
+                    hist_props=hist_props_defaults, free_energy=free_energy,
+                    annotate=annotate, annotate_pos=annotate_pos,
+                    annotate_props=annotate_props_defaults
+                    )
+
+            elif plot_style == "histogram":
+                plot_props_defaults = {
+                    "cmap": mpl.cm.inferno,
+                }
+
+                if plot_props is not None:
+                    plot_props_defaults.update(plot_props)
+
+                plot_noise_props_defaults = {
+                    "cmap": mpl.cm.Greys,
+                }
+
+                if plot_noise_props is not None:
+                    plot_noise_props_defaults.update(plot_noise_props)
+
+                plotted = plot.plot_histogram2d(
+                    ax=ax, data=data, original=original,
+                    cluster_map=cluster_map,
+                    clusters=clusters,
+                    contour_props=plot_props_defaults,
+                    contour_noise_props=plot_noise_props_defaults,
+                    hist_props=hist_props_defaults, free_energy=free_energy,
+                    annotate=annotate, annotate_pos=annotate_pos,
+                    annotate_props=annotate_props_defaults
+                    )
+
+        ax.set(**ax_props_defaults)
+
+        return plotted
+
+    def to_nx_DiGraph(self, ignore=None, bundle=None):
+        """Convert cluster hierarchy to networkx DiGraph
+
+        Keyword args:
+            ignore: A set of label not to include into the graph.  Use
+                for example to exclude noise (label 0).
+            bundle: The bundle to start with. If `None`, uses the root bundle.
+        """
+
+        if not NX_FOUND:
+            raise ModuleNotFoundError("No module named 'networkx'")
+
+        if bundle is None:
+            bundle = self._bundle
+
+        def add_children(clustering_label, clustering, graph):
+            for child_label, child_clustering in sorted(clustering._children.items()):
+
+                if child_label in ignore:
+                    continue
+
+                padded_child_label = ".".join([clustering_label, str(child_label)])
+                graph.add_node(padded_child_label, object=child_clustering)
+                graph.add_edge(clustering_label, padded_child_label)
+
+                if child_clustering._children:
+                    add_children(padded_child_label, child_clustering, graph)
+
+        if ignore is None:
+            ignore = set()
+
+        if not isinstance(ignore, set):
+            ignore = set(ignore)
+
+        graph = nx.DiGraph()
+        graph.add_node("1", object=bundle)
+        add_children("1", bundle, graph)
+
+        return graph
+
+    def to_dtrajs(self, bundle=None):
+        """Convert cluster label assignments to discrete state  trajectory"""
+
+        if bundle is None:
+            bundle = self._bundle
+
+        labels_array = bundle.labels
+        if labels_array is None:
+            return []
+
+        edges = None
+        if bundle._input_data is not None:
+            edges = self._input_data.meta.get("edges")
+
+        if edges is None:
+            return [labels_array]
+
+        dtrajs = np.split(labels_array, np.cumsum(edges))
+
+        last_dtraj_index = len(dtrajs) - 1
+        if len(dtrajs[last_dtraj_index]) == 0:
+            dtrajs = dtrajs[:last_dtraj_index]
+
+        return dtrajs

@@ -15,9 +15,7 @@ from commonnn._primitive_types import P_AVALUE
 from commonnn import _bundle, _types
 
 
-pytestmark = pytest.mark.pandas
-
-
+@pytest.mark.pandas
 def test_make_typed_DataFrame():
     if not PANDAS_FOUND:
         pytest.skip("Test function requires pandas")
@@ -43,6 +41,7 @@ def test_make_typed_DataFrame():
     assert tdf["b"].dtype == 'O'
 
 
+@pytest.mark.pandas
 def test_make_empty_typed_DataFrame():
     if not PANDAS_FOUND:
         pytest.skip("Test function requires pandas")
