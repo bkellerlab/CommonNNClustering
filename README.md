@@ -83,7 +83,7 @@ array([1, 1, 1, 1, 1, 0, 0, 0, 0, 2, 2, 2])
 
 ```
 
-![quickstart](docsrc/tutorial/quickstart/quickstart_example.png)
+![quickstart](docsrc/_source/quickstart/quickstart_example.png)
 
 Alternative scikit-learn implementation
 ---------------------------------------
