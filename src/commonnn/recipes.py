@@ -330,7 +330,7 @@ REGISTERED_RECIPES = {
     },
     "sorted_neighbourhoods": {
         "input_data": "neighbourhoods_mview",
-        "preparation_hook": "neighbourhoods",
+        "preparation_hook": "padded_neighbourhoods_array",
         "fitter": "bfs",
         "fitter.ngetter": ("lookup", (), {"is_sorted": True}),
         "fitter.na": "vector",
