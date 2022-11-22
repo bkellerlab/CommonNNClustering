@@ -1,0 +1,610 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "# Basic usage"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "Go to:\n",
+    "    \n",
+    "  - [Notebook configuration](basic_usage.ipynb#Notebook-configuration)\n",
+    "  - [Getting started](basic_usage.ipynb#Getting-started)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Notebook configuration"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2022-10-17T12:45:06.214273Z",
+     "start_time": "2022-10-17T12:45:03.676498Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import sys\n",
+    "\n",
+    "# Optional dependencies\n",
+    "import matplotlib as mpl\n",
+    "import matplotlib.pyplot as plt\n",
+    "\n",
+    "import commonnn\n",
+    "from commonnn import cluster"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2022-10-17T12:45:06.222621Z",
+     "start_time": "2022-10-17T12:45:06.217513Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Python:  3.10.7 (main, Sep 27 2022, 11:41:38) [GCC 10.2.1 20210110]\n",
+      "Packages:\n",
+      "    matplotlib: 3.6.0\n",
+      "    commonnn: 0.0.1\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Version information\n",
+    "print(\"Python: \", *sys.version.split(\"\\n\"))\n",
+    "\n",
+    "print(\"Packages:\")\n",
+    "for package in [mpl, commonnn]:\n",
+    "    print(f\"    {package.__name__}: {package.__version__}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "We use [Matplotlib](https://matplotlib.org/) to create plots. The `matplotlibrc` file in the root directory of the `CommonNNClustering` repository is used to customize the appearance of the plots."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2022-10-17T12:45:06.240695Z",
+     "start_time": "2022-10-17T12:45:06.236437Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# Matplotlib configuration\n",
+    "mpl.rc_file(\"../../matplotlibrc\", use_default_template=False)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2022-10-17T12:45:06.247485Z",
+     "start_time": "2022-10-17T12:45:06.243108Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# Axis property defaults for the plots\n",
+    "ax_props = {\n",
+    "    \"aspect\": \"equal\"\n",
+    "}\n",
+    "\n",
+    "# Property defaults for plotted lines\n",
+    "dot_props = {\n",
+    "    \"marker\": \"o\",\n",
+    "    \"markeredgecolor\": \"k\"\n",
+    "}"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "## Getting started"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The `commonnn.cluster` main module provides a `Clustering` class. An instance of this class is used to bundle input data (e.g. data points) with cluster results (cluster label assignments) alongside the clustering method (a fitter with a set of building blocks) and convenience functions for further analysis (not only in an Molecular Dynamics context). As a guiding principle, a `Clustering` object is always associated with one particular data set (possibly hierarchically decomposed) and allows varying cluster parameters."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "<div class=\"alert alert-info\">\n",
+    "\n",
+    "**Info:** Refer also to the [__scikit-learn-extra__ project](https://github.com/scikit-learn-contrib/scikit-learn-extra) for an alternative API following a parameter centered approach to clustering as `sklearn_extra.cluster.CommonNNClustering`.\n",
+    "\n",
+    "</div>"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "A `Clustering` can be initialized by passing *raw* input data to it. By default, this is expected to be a nested sequence, e.g. a list of lists. It will be understood as the coordinates of a number of data points in a feature space. Similar data structures, like a 2-dimensional NumPy array would be acceptable, as well. It is possible to use different kinds of input data formats instead, like for example pre-computed pairwise distances, and it is described later how to do it (refer to tutorials [__Clustering of scikit-learn toy data sets__](scikit_learn_datasets.ipynb) and [__Advanced usage__](advanced_usage.ipynb))."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2022-10-17T12:45:06.261233Z",
+     "start_time": "2022-10-17T12:45:06.249279Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "# 2D Data points (list of lists, 12 points in 2 dimensions)\n",
+    "data_points = [   # Point index\n",
+    "    [0, 0],       # 0\n",
+    "    [1, 1],       # 1\n",
+    "    [1, 0],       # 2\n",
+    "    [0, -1],      # 3\n",
+    "    [0.5, -0.5],  # 4\n",
+    "    [2,  1.5],    # 5\n",
+    "    [2.5, -0.5],  # 6\n",
+    "    [4, 2],       # 7\n",
+    "    [4.5, 2.5],   # 8\n",
+    "    [5, -1],      # 9\n",
+    "    [5.5, -0.5],  # 10\n",
+    "    [5.5, -1.5],  # 11\n",
+    "    ]\n",
+    "\n",
+    "clustering = cluster.Clustering(data_points)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "When we cluster data points, we are essentially interested in cluster label assignments for these points. The labels will be exposed as the `labels` attribute on the `Clustering` instance, which is currently `None` because no clustering has been done yet."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 6,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2022-10-17T12:45:06.278900Z",
+     "start_time": "2022-10-17T12:45:06.262884Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "True"
+      ]
+     },
+     "execution_count": 6,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "clustering.labels is None"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "To cluster the points, we will use the `Clustering.fit` method. CommonNN clustering depends on two parameters:\n",
+    "  \n",
+    "  - `radius_cutoff`: Points are considered neighbours if the distance between them is not larger than this cutoff radius $r$.\n",
+    "  - `similarity_cutoff`: Points are assigned to the same cluster if they share at least this number of $n_\\mathrm{c}$ common neighbours.\n",
+    "  \n",
+    "For the clustering procedure, we ultimately need to compute the neighbouring points with respect to the `radius_cutoff` for each point in the data set. Then we can determine if two points fulfill the criterion of being part of the same cluster. How this is done, can be controlled in detail but by default the input data points are assumed to be given in euclidean space and the neighbours are computed brute force. For larger data sets, it makes sense to use a different approach."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 7,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2022-10-17T12:45:06.287308Z",
+     "start_time": "2022-10-17T12:45:06.280475Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "-----------------------------------------------------------------------------------------------\n",
+      "#points   r         nc        min       max       #clusters %largest  %noise    time     \n",
+      "12        2.000     1         None      None      2         0.583     0.167     00:00:0.000\n",
+      "-----------------------------------------------------------------------------------------------\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "clustering.fit(radius_cutoff=2.0, similarity_cutoff=1)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "A clustering attempt returns and prints a comprehensive record of the cluster parameters and the outcome. You can suppress the recording with the keyword argument `record=False` and the printing with `v=False`:\n",
+    "\n",
+    "  - **#points**: Number of data points in the data set.\n",
+    "  - **r**: Radius cutoff *r*.\n",
+    "  - **nc**: Common-nearest-neighour similarity cutoff $n_\\mathrm{c}$.\n",
+    "  - **min**: Member cutoff (valid clusters need to have at least this many members).\n",
+    "  - **max**: Maximum cluster count (keep only the *max* largest clusters and disregard smaller clusters).\n",
+    "  - **#clusters**: Number of identified clusters.\n",
+    "  - **%largest**: Member share on the total number of points in the largest cluster.\n",
+    "  - **%noise**: Member share on the total number of points identified as noise (not part of any cluster).\n",
+    "  \n",
+    "The `min` (keyword argument `member_cutoff`) and `max` (keyword argument `max_clusters`) only take effect in an optional post processing step when `sort_by_size=True` (default). In this case, the clusters are sorted by their size, so that the first cluster (cluster 1) has the highest member count. Optionally, they are trimmed such that valid clusters have a minimum number of members (`member_cutoff`) and only the largest clusters are kept (`max_clusters`)."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The outcome of the clustering are cluster label assignments for each point. Points classified as *noise* (not part of any cluster) are labeled 0. Integer labels larger than 0 indicate the membership of each point to one of the identified clusters. If clusters were sorted (`sort_by_size=True`), cluster 1 has the highest member count."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 8,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2022-10-17T12:45:06.301233Z",
+     "start_time": "2022-10-17T12:45:06.289239Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([1, 1, 1, 1, 1, 1, 1, 0, 0, 2, 2, 2])"
+      ]
+     },
+     "execution_count": 8,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "clustering.labels"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "The `labels` attribute of a cluster object always holds the result of the latest fit. All cluster results (from fits where `record=True`) are collected in a summary without storing the actual labels."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 9,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2022-10-17T12:45:06.316957Z",
+     "start_time": "2022-10-17T12:45:06.302912Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "-----------------------------------------------------------------------------------------------\n",
+      "#points   r         nc        min       max       #clusters %largest  %noise    time     \n",
+      "12        2.000     1         None      None      2         0.583     0.167     00:00:0.000\n",
+      "-----------------------------------------------------------------------------------------------\n",
+      "\n",
+      "-----------------------------------------------------------------------------------------------\n",
+      "#points   r         nc        min       max       #clusters %largest  %noise    time     \n",
+      "12        1.500     1         None      None      2         0.417     0.333     00:00:0.000\n",
+      "-----------------------------------------------------------------------------------------------\n",
+      "\n"
+     ]
+    }
+   ],
+   "source": [
+    "clustering.fit(radius_cutoff=1.5, similarity_cutoff=1, v=False)\n",
+    "print(*clustering.summary, sep=\"\\n\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "If you have [Pandas](https://pandas.pydata.org/) installed, the summary can be transformed into a handy `pandas.DataFrame`."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2022-10-17T12:45:06.352985Z",
+     "start_time": "2022-10-17T12:45:06.319638Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/html": [
+       "<div>\n",
+       "<style scoped>\n",
+       "    .dataframe tbody tr th:only-of-type {\n",
+       "        vertical-align: middle;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe tbody tr th {\n",
+       "        vertical-align: top;\n",
+       "    }\n",
+       "\n",
+       "    .dataframe thead th {\n",
+       "        text-align: right;\n",
+       "    }\n",
+       "</style>\n",
+       "<table border=\"1\" class=\"dataframe\">\n",
+       "  <thead>\n",
+       "    <tr style=\"text-align: right;\">\n",
+       "      <th></th>\n",
+       "      <th>n_points</th>\n",
+       "      <th>radius_cutoff</th>\n",
+       "      <th>similarity_cutoff</th>\n",
+       "      <th>member_cutoff</th>\n",
+       "      <th>max_clusters</th>\n",
+       "      <th>n_clusters</th>\n",
+       "      <th>ratio_largest</th>\n",
+       "      <th>ratio_noise</th>\n",
+       "      <th>execution_time</th>\n",
+       "    </tr>\n",
+       "  </thead>\n",
+       "  <tbody>\n",
+       "    <tr>\n",
+       "      <th>0</th>\n",
+       "      <td>12</td>\n",
+       "      <td>2.0</td>\n",
+       "      <td>1</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0.583333</td>\n",
+       "      <td>0.166667</td>\n",
+       "      <td>0.000057</td>\n",
+       "    </tr>\n",
+       "    <tr>\n",
+       "      <th>1</th>\n",
+       "      <td>12</td>\n",
+       "      <td>1.5</td>\n",
+       "      <td>1</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>&lt;NA&gt;</td>\n",
+       "      <td>2</td>\n",
+       "      <td>0.416667</td>\n",
+       "      <td>0.333333</td>\n",
+       "      <td>0.000043</td>\n",
+       "    </tr>\n",
+       "  </tbody>\n",
+       "</table>\n",
+       "</div>"
+      ],
+      "text/plain": [
+       "   n_points  radius_cutoff  similarity_cutoff  member_cutoff  max_clusters  \\\n",
+       "0        12            2.0                  1           <NA>          <NA>   \n",
+       "1        12            1.5                  1           <NA>          <NA>   \n",
+       "\n",
+       "   n_clusters  ratio_largest  ratio_noise  execution_time  \n",
+       "0           2       0.583333     0.166667        0.000057  \n",
+       "1           2       0.416667     0.333333        0.000043  "
+      ]
+     },
+     "execution_count": 10,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "clustering.summary.to_DataFrame()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "A `Clustering` object comes with a set of convenience methods that allow for example a quick look at a plot of the data points and a cluster result."
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2022-10-17T12:45:07.067407Z",
+     "start_time": "2022-10-17T12:45:06.354550Z"
+    },
+    "scrolled": true
+   },
+   "outputs": [
+    {
+     "data": {
+      "image/png": "iVBORw0KGgoAAAANSUhEUgAAAu4AAAFKCAYAAABCeNqvAAAAOXRFWHRTb2Z0d2FyZQBNYXRwbG90bGliIHZlcnNpb24zLjYuMCwgaHR0cHM6Ly9tYXRwbG90bGliLm9yZy89olMNAAAACXBIWXMAABcSAAAXEgFnn9JSAAA5e0lEQVR4nO3de3wU9b3/8Xc2JKwkkC1sEqOCXCzXWhQhWkS5RouSZCkm1noiNBxsK9b+BKvY1paqxxv11srx0rpYSoUmYHNRpAKColKo5iAIiBIuBg1JNrBAQpeE7Pz+sImGDSHkNju7r+fjwYMHM9/MfDLJfPbNd2dnIgzDMAQAAAAgqNnMLgAAAADAmRHcAQAAAAsguAMAAAAWQHAHAAAALIDgDgAAAFgAwR0AAACwAII7AAAAYAEEdwAAAMACCO4AAACABRDcAQAAAAsguAMAAAAWQHAHAAAALIDgDgAAAFgAwR0AAACwAII7gEZmzJihiIgIrVq1yuxSACDAvn37FBERoSuuuMLsUoLaqlWrFBERoRkzZphdCtoRwR1oZ/XBd/78+W3azrhx4xQREaGXXnqpXeoCAADWRnAHAAAALIDgDrSzhx9+WDt37tTtt9/epu0sXrxYO3fu1NSpU9upMgBAa9S/k7pv3z6zS0GY62J2AUCoSUpKUlJSUpu306dPn3aoBgAAhApm3AEAAAALILgD//Hxxx/rhz/8oQYOHKiEhAS5XC6tXLkyYFz9h0Z9Pp+2bNmizMxMXXDBBXrrrbckSfPnz1dERISee+65gK/dsGGDxo4dq+7du2vIkCFasmSJ8vLydMstt+j888/XRRdd1DD2dHd3qb+bwsmTJ3X//fcrOTlZ3/jGN5SSkqINGzY0+b198MEH+sEPfqDBgwerW7duGj58uB599FHV1dW15ZABQLv79NNPddNNNykxMVF2u10DBgzQ9OnT9dFHHzX7dS+99JIiIiI0b968gHWn66dr167VpEmT1L17d0VHR6tv3766/fbb9a9//UvSV/3+z3/+sySpX79+ioiIaPIGBH6/X08//bSuvvpq9ejRQ5dddpkWLFig2traJut87rnndPToUc2fP19Dhw7Vj370o0bjNm3apIyMDCUmJqpfv3665ZZbtH///oDvzTAMPfXUUxoxYoQcDoeuvPJKvfzyyzIMo9njBWviUhlAUm5urn74wx+qrq5OY8eOVUxMjDZs2KD8/HzdfffdeuSRRxQREdHoa5YvX66ZM2cqMjJSycnJSkxMbHYfq1at0vXXX69evXopPT1dRUVFysrKUlxcnMaPH69rr71WhmGotrZWUVFRzW7r3//+t6ZOnapt27bp8ssv19GjR7VmzRpt3LhR27ZtU79+/RrGbt26VSNHjlRcXJwuvvhijRw5UkVFRZo3b562bNmipUuXtv7AAUA7Wr16tTIzM3X06FGNGDFC3/zmN1VcXKycnBzl5eXJ6/W2276WL1+uG2+8UQ6HQ9dcc41sNpuKi4u1cOFC1dTUaNSoUUpLS9PgwYO1bt06ffLJJ/rBD36g7t27S5JGjhzZsK0TJ07oBz/4gV555RUNHTq0ocfffffd2rlzp1588cWA15CysjJdccUV2rlzp4YNG6bhw4c3rFuyZIlmzpypbt26aeLEiaqurtZf//pXrV27Vps3b9b555/fMPaOO+7QM888I0kaM2aMzj33XN15553q2rVrux0rBBEDCHPFxcVG165djYEDBxq7du1qWO71eo309HRDkrFs2bKG5WPHjjUkGdHR0cb48eONkpKSRtv7zW9+Y0gynn322YZlfr/f6N+/v9GrVy+jtLTUMAzDqKmpMa6++mojOjo6YBuGYRjTp083JBmvv/56o+WSDEnGuHHjjJqaGsMwDKOurs743ve+Z0gyHn744UbjDx48aPz+9783qqurG5bV1NQYEydONCQZb775Zov2CwAdqayszIiNjTUcDoexcePGRus+//xz4/HHHzcMwzD27t1rSDIuv/zyRmMWLVpkSDLuueeegG031dfGjBljREREGHv37m00dteuXcamTZua/PpTx9Z77LHHDEnGfffdZ9TV1RmG8WXfv+uuuwxJRlFRUUCd0dHRRs+ePY2CgoJG29q/f79ht9uNESNGGAcPHmxYvnHjRiMmJsa44447Gpa9++67hiSjR48exltvvdWwvKqqyhg3bpwhyZg+fXqTNcOauFQGYe+uu+7SiRMn9Kc//UkDBw5sWB4XFye32y2n06k5c+bI5/M1+rr4+Hjl5eXpggsuOOM+PvvsM+3Zs0fXX3+9zj33XElSVFSUsrOzVVNTozfffPOs637ggQcaZuZtNpuysrIkffk289clJibqpz/9qbp169awLCoqSjNnzpQkrVu37qz3DQDt7cEHH1RVVZUWLFgQ8HCl8847T3PmzGnX/R07dkznnHNOo9lrSRo4cKCSk5NbvJ0jR47owQcf1JgxY/Tb3/5WNtuX0SoiIkIPPfSQnE6nli9fHvB1NTU1+uMf/6jU1NRGy3/961/rxIkTWrp0aaN3cq+44grNmjVLK1askN/vlyQ98sgjkqQFCxbo6quvbhgbExOj2bNnt/h7gHVwqQzCWl1dnf7xj3+oT58+uuqqqwLW9+zZU9dff73+/Oc/a9u2bRo1alTDujvvvFM9evRo0X4qKiokSQkJCQHb//r6loqMjNR3vvOdRsvi4uIkSdXV1S3aRv1/IHbv3n1W+waAjlBQUKCuXbvq5ptv7pT9jR07Vh9++KHS0tL0k5/8RBMmTFBsbOxZb6eoqEhHjx5VbW2tfvKTnwSsj42N1aZNmwKWf+tb32rydr/r1q1TXFycnnjiiYB1+/bt0+eff64vvvhCF1xwgf75z38qIiKi044ZzEdwR1jbs2ePjh8/rsGDB592zKBBgyR9ea3414P7pZde2uL9fPOb31RUVJS2bt3aaPmHH34oSRo2bNjZlK2ePXsqMjKy0bJTr5/8utraWi1dulSrV6/WP//5T5WWlurf//63JDXM3ACAWaqqqrR//34NHDhQ55xzTqfs8ze/+Y02bNigVatWadWqVerSpYsuv/xyPfTQQ41mr89k+/btkr78MGlTAV0KnLSRvnwNObVvHzt2TJ999pkk6fnnnz/tPo8dO6YjR46ooqJC/fr1U0xMTIvrhbVxqQzCWn14rampOe2YEydOSJKOHz/eaPnZ3Ks9Li5O06dP1xtvvKH//d//1bFjx7Ru3Tr97ne/00UXXaRx48adVd31b8W2xP79+3XppZdq+vTp+utf/6ouXbrommuu0TXXXHNW+wSAjmL85w4ozU1AtLeePXtq8+bNWrRokW666SY5HA69++67GjdunF566aUWb6e+H+fm5sowjCb/NBXom3oNqf/+r7/++tNuyzAMDRkypOFrunRhDjacENwR1gYPHqyoqCh98sknp7111q5duyRJ3/72txstP9sXmN27d6tHjx6aPXu2evTooQkTJuicc87RkiVLZLfbW/cNtMCsWbO0fft2/ehHP9L+/fu1c+dOvfLKK7rnnns6bJ8AcDa6d++uvn37au/evQG3T2wPJ0+ebHJ5ly5dNGPGDL388ssqLS3V8uXL1bVrVz344IMt3nb9a8OOHTvOqqamXkNiY2M1YMAA7dix44y3c4yLi1OvXr067JghOBHcEdaio6M1ZswYffHFF03es/3gwYN69dVXFRcXd1aXxpyqqqpK69ev12uvvably5fr7rvv1rPPPqsPP/xQl19+eVu+hTN65513NHToUD377LPq3bt3w/JT30EAADNNmDBBNTU1+stf/tLk+vrZ5jNpasypH9pvSpcuXTRt2jRNmDBBxcXFqqysDBjT1GeILrnkEvXq1Ut//OMfT9tXz+aSxEmTJmnv3r167bXXzrit5ORknTx5Uq+88krAuKqqqhbvE9ZBcEfYe+qppxQZGanZs2c3esDH4cOHNWPGDFVVVenhhx9u8QdRm1J/Kc7x48c1bdo0Pfroo/rxj3/c5HWP7S0pKUklJSUqKSlpVM8f/vCHDt83ALTUAw88oNjYWM2bN0+bN29utG7Xrl2aPHlys/dxdzgckqTy8vJGy9evXx+wPUmaM2eO1q9f32jZkSNHtGXLFsXExDRsT1JD/9+2bZukL3t5/UP3YmNj9cgjj+jAgQOaPn16o3BfV1enl19+WXfddVez3/vX3X///XI4HPrxj3+soqKiRus+/vhjTZo0qeEdhLlz5zb8/fXXrz179ujuu+9u8T5hHVwYhbD37W9/W88//7xmz56tkSNH6qqrrlKPHj20YcMGVVRUaNasWbr11lvbtI+ePXuqX79+ysrK0ne/+92GD1+dc845GjhwoK666ip961vfao9vJ8CMGTP061//WsOGDdN3v/tdRUVFae3ate36IBMAaKvzzjtPS5YsUVZWlsaMGaMrrrhC5513nrZv364dO3YoJiam4XNJTRk1apQiIyMbbqPYp08fffTRR/rrX/+qgQMH6pNPPmkYaxiGFi1apCeffFKDBg3SsGHDZLPZ9M477+jgwYP67W9/2+gGAPUPW5o9e7ZycnK0efNmJSQkNATr7OxsffDBB3ruuef09ttva8yYMaqtrVVRUZE+//xz3XnnnS0+DgkJCXr55Zd100036YorrtB3vvMdnX/++dq1a5eKiorUu3dvnThxQl26dNGECROUlZWlv/zlLxo5cqQmTJiguro6rV+/XpdddtlZ37EMwY8Zd0DSzJkztWnTJk2dOlW7d+/Whg0blJycrOXLl+uFF14IuIPL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\n",
+      "text/plain": [
+       "<Figure size 750x450 with 2 Axes>"
+      ]
+     },
+     "metadata": {},
+     "output_type": "display_data"
+    }
+   ],
+   "source": [
+    "fig, ax = plt.subplots(1, 2)\n",
+    "\n",
+    "ax[0].set_title(\"original\")\n",
+    "clustering.evaluate(\n",
+    "    ax=ax[0], original=True,\n",
+    "    ax_props=ax_props, plot_props=dot_props\n",
+    "    )\n",
+    "\n",
+    "ax[1].set_title(\"clustered\")\n",
+    "clustering.evaluate(\n",
+    "    ax=ax[1],\n",
+    "    ax_props=ax_props, plot_props=dot_props\n",
+    "    )\n",
+    "fig.tight_layout()"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "It is possible to retrieve a view of the input data associated with a `Clustering` via:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 12,
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2022-10-17T12:45:07.073664Z",
+     "start_time": "2022-10-17T12:45:07.069369Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([[ 0. ,  0. ],\n",
+       "       [ 1. ,  1. ],\n",
+       "       [ 1. ,  0. ],\n",
+       "       [ 0. , -1. ],\n",
+       "       [ 0.5, -0.5],\n",
+       "       [ 2. ,  1.5],\n",
+       "       [ 2.5, -0.5],\n",
+       "       [ 4. ,  2. ],\n",
+       "       [ 4.5,  2.5],\n",
+       "       [ 5. , -1. ],\n",
+       "       [ 5.5, -0.5],\n",
+       "       [ 5.5, -1.5]])"
+      ]
+     },
+     "execution_count": 12,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "clustering.input_data"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "metadata": {},
+   "source": [
+    "<div class=\"alert alert-info\">\n",
+    "\n",
+    "**Info:** The *raw* data points that we passed here to create the `Clustering` object are internally wrapped into a specific input data type. `Clustering.input_data` is a shortcut for `Clustering._bundle._input_data.to_components_array()`. Depending on the used type, the data may, however, actually be stored in any possible format under `InputData._data`.\n",
+    "See [__Advanced usage__](advanced_usage.ipynb) for more information.\n",
+    "</div>"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "labcommonnn_3.10.7",
+   "language": "python",
+   "name": "labcommonnn_3.10.7"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.10.7"
+  },
+  "toc": {
+   "base_numbering": 1,
+   "nav_menu": {},
+   "number_sections": true,
+   "sideBar": true,
+   "skip_h1_title": true,
+   "title_cell": "Contents",
+   "title_sidebar": "Contents",
+   "toc_cell": false,
+   "toc_position": {
+    "height": "calc(100% - 180px)",
+    "left": "10px",
+    "top": "150px",
+    "width": "164.988px"
+   },
+   "toc_section_display": true,
+   "toc_window_display": true
+  },
+  "varInspector": {
+   "cols": {
+    "lenName": 16,
+    "lenType": 16,
+    "lenVar": 40
+   },
+   "kernels_config": {
+    "python": {
+     "delete_cmd_postfix": "",
+     "delete_cmd_prefix": "del ",
+     "library": "var_list.py",
+     "varRefreshCmd": "print(var_dic_list())"
+    },
+    "r": {
+     "delete_cmd_postfix": ") ",
+     "delete_cmd_prefix": "rm(",
+     "library": "var_list.r",
+     "varRefreshCmd": "cat(var_dic_list()) "
+    }
+   },
+   "types_to_exclude": [
+    "module",
+    "function",
+    "builtin_function_or_method",
+    "instance",
+    "_Feature"
+   ],
+   "window_display": false
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 2
+}

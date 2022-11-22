@@ -1,0 +1,26 @@
+.. _sec_api_cluster:
+
+.. module:: commonnn.cluster
+
+cluster
+=======
+
+The functionality of this module is primarily exposed by the
+:class:`~commonnn.cluster.Clustering` class. An instance of this
+class aggregates various types (defined in :mod:`~commonnn._types`
+:ref:`here <sec_api_types>`).
+
+
+Go to:
+
+   * :ref:`Clustering <sec_api_commonnn_cluster_Clustering>`
+
+
+.. _sec_api_commonnn_cluster_Clustering:
+
+Clustering
+----------
+
+.. autoclass:: commonnn.cluster.Clustering
+   :members:
+

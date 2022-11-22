@@ -1,0 +1,311 @@
+.. _sec_api_types:
+
+.. module:: commonnn._types
+
+
+_types
+=======
+
+This module provides a set of types that can be used as building blocks
+in the aggregation of a :class:`~commonnn.cluster.Clustering` object.
+
+
+Go to:
+
+   * :ref:`Cluster parameters <sec_api_commonnn_types_cluster_params>`
+   * :ref:`Cluster labels <sec_api_commonnn_types_labels>`
+   * :ref:`Input data <sec_api_commonnn_types_input_data>`
+   * :ref:`Neighbours <sec_api_commonnn_types_neighbours>`
+   * :ref:`Neighbours getter <sec_api_commonnn_types_neighbours_getter>`
+   * :ref:`Distance getter <sec_api_commonnn_types_distance_getter>`
+   * :ref:`Metrics <sec_api_commonnn_types_metric>`
+   * :ref:`Similarity Checker <sec_api_commonnn_types_similarity_checker>`
+   * :ref:`Queues <sec_api_commonnn_types_queue>`
+
+
+.. _sec_api_commonnn_types_cluster_params:
+
+Cluster parameters
+------------------
+
+.. autoclass:: commonnn._types.ClusterParameters
+   :members:
+
+.. autoclass:: commonnn._types.CommonNNParameters
+   :members:
+
+.. autoclass:: commonnn._types.RadiusParameters
+   :members:
+
+
+.. _sec_api_commonnn_types_labels:
+
+Cluster labels
+--------------
+
+.. autoclass:: commonnn._types.Labels
+   :members:
+
+.. autoclass:: commonnn._types.ReferenceIndices
+   :members:
+
+.. _sec_api_commonnn_types_input_data:
+
+Input data
+----------
+
+Types used as input data to a clustering have to adhere to the input
+data interface which is defined through
+:class:`~commonnn._types.InputDataExtInterface` for Cython extension
+types. For pure Python types the input data interface is defined through
+the abstract base class :class:`~commonnn._types.InputData`
+and the specialised abstract classes
+
+   * :class:`~commonnn._types.InputData`
+   * :class:`~commonnn._types.InputDataComponents`
+   * :class:`~commonnn._types.InputDataPairwiseDistances`
+   * :class:`~commonnn._types.InputDataPairwiseDistancesComputer`
+   * :class:`~commonnn._types.InputDataNeighbourhoods`
+   * :class:`~commonnn._types.InputDataNeighbourhoodsComputer`
+
+|
+
+.. autoclass:: commonnn._types.InputDataExtInterface
+   :members:
+
+.. autoclass:: commonnn._types.InputData
+   :members:
+
+.. autoclass:: commonnn._types.InputDataComponents
+   :members:
+
+.. autoclass:: commonnn._types.InputDataPairwiseDistances
+   :members:
+
+.. autoclass:: commonnn._types.InputDataPairwiseDistancesComputer
+   :members:
+
+.. autoclass:: commonnn._types.InputDataNeighbourhoods
+   :members:
+
+.. autoclass:: commonnn._types.InputDataNeighbourhoodsComputer
+   :members:
+
+.. autoclass:: commonnn._types.InputDataExtComponentsMemoryview
+   :members:
+
+.. autoclass:: commonnn._types.InputDataExtDistancesMemoryview
+   :members:
+
+.. autoclass:: commonnn._types.InputDataExtDistancesLinearMemoryview
+   :members:
+
+.. autoclass:: commonnn._types.InputDataExtNeighbourhoodsMemoryview
+   :members:
+
+.. autoclass:: commonnn._types.InputDataExtNeighbourhoodsVector
+   :members:
+
+.. autoclass:: commonnn._types.InputDataNeighbourhoodsSequence
+   :members:
+
+.. autoclass:: commonnn._types.InputDataSklearnKDTree
+   :members:
+
+
+.. _sec_api_commonnn_types_neighbours:
+
+Neighbour containers
+--------------------
+
+.. autoclass:: commonnn._types.NeighboursExtInterface
+   :members:
+
+.. autoclass:: commonnn._types.Neighbours
+   :members:
+
+.. autoclass:: commonnn._types.NeighboursExtVector
+   :members:
+
+.. autoclass:: commonnn._types.NeighboursExtSet
+   :members:
+
+.. autoclass:: commonnn._types.NeighboursExtUnorderedSet
+   :members:
+
+.. autoclass:: commonnn._types.NeighboursExtVectorUnorderedSet
+   :members:
+
+.. autoclass:: commonnn._types.NeighboursList
+   :members:
+
+.. autoclass:: commonnn._types.NeighboursSet
+   :members:
+
+
+.. _sec_api_commonnn_types_neighbours_getter:
+
+Neighbours getter
+-----------------
+
+.. autoclass:: commonnn._types.NeighboursGetterExtInterface
+   :members:
+
+.. autoclass:: commonnn._types.NeighboursGetter
+   :members:
+
+.. autoclass:: commonnn._types.NeighboursGetterExtBruteForce
+   :members:
+
+.. autoclass:: commonnn._types.NeighboursGetterExtLookup
+   :members:
+
+.. autoclass:: commonnn._types.NeighboursGetterBruteForce
+   :members:
+
+.. autoclass:: commonnn._types.NeighboursGetterLookup
+   :members:
+
+.. autoclass:: commonnn._types.NeighboursGetterRecomputeLookup
+   :members:
+
+
+.. _sec_api_commonnn_types_distance_getter:
+
+Distance getter
+---------------
+
+.. autoclass:: commonnn._types.DistanceGetterExtInterface
+   :members:
+
+.. autoclass:: commonnn._types.DistanceGetter
+   :members:
+
+.. autoclass:: commonnn._types.DistanceGetterExtMetric
+   :members:
+
+.. autoclass:: commonnn._types.DistanceGetterExtLookup
+   :members:
+
+.. autoclass:: commonnn._types.DistanceGetterMetric
+   :members:
+
+.. autoclass:: commonnn._types.DistanceGetterLookup
+   :members:
+
+
+.. _sec_api_commonnn_types_metric:
+
+Metrics
+-------
+
+.. autoclass:: commonnn._types.MetricExtInterface
+   :members:
+
+.. autoclass:: commonnn._types.Metric
+   :members:
+
+.. autoclass:: commonnn._types.MetricExtDummy
+   :members:
+
+.. autoclass:: commonnn._types.MetricExtPrecomputed
+   :members:
+
+.. autoclass:: commonnn._types.MetricExtEuclidean
+   :members:
+
+.. autoclass:: commonnn._types.MetricExtEuclideanReduced
+   :members:
+
+.. autoclass:: commonnn._types.MetricExtEuclideanPeriodicReduced
+   :members:
+
+.. autoclass:: commonnn._types.MetricDummy
+   :members:
+
+.. autoclass:: commonnn._types.MetricEuclidean
+   :members:
+
+.. autoclass:: commonnn._types.MetricEuclideanReduced
+   :members:
+
+
+.. _sec_api_commonnn_types_similarity_checker:
+
+Similarity checker
+------------------
+
+.. autoclass:: commonnn._types.SimilarityCheckerExtInterface
+   :members:
+
+.. autoclass:: commonnn._types.SimilarityChecker
+   :members:
+
+.. autoclass:: commonnn._types.SimilarityCheckerExtContains
+   :members:
+
+.. autoclass:: commonnn._types.SimilarityCheckerExtSwitchContains
+   :members:
+
+.. autoclass:: commonnn._types.SimilarityCheckerExtScreensorted
+   :members:
+
+.. autoclass:: commonnn._types.SimilarityCheckerContains
+   :members:
+
+.. autoclass:: commonnn._types.SimilarityCheckerSwitchContains
+   :members:
+
+
+.. _sec_api_commonnn_types_queue:
+
+
+|
+
+Queues
+------
+
+Queues can be optionally used by a fitter, e.g.
+
+   * :class:`~commonnn._fit.FitterExtCommonNNBFS`
+   * :class:`~commonnn._fit.FitterCommonNNBFS`
+
+|
+
+.. autoclass:: commonnn._types.QueueExtInterface
+   :members:
+
+|
+
+.. autoclass:: commonnn._types.PriorityQueueExtInterface
+   :members:
+
+|
+
+.. autoclass:: commonnn._types.Queue
+   :members:
+
+|
+
+.. autoclass:: commonnn._types.PriorityQueue
+   :members:
+
+|
+
+.. autoclass:: commonnn._types.QueueExtLIFOVector
+   :members:
+
+|
+
+.. autoclass:: commonnn._types.QueueExtFIFOQueue
+   :members:
+
+|
+
+.. autoclass:: commonnn._types.QueueFIFODeque
+   :members:
+
+|
+
+.. autoclass:: commonnn._types.PriorityQueueMaxHeap
+   :members:

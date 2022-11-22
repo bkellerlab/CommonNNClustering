@@ -1,0 +1,432 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>cluster &#8212; CommonNN Clustering  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="recipes" href="api_recipes.html" />
+    <link rel="prev" title="API Reference" href="api_reference.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <span class="target" id="module-commonnn.cluster"><span id="sec-api-cluster"></span></span><section id="cluster">
+<h1>cluster<a class="headerlink" href="#cluster" title="Permalink to this heading">¶</a></h1>
+<p>The functionality of this module is primarily exposed by the
+<a class="reference internal" href="#commonnn.cluster.Clustering" title="commonnn.cluster.Clustering"><code class="xref py py-class docutils literal notranslate"><span class="pre">Clustering</span></code></a> class. An instance of this
+class aggregates various types (defined in <a class="reference internal" href="api_types.html#module-commonnn._types" title="commonnn._types"><code class="xref py py-mod docutils literal notranslate"><span class="pre">_types</span></code></a>
+<a class="reference internal" href="api_types.html#sec-api-types"><span class="std std-ref">here</span></a>).</p>
+<p>Go to:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#sec-api-commonnn-cluster-clustering"><span class="std std-ref">Clustering</span></a></p></li>
+</ul>
+</div></blockquote>
+<section id="clustering">
+<span id="sec-api-commonnn-cluster-clustering"></span><h2>Clustering<a class="headerlink" href="#clustering" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn.cluster.</span></span><span class="sig-name descname"><span class="pre">Clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hierarchical_fitter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predictor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bundle_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recipe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">recipe_kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn.cluster.Clustering" title="Permalink to this definition">¶</a></dt>
+<dd><p>Organises a clustering</p>
+<p>Aggregates all necessary types to
+carry out a clustering of input data points.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering.children">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">children</span></span><a class="headerlink" href="#commonnn.cluster.Clustering.children" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a mapping of child cluster labels to
+<a class="reference internal" href="api_bundle.html#commonnn._bundle.Bundle" title="commonnn._bundle.Bundle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">commonnn._bundle.Bundle</span></code></a> instances representing
+the children of this clustering (the root bundle).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clusters</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Container</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_style</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'dots'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parts</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">points</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax_props</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotate_pos</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annotate_props</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_props</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_noise_props</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hist_props</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_energy</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bundle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn.cluster.Clustering.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make 2D plot of an original data set or a cluster result</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> – The <code class="code docutils literal notranslate"><span class="pre">Axes</span></code> instance to which to add the plot.  If</p></li>
+<li><p><strong>None</strong> – </p></li>
+<li><p><strong>created.</strong> (<em>a new Figure with Axes will be</em>) – </p></li>
+<li><p><strong>clusters</strong> – Cluster numbers to include in the plot.  If <code class="code docutils literal notranslate"><span class="pre">None</span></code>,
+consider all.</p></li>
+<li><p><strong>original</strong> – Allows to plot the original data instead of a cluster
+result.  Overrides <code class="code docutils literal notranslate"><span class="pre">clusters</span></code>.  Will be considered
+<code class="code docutils literal notranslate"><span class="pre">True</span></code>, if no cluster result is present.</p></li>
+<li><p><strong>plot_style</strong> – <dl class="simple">
+<dt>The kind of plotting method to use:</dt><dd><ul>
+<li><p>”dots”, <code class="xref py py-func docutils literal notranslate"><span class="pre">ax.plot()</span></code></p></li>
+<li><p>”scatter”, <code class="xref py py-func docutils literal notranslate"><span class="pre">ax.scatter()</span></code></p></li>
+<li><p>”contour”, <code class="xref py py-func docutils literal notranslate"><span class="pre">ax.contour()</span></code></p></li>
+<li><p>”contourf”, <code class="xref py py-func docutils literal notranslate"><span class="pre">ax.contourf()</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>parts</strong> – Use a slice (start, stop, stride) on the data parts
+before plotting. Will be applied before a slice on <code class="code docutils literal notranslate"><span class="pre">points</span></code>.</p></li>
+<li><p><strong>points</strong> – Use a slice (start, stop, stride) on the data points
+before plotting.</p></li>
+<li><p><strong>dim</strong> – Use these two dimensions for plotting.  If <code class="code docutils literal notranslate"><span class="pre">None</span></code>, uses
+(0, 1).</p></li>
+<li><p><strong>mask</strong> – Sequence of boolean or integer values used for optional
+fancy indexing on the point data array.  Note, that this
+is applied after regular slicing (e.g. via <code class="code docutils literal notranslate"><span class="pre">points</span></code>) and
+requires a copy of the indexed data (may be slow and
+memory intensive for big data sets).</p></li>
+<li><p><strong>annotate</strong> – If there is a cluster result, plot the cluster numbers.
+Uses <code class="code docutils literal notranslate"><span class="pre">annotate_pos</span></code> to determinte the position of the
+annotations.</p></li>
+<li><p><strong>annotate_pos</strong> – <dl class="simple">
+<dt>Where to put the cluster number annotation. Can be one of:</dt><dd><ul>
+<li><p>”mean”, Use the cluster mean</p></li>
+<li><p>”random”, Use a random point of the cluster</p></li>
+<li><dl class="simple">
+<dt>dict <code class="code docutils literal notranslate"><span class="pre">{1:</span> <span class="pre">(x,</span> <span class="pre">y),</span> <span class="pre">...}</span></code>, Use a specific coordinate</dt><dd><p>tuple for each cluster. Omitted labels will be placed
+randomly.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>annotate_props</strong> – Dictionary of keyword arguments passed to
+<code class="xref py py-func docutils literal notranslate"><span class="pre">ax.annotate()</span></code>.</p></li>
+<li><p><strong>ax_props</strong> – Dictionary of <code class="code docutils literal notranslate"><span class="pre">ax</span></code> properties to apply after
+plotting via <code class="xref py py-func docutils literal notranslate"><span class="pre">ax.set(**ax_props)()</span></code>.  If <code class="code docutils literal notranslate"><span class="pre">None</span></code>,
+uses defaults that can be also defined in
+the configuration file (<em>Note yet implemented</em>).</p></li>
+<li><p><strong>plot_props</strong> – Dictionary of keyword arguments passed to various
+functions (<code class="xref py py-func docutils literal notranslate"><span class="pre">plot.plot_dots()</span></code> etc.) with different
+meaning to format cluster plotting.  If <code class="code docutils literal notranslate"><span class="pre">None</span></code>, uses
+defaults that can be also defined in
+the configuration file (<em>Note yet implemented</em>).</p></li>
+<li><p><strong>plot_noise_props</strong> – Like <code class="code docutils literal notranslate"><span class="pre">plot_props</span></code> but for formatting noise point
+plotting.</p></li>
+<li><p><strong>hist_props</strong> – Dictionary of keyword arguments passed to functions that
+involve the computing of a histogram via
+<code class="code docutils literal notranslate"><span class="pre">numpy.histogram2d</span></code>.</p></li>
+<li><p><strong>free_energy</strong> – If <code class="code docutils literal notranslate"><span class="pre">True</span></code>, converts computed histograms to pseudo free
+energy surfaces.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Figure, Axes and a list of plotted elements</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Requires coordinate access on the input data via
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">to_components_array()</span></code>.
+Also requires <code class="xref py py-meth docutils literal notranslate"><span class="pre">by_parts()</span></code> if
+option <code class="code docutils literal notranslate"><span class="pre">parts</span></code> is used.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bundle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_by_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">member_cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_clusters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">record</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#commonnn.cluster.Clustering.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute clustering procedure</p>
+<dl class="field-list simple">
+<dt class="field-odd">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sort_by_size</strong> – Weather to sort (and trim) the created
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">Labels</span></code> instance.  See also
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">Labels.sort_by_size()</span></code>.</p></li>
+<li><p><strong>member_cutoff</strong> – Valid clusters need to have at least this
+many members.  Passed on to <code class="xref py py-meth docutils literal notranslate"><span class="pre">Labels.sort_by_size()</span></code>
+if <code class="code docutils literal notranslate"><span class="pre">sort_by_size</span></code> is <code class="code docutils literal notranslate"><span class="pre">True</span></code>.  Has no effect otherwise
+and valid clusters have at least one member.</p></li>
+<li><p><strong>max_clusters</strong> – Keep only the largest <code class="code docutils literal notranslate"><span class="pre">max_clusters</span></code> clusters.
+Passed on to <code class="xref py py-meth docutils literal notranslate"><span class="pre">Labels.sort_by_size()</span></code> if
+<code class="code docutils literal notranslate"><span class="pre">sort_by_size</span></code> is <code class="code docutils literal notranslate"><span class="pre">True</span></code>.  Has no effect otherwise.</p></li>
+<li><p><strong>record</strong> – Whether to create a <code class="xref py py-obj docutils literal notranslate"><span class="pre">Record</span></code>
+instance for this clustering which is appended to the
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">Summary</span></code> of the clustered bundle.</p></li>
+<li><p><strong>v</strong> – Be chatty.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Further keyword arguments are passed on to
+<a class="reference internal" href="api_fit.html#commonnn._fit.Fitter.fit" title="commonnn._fit.Fitter.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering.fit_hierarchical">
+<span class="sig-name descname"><span class="pre">fit_hierarchical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">purge</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bundle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn.cluster.Clustering.fit_hierarchical" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute hierarchical clustering procedure</p>
+<dl class="field-list simple">
+<dt class="field-odd">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>purge</strong> – Reset children dictionary of root bundle</p></li>
+<li><p><strong>bundle</strong> – Root bundle</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Used arguments and further keyword arguments depend on the
+used hierarchical fitter.</p>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering.fitter">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fitter</span></span><a class="headerlink" href="#commonnn.cluster.Clustering.fitter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering.input_data">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input_data</span></span><a class="headerlink" href="#commonnn.cluster.Clustering.input_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering.isolate">
+<span class="sig-name descname"><span class="pre">isolate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bool</span> <span class="pre">purge:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bool</span> <span class="pre">isolate_input_data:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bundle=None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#commonnn.cluster.Clustering.isolate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create child clusterings from cluster labels</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>purge</strong> – If <code class="code docutils literal notranslate"><span class="pre">True</span></code>, creates a new mapping for the children of this
+clustering.</p></li>
+<li><p><strong>isolate_input_data</strong> – If <code class="code docutils literal notranslate"><span class="pre">True</span></code>, attaches a subset of the input data
+of this clustering to the child.</p></li>
+<li><p><strong>bundle</strong> – A bundle to operate on. If <code class="code docutils literal notranslate"><span class="pre">None</span></code> uses the root bundle.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering.labels">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">labels</span></span><a class="headerlink" href="#commonnn.cluster.Clustering.labels" title="Permalink to this definition">¶</a></dt>
+<dd><p>Direct access to <code class="xref py py-obj docutils literal notranslate"><span class="pre">labels</span></code>
+holding cluster label assignments for points in <a class="reference internal" href="api_types.html#commonnn._types.InputData" title="commonnn._types.InputData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">InputData</span></code></a>,
+stored on the root <a class="reference internal" href="api_bundle.html#commonnn._bundle.Bundle" title="commonnn._bundle.Bundle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bundle</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering.pie">
+<span class="sig-name descname"><span class="pre">pie</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pie_props</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bundle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn.cluster.Clustering.pie" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a pie plot of the cluster hierarchy based on assigned labels</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bundle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn.cluster.Clustering.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute prediction procedure</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>other</strong> – <a class="reference internal" href="api_bundle.html#commonnn._bundle.Bundle" title="commonnn._bundle.Bundle"><code class="xref py py-obj docutils literal notranslate"><span class="pre">commonnn._bundle.Bundle</span></code></a> instance for
+which cluster labels should be predicted.</p>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>bundle</strong> – Bundle to predict from. If None, uses the root bundle.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering.reel">
+<span class="sig-name descname"><span class="pre">reel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bundle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#commonnn.cluster.Clustering.reel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering.root">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">root</span></span><a class="headerlink" href="#commonnn.cluster.Clustering.root" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering.summarize">
+<span class="sig-name descname"><span class="pre">summarize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'execution_time'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">treat_nan</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax_props</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contour_props</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_style</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'contourf'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bundle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn.cluster.Clustering.summarize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a 2D plot of record values</p>
+<p>Record values (“time”, “clusters”, “largest”, “noise”) are
+plotted against cluster parameters (radius cutoff <em>r</em>
+and cnn cutoff <em>c</em>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> – Matplotlib Axes to plot on.  If <code class="code docutils literal notranslate"><span class="pre">None</span></code>, a new Figure
+with Axes will be created.</p></li>
+<li><p><strong>quantity</strong> – Record value to visualise:
+* “time”
+* “clusters”
+* “largest”
+* “noise”</p></li>
+<li><p><strong>treat_nan</strong> – If not <code class="code docutils literal notranslate"><span class="pre">None</span></code>, use this value to pad nan-values.</p></li>
+<li><p><strong>ax_props</strong> – Used to style <code class="code docutils literal notranslate"><span class="pre">ax</span></code>.</p></li>
+<li><p><strong>contour_props</strong> – Passed on to contour.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering.summary">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">summary</span></span><a class="headerlink" href="#commonnn.cluster.Clustering.summary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return an instance of <a class="reference internal" href="api_report.html#commonnn.report.Summary" title="commonnn.report.Summary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">commonnn.report.Summary</span></code></a>
+collecting clustering result records for this clustering
+(the root bundle).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering.to_dtrajs">
+<span class="sig-name descname"><span class="pre">to_dtrajs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bundle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn.cluster.Clustering.to_dtrajs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert cluster label assignments to discrete state  trajectory</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering.to_nx_DiGraph">
+<span class="sig-name descname"><span class="pre">to_nx_DiGraph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bundle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn.cluster.Clustering.to_nx_DiGraph" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert cluster hierarchy to networkx DiGraph</p>
+<dl class="field-list simple">
+<dt class="field-odd">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ignore</strong> – A set of label not to include into the graph.  Use
+for example to exclude noise (label 0).</p></li>
+<li><p><strong>bundle</strong> – The bundle to start with. If <code class="code docutils literal notranslate"><span class="pre">None</span></code>, uses the root bundle.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering.tree">
+<span class="sig-name descname"><span class="pre">tree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pos_props</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">draw_props</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bundle</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn.cluster.Clustering.tree" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a layer plot of the cluster hierarchy</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonnn.cluster.Clustering.trim">
+<span class="sig-name descname"><span class="pre">trim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">bundle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol=u'shrinking'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn.cluster.Clustering.trim" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">CommonNN Clustering</a></h1>
+
+
+
+<p class="blurb">A Python package for common-nearest-neighbour clustering</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=bkellerlab&repo=CommonNNClustering&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="install.html">Installation instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api_reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_recipes.html">recipes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_plot.html">plot</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_bundle.html">_bundle</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_report.html">report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_helper.html">helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_types.html">_types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_fit.html">_fit</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="api_reference.html">API Reference</a><ul>
+      <li>Previous: <a href="api_reference.html" title="previous chapter">API Reference</a></li>
+      <li>Next: <a href="api_recipes.html" title="next chapter">recipes</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Jan-Oliver Kapp-Joswig.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.2.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/_source/api_cluster.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

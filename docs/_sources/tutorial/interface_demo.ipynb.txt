@@ -1,0 +1,749 @@
+{
+ "cells": [
+  {
+   "cell_type": "markdown",
+   "id": "aging-davis",
+   "metadata": {},
+   "source": [
+    "# Demonstration of (generic) interfaces"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "north-apartment",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:26:27.693082Z",
+     "start_time": "2021-10-04T16:26:27.680112Z"
+    }
+   },
+   "source": [
+    "Go to:\n",
+    "    \n",
+    "  - [Notebook configuration](interface_demo.ipynb#Notebook-configuration)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "right-evidence",
+   "metadata": {},
+   "source": [
+    "## Notebook configuration"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "modular-ownership",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:26:55.432565Z",
+     "start_time": "2021-10-04T16:26:55.428362Z"
+    }
+   },
+   "outputs": [],
+   "source": [
+    "import sys\n",
+    "\n",
+    "import numpy as np\n",
+    "\n",
+    "import cnnclustering\n",
+    "from cnnclustering import cluster\n",
+    "from cnnclustering import _types, _fit"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "physical-socket",
+   "metadata": {},
+   "source": [
+    "Print Python and package version information:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 4,
+   "id": "failing-cycling",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:27:29.532022Z",
+     "start_time": "2021-10-04T16:27:29.522848Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Python:  3.8.8 (default, Mar 11 2021, 08:58:19)  [GCC 8.3.0]\n",
+      "Packages:\n",
+      "    numpy: 1.20.1\n",
+      "    cnnclustering: 0.4.3\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Version information\n",
+    "print(\"Python: \", *sys.version.split(\"\\n\"))\n",
+    "\n",
+    "print(\"Packages:\")\n",
+    "for package in [np, cnnclustering]:\n",
+    "    print(f\"    {package.__name__}: {package.__version__}\")"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "allied-introduction",
+   "metadata": {},
+   "source": [
+    "## Labels"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "orange-drinking",
+   "metadata": {},
+   "source": [
+    "`_types.Labels` is used to store cluster label assignments next to a *consider* indicator and meta information. It also provides a few transformational methods.\n",
+    "\n",
+    "Initialize `Labels` as\n",
+    "\n",
+    "  - `Labels(labels)`\n",
+    "  - `Labels(labels, consider=consider)`\n",
+    "  - `Labels(labels, consider=consider, meta=meta)`\n",
+    "  - `Labels.from_sequence(labels_list, consider=consider_list, meta=meta)`"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "fatal-boring",
+   "metadata": {},
+   "source": [
+    "Technically, `Labels` is not used as a generic class. A clustering, i.e. the assignments of cluster labels to points through a fitter (using a bunch of generic interfaces), uses an instance of `Labels` by directly modifying the underlying array of labels, a Cython memoryview that can be accessed from the C level as `Labels._labels`. `Labels.labels` provides a NumPy array view to `Labels._labels`.\n",
+    "\n",
+    "Examples:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 5,
+   "id": "expressed-drove",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:47:04.184095Z",
+     "start_time": "2021-10-04T16:47:03.478182Z"
+    }
+   },
+   "outputs": [
+    {
+     "ename": "TypeError",
+     "evalue": "__cinit__() takes exactly 1 positional argument (0 given)",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[1;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[1;31mTypeError\u001b[0m                                 Traceback (most recent call last)",
+      "\u001b[1;32m<ipython-input-5-a465ac6e3f53>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m\u001b[0m\n\u001b[0;32m      1\u001b[0m \u001b[1;31m# Requires labels to be initialised\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[1;32m----> 2\u001b[1;33m \u001b[0mlabels\u001b[0m \u001b[1;33m=\u001b[0m \u001b[0m_types\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0mLabels\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m",
+      "\u001b[1;32msrc/cnnclustering/_types.pyx\u001b[0m in \u001b[0;36mcnnclustering._types.Labels.__cinit__\u001b[1;34m()\u001b[0m\n",
+      "\u001b[1;31mTypeError\u001b[0m: __cinit__() takes exactly 1 positional argument (0 given)"
+     ]
+    }
+   ],
+   "source": [
+    "# Requires labels to be initialised\n",
+    "labels = _types.Labels()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 13,
+   "id": "acoustic-implementation",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:51:30.908405Z",
+     "start_time": "2021-10-04T16:51:30.901546Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Labels([1, 1, 2, 2, 2, 0])"
+      ]
+     },
+     "execution_count": 13,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "labels = _types.Labels(np.array([1, 1, 2, 2, 2, 0]))\n",
+    "labels"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 15,
+   "id": "timely-bargain",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:52:07.452389Z",
+     "start_time": "2021-10-04T16:52:07.445780Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "Labels([1, 1, 2, 2, 2, 0])"
+      ]
+     },
+     "execution_count": 15,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "labels = _types.Labels.from_sequence([1, 1, 2, 2, 2, 0])\n",
+    "labels"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 16,
+   "id": "north-movement",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:54:01.305906Z",
+     "start_time": "2021-10-04T16:54:01.301608Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[1 1 2 2 2 0]\n"
+     ]
+    }
+   ],
+   "source": [
+    "print(labels)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 17,
+   "id": "likely-applicant",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:54:02.891024Z",
+     "start_time": "2021-10-04T16:54:02.885030Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([1, 1, 2, 2, 2, 0])"
+      ]
+     },
+     "execution_count": 17,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "labels.labels"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 18,
+   "id": "promising-collins",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:54:03.562242Z",
+     "start_time": "2021-10-04T16:54:03.556713Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([1, 1, 1, 1, 1, 1], dtype=uint8)"
+      ]
+     },
+     "execution_count": 18,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "labels.consider"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 19,
+   "id": "confidential-advertiser",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:54:14.050147Z",
+     "start_time": "2021-10-04T16:54:14.044837Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{}"
+      ]
+     },
+     "execution_count": 19,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "labels.meta"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 21,
+   "id": "premier-trouble",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:54:25.634629Z",
+     "start_time": "2021-10-04T16:54:25.629180Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{0, 1, 2}"
+      ]
+     },
+     "execution_count": 21,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "labels.set"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 22,
+   "id": "satisfied-hardwood",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:54:34.019117Z",
+     "start_time": "2021-10-04T16:54:34.013253Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "defaultdict(list, {1: [0, 1], 2: [2, 3, 4], 0: [5]})"
+      ]
+     },
+     "execution_count": 22,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "labels.mapping"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 25,
+   "id": "designed-maintenance",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T16:55:07.435190Z",
+     "start_time": "2021-10-04T16:55:07.429789Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "[2 2 1 1 1 0]\n"
+     ]
+    }
+   ],
+   "source": [
+    "labels.sort_by_size()\n",
+    "print(labels)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "efficient-repository",
+   "metadata": {},
+   "source": [
+    "## Cluster parameters"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "sound-excitement",
+   "metadata": {},
+   "source": [
+    "An instance of `_types.ClusterParameters` is used during a clustering to pass around cluster parameters.\n",
+    "\n",
+    "Initialise `ClusterParameters` as:\n",
+    "\n",
+    "  - `ClusterParameters(radius_cutoff)`\n",
+    "  - `ClusterParameters(radius_cutoff, similarity_cutoff)`\n",
+    "  - ..."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "comprehensive-delaware",
+   "metadata": {},
+   "source": [
+    "`ClusterParameters` is a simple struct like class that offers collective access and passing of cluster parameters.\n",
+    "\n",
+    "Examples:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 27,
+   "id": "inclusive-assembly",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T17:00:55.448621Z",
+     "start_time": "2021-10-04T17:00:55.429427Z"
+    }
+   },
+   "outputs": [
+    {
+     "ename": "TypeError",
+     "evalue": "__cinit__() takes at least 1 positional argument (0 given)",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[1;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[1;31mTypeError\u001b[0m                                 Traceback (most recent call last)",
+      "\u001b[1;32m<ipython-input-27-d3c71fb983e3>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m\u001b[0m\n\u001b[0;32m      1\u001b[0m \u001b[1;31m# Requires at least a radius\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[1;32m----> 2\u001b[1;33m \u001b[0m_types\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0mClusterParameters\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m",
+      "\u001b[1;32msrc/cnnclustering/_types.pyx\u001b[0m in \u001b[0;36mcnnclustering._types.ClusterParameters.__cinit__\u001b[1;34m()\u001b[0m\n",
+      "\u001b[1;31mTypeError\u001b[0m: __cinit__() takes at least 1 positional argument (0 given)"
+     ]
+    }
+   ],
+   "source": [
+    "# Requires at least a radius\n",
+    "_types.ClusterParameters()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 29,
+   "id": "broke-blade",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T17:01:26.802142Z",
+     "start_time": "2021-10-04T17:01:26.797225Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "{'radius_cutoff': 1.0, 'similarity_cutoff': 0, 'similarity_cutoff_continuous': 0.0, 'n_member_cutoff': 0, 'current_start': 1}\n"
+     ]
+    }
+   ],
+   "source": [
+    "cluster_params = _types.ClusterParameters(1)\n",
+    "print(cluster_params)"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "adolescent-throat",
+   "metadata": {},
+   "source": [
+    "## Input data"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "attached-bradford",
+   "metadata": {},
+   "source": [
+    "Common-nearest-neighbours clustering can be done on data in a variety of different input formats with variations in the actual execution of the procedure. A typical case for example, would be to use the coordinates of a number of points in some feature space. These coordinates may be stored in a 2-dimensional (NumPy-)array but they could be also held in a database. Maybe instead of point coordinates, we can also begin the clustering with pre-computed pairwise distances between the points. The present implementation in the `cnnclustering` package is aimed to be generic and widely agnostic about the source of input data. This is achieved by wrapping the input data structure into an *input data* object that complies with a universal *input data interface*. The input data interface is on the Python level defined through the abstract base class `_types.InputData` and specialised through its abstract subclasses `InputDataComponents`, `InputDataPairwiseDistances`, `InputDataPairwiseComuter`, `InputDataNeighbourhoods`, and `InputDataNeighbourhoodsComputer`. Valid input data types inherit from one of these abstract types and provide concrete implementation for the required methods. On the Cython level, the input data interface is universally defined through `_types.InputDataExtInterface`. Realisations of the interface by Cython extension types inherit from `InputDataExtInterface` and should be registered as a concrete implementation of on of the Python abstract base classes."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "eight-faculty",
+   "metadata": {},
+   "source": [
+    "`InputData` objects should expose the following (typed) attributes:\n",
+    "    \n",
+    "  - `data` (any): If applicable, a representation of the underlying data, preferably as NumPy array. Not strictly required for the clustering.\n",
+    "  - `n_points` (`int`): The total number of points in the data set.\n",
+    "  - `meta` (`dict`): A Python dictionary storing meta-information about the data. Used keys are for example:\n",
+    "    - `\"access_coords\"`: Can point coordinates be retrieved from the input data (bool)?\n",
+    "    - `\"edges\"`: If stored input data points are actually belonging to more than one data source, a list of integers can state the number of points per parts.\n",
+    "    \n",
+    "  - (`InputData`) `get_subset(indices: Container)`: Return an instance of the same type holding only a subset of points (as given by indices). Used by `Clustering.isolate()`."
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "beginning-pleasure",
+   "metadata": {},
+   "source": [
+    "`InputDataComponents` objects should expose the following additional attributes:\n",
+    "\n",
+    "  - `n_dim` (`int`): The total number of dimensions.\n",
+    "  - (`float`) `get_component(point: int, dimension: int)`: Return one component of a point with respect to a given dimension.\n",
+    "  - (`NumPy ndarray`) `to_components_array()`: Transform/return underlying data as a 2D NumPy array. "
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "informational-cheat",
+   "metadata": {},
+   "source": [
+    "### InputDataExtComponentsMemoryview"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "bottom-iceland",
+   "metadata": {},
+   "source": [
+    "Examples:"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 32,
+   "id": "committed-austin",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T17:32:53.057654Z",
+     "start_time": "2021-10-04T17:32:53.040140Z"
+    }
+   },
+   "outputs": [
+    {
+     "ename": "TypeError",
+     "evalue": "__cinit__() takes exactly 1 positional argument (0 given)",
+     "output_type": "error",
+     "traceback": [
+      "\u001b[1;31m---------------------------------------------------------------------------\u001b[0m",
+      "\u001b[1;31mTypeError\u001b[0m                                 Traceback (most recent call last)",
+      "\u001b[1;32m<ipython-input-32-41a19cb81e61>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m\u001b[0m\n\u001b[0;32m      1\u001b[0m \u001b[1;31m# Requires data to initialise\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[1;32m----> 2\u001b[1;33m \u001b[0m_types\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0mInputDataExtComponentsMemoryview\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m",
+      "\u001b[1;32msrc/cnnclustering/_types.pyx\u001b[0m in \u001b[0;36mcnnclustering._types.InputDataExtComponentsMemoryview.__cinit__\u001b[1;34m()\u001b[0m\n",
+      "\u001b[1;31mTypeError\u001b[0m: __cinit__() takes exactly 1 positional argument (0 given)"
+     ]
+    }
+   ],
+   "source": [
+    "# Requires data to initialise\n",
+    "_types.InputDataExtComponentsMemoryview()"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 34,
+   "id": "upset-result",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T17:33:40.972473Z",
+     "start_time": "2021-10-04T17:33:40.967280Z"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "InputDataExtComponentsMemoryview\n"
+     ]
+    }
+   ],
+   "source": [
+    "input_data = _types.InputDataExtComponentsMemoryview(np.random.random(size=(10, 3)))\n",
+    "print(input_data)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 36,
+   "id": "suburban-variety",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T17:34:06.124026Z",
+     "start_time": "2021-10-04T17:34:06.117212Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "array([[0.15423156, 0.048149  , 0.21238066],\n",
+       "       [0.31544151, 0.45775574, 0.61957889],\n",
+       "       [0.56523987, 0.25913205, 0.89349825],\n",
+       "       [0.13423745, 0.81121165, 0.73824816],\n",
+       "       [0.40574509, 0.27321913, 0.03709493],\n",
+       "       [0.31003679, 0.03195195, 0.29738916],\n",
+       "       [0.16060228, 0.12021594, 0.53725757],\n",
+       "       [0.64273307, 0.32431991, 0.17237345],\n",
+       "       [0.46686891, 0.8965295 , 0.52424868],\n",
+       "       [0.84518244, 0.49240724, 0.18182637]])"
+      ]
+     },
+     "execution_count": 36,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "input_data.data"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 37,
+   "id": "fitted-consensus",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T17:34:14.044210Z",
+     "start_time": "2021-10-04T17:34:14.038966Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "{'access_coords': True}"
+      ]
+     },
+     "execution_count": 37,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "input_data.meta"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 35,
+   "id": "continuous-trailer",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T17:33:51.980673Z",
+     "start_time": "2021-10-04T17:33:51.975418Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "10"
+      ]
+     },
+     "execution_count": 35,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "input_data.n_points"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 38,
+   "id": "realistic-vancouver",
+   "metadata": {
+    "ExecuteTime": {
+     "end_time": "2021-10-04T17:34:43.317247Z",
+     "start_time": "2021-10-04T17:34:43.312005Z"
+    }
+   },
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "3"
+      ]
+     },
+     "execution_count": 38,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "input_data.n_dim"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "neural-gothic",
+   "metadata": {},
+   "source": [
+    "## Clustering"
+   ]
+  },
+  {
+   "cell_type": "markdown",
+   "id": "toxic-director",
+   "metadata": {},
+   "source": [
+    "For more details on `Clustering` initialisation refer to the [Advanced usage](advanced_usage.ipynb) tutorial."
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "cnnclustering38",
+   "language": "python",
+   "name": "cnnclustering38"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.8.8"
+  },
+  "toc": {
+   "base_numbering": 1,
+   "nav_menu": {},
+   "number_sections": true,
+   "sideBar": true,
+   "skip_h1_title": true,
+   "title_cell": "Table of Contents",
+   "title_sidebar": "Contents",
+   "toc_cell": false,
+   "toc_position": {},
+   "toc_section_display": true,
+   "toc_window_display": true
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}

@@ -387,6 +387,7 @@ COMPONENT_KW_TYPE_ALIAS_MAP = {
 # Provides name identifiers for types
 COMPONENT_NAME_TYPE_MAP = {
     "preparation_hook": {
+        "pass": prepare_pass,
         "components_array_from_parts": prepare_components_array_from_parts,
         "padded_neighbourhoods_array": prepare_padded_neighbourhoods_array,
         "array": prepare_to_array,

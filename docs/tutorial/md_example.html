@@ -1,0 +1,1854 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Molecular dynamics application example &#8212; CommonNN Clustering  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="API Reference" href="../_source/api_reference.html" />
+    <link rel="prev" title="Density based clustering basics" href="algorithm_explained.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.jp-RenderedHTMLCommon thead,
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+.jp-RenderedHTMLCommon th,
+div.rendered_html th {
+  font-weight: bold;
+}
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+.jp-RenderedHTMLCommon tbody tr:hover,
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+</style>
+<style>
+    .nbinput .prompt,
+    .nboutput .prompt {
+        display: none;
+    }
+</style><section id="Molecular-dynamics-application-example">
+<h1>Molecular dynamics application example<a class="headerlink" href="#Molecular-dynamics-application-example" title="Permalink to this heading">¶</a></h1>
+<p>Go to:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#Notebook-configuration"><span class="std std-ref">Notebook configuration</span></a></p></li>
+<li><p><a class="reference internal" href="#Helper-functions"><span class="std std-ref">Helper functions</span></a></p></li>
+<li><p><a class="reference internal" href="#The-C-type-lection-receptor-langerin"><span class="std std-ref">The C-type lectin receptor langerin</span></a></p></li>
+<li><p><a class="reference internal" href="#Clustering-root-data"><span class="std std-ref">Clustering root data</span></a></p></li>
+<li><p><a class="reference internal" href="#Semi-automatic-hierarchical-clustering"><span class="std std-ref">Semi-automatic hierarchical clustering</span></a></p></li>
+</ul>
+<section id="Notebook-configuration">
+<h2>Notebook configuration<a class="headerlink" href="#Notebook-configuration" title="Permalink to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span> <span class="k">as</span> <span class="nn">mpl</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">sklearn</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">pairwise_distances</span>
+<span class="kn">from</span> <span class="nn">sklearn.neighbors</span> <span class="kn">import</span> <span class="n">KDTree</span>
+<span class="kn">from</span> <span class="nn">tqdm.notebook</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="kn">import</span> <span class="nn">cnnclustering</span>
+<span class="kn">from</span> <span class="nn">cnnclustering</span> <span class="kn">import</span> <span class="n">cluster</span><span class="p">,</span> <span class="n">plot</span><span class="p">,</span> <span class="n">hooks</span>
+</pre></div>
+</div>
+</div>
+<p>Print Python and package version information:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Version information</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Python: &quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">sys</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Packages:&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="p">[</span><span class="n">mpl</span><span class="p">,</span> <span class="n">np</span><span class="p">,</span> <span class="n">sklearn</span><span class="p">,</span> <span class="n">cnnclustering</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">package</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">package</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Python:  3.8.8 (default, Mar 11 2021, 08:58:19)  [GCC 8.3.0]
+Packages:
+    matplotlib: 3.3.4
+    numpy: 1.20.1
+    sklearn: 0.24.1
+    cnnclustering: 0.4.3
+</pre></div></div>
+</div>
+<p>We use <a class="reference external" href="https://matplotlib.org/">Matplotlib</a> to create plots. The <code class="docutils literal notranslate"><span class="pre">matplotlibrc</span></code> file in the root directory of the <code class="docutils literal notranslate"><span class="pre">CommonNNClustering</span></code> repository is used to customize the appearance of the plots.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Matplotlib configuration</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rc_file</span><span class="p">(</span>
+    <span class="s2">&quot;../../matplotlibrc&quot;</span><span class="p">,</span>
+    <span class="n">use_default_template</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Axis property defaults for the plots</span>
+<span class="n">ax_props</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;xlabel&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s2">&quot;ylabel&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s2">&quot;xticks&quot;</span><span class="p">:</span> <span class="p">(),</span>
+    <span class="s2">&quot;yticks&quot;</span><span class="p">:</span> <span class="p">(),</span>
+    <span class="s2">&quot;aspect&quot;</span><span class="p">:</span> <span class="s2">&quot;equal&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Helper-functions">
+<h2>Helper functions<a class="headerlink" href="#Helper-functions" title="Permalink to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">draw_evaluate</span><span class="p">(</span><span class="n">clustering</span><span class="p">,</span> <span class="n">axis_labels</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">plot_style</span><span class="o">=</span><span class="s2">&quot;dots&quot;</span><span class="p">):</span>
+
+    <span class="n">fig</span><span class="p">,</span> <span class="n">Ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span>
+        <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.figsize&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span>
+                 <span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s1">&#39;figure.figsize&#39;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mf">0.5</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+        <span class="n">dim_</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dim</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">ax_props_</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ax_props</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="n">axis_labels</span><span class="p">:</span>
+            <span class="n">ax_props_</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                <span class="p">{</span><span class="s2">&quot;xlabel&quot;</span><span class="p">:</span> <span class="n">dim_</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;ylabel&quot;</span><span class="p">:</span> <span class="n">dim_</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">}</span>
+            <span class="p">)</span>
+
+        <span class="n">_</span> <span class="o">=</span> <span class="n">clustering</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+            <span class="n">ax</span><span class="o">=</span><span class="n">Ax</span><span class="p">[</span><span class="n">dim</span><span class="p">],</span>
+            <span class="n">plot_style</span><span class="o">=</span><span class="n">plot_style</span><span class="p">,</span>
+            <span class="n">ax_props</span><span class="o">=</span><span class="n">ax_props_</span><span class="p">,</span>
+            <span class="n">dim</span><span class="o">=</span><span class="n">dim_</span>
+            <span class="p">)</span>
+
+        <span class="n">Ax</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">get_label</span><span class="p">()</span><span class="o">.</span><span class="n">set_rotation</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="The-C-type-lection-receptor-langerin">
+<h2>The C-type lection receptor langerin<a class="headerlink" href="#The-C-type-lection-receptor-langerin" title="Permalink to this heading">¶</a></h2>
+<p>Let’s read in some “real world” data for this example. We will work with a 6D projection from a classical MD trajectory of the C-type lectin receptor langerin that was generated by the dimension reduction procedure TICA.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">langerin</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;md_example/langerin_projection.npy&quot;</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;C-type lectin langerin&quot;</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>After creating a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> instance, we can print out basic information about the data. The projection comes in 116 parts of individual independent simulations. In total we have about 26,000 data points in this set representing 26 microseconds of simulation time at a sampling timestep of 1 nanoseconds.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">langerin</span><span class="o">.</span><span class="n">info</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+alias: &#39;C-type lectin langerin&#39;
+hierarchy_level: 0
+access: coordinates
+points: 26528
+children: None
+</pre></div></div>
+</div>
+<p>Dealing with six data dimensions we can still visualise the data quite well.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">draw_evaluate</span><span class="p">(</span><span class="n">langerin</span><span class="p">,</span> <span class="n">axis_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">plot_style</span><span class="o">=</span><span class="s2">&quot;contourf&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_17_0.png" src="../_images/tutorial_md_example_17_0.png" />
+</div>
+</div>
+<p>A quick look on the distribution of distances in the set gives us a first feeling for what might be a suitable value for the neighbour search radius <em>r</em>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">distances</span> <span class="o">=</span> <span class="n">pairwise_distances</span><span class="p">(</span>
+    <span class="n">langerin</span><span class="o">.</span><span class="n">input_data</span>
+<span class="p">)[</span><span class="n">np</span><span class="o">.</span><span class="n">triu_indices</span><span class="p">(</span><span class="n">langerin</span><span class="o">.</span><span class="n">_input_data</span><span class="o">.</span><span class="n">n_points</span><span class="p">)]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">plot</span><span class="o">.</span><span class="n">plot_histogram</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">distances</span><span class="p">,</span> <span class="n">maxima</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">maxima_props</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;order&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_19_0.png" src="../_images/tutorial_md_example_19_0.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Free memory</span>
+<span class="o">%</span><span class="k">xdel</span> distances
+</pre></div>
+</div>
+</div>
+<p>We can suspect that values of <em>r</em> of roughly 2 or lower should be a good starting point. The maximum in the distribution closest to 0 defines a reasonable value range for <span class="math notranslate nohighlight">\(r\)</span>. We can also get a feeling for what values <em>c</em> could take by checking the number of neighbours each point has for a given search radius.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">min_n</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">max_n</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">mean_n</span> <span class="o">=</span> <span class="p">[]</span>
+
+
+<span class="n">tree</span> <span class="o">=</span> <span class="n">KDTree</span><span class="p">(</span><span class="n">langerin</span><span class="o">.</span><span class="n">input_data</span><span class="p">)</span>
+<span class="n">r_list</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.25</span><span class="p">,</span> <span class="mf">3.25</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">r_list</span><span class="p">):</span>
+    <span class="n">n_neighbours</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">tree</span><span class="o">.</span><span class="n">query_radius</span><span class="p">(</span>
+            <span class="n">langerin</span><span class="o">.</span><span class="n">input_data</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">return_distance</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">r</span> <span class="o">==</span> <span class="mf">2.0</span><span class="p">:</span>
+        <span class="n">n_neighbours_highlight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">n_neighbours</span><span class="p">)</span>
+
+    <span class="n">min_n</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">n_neighbours</span><span class="p">))</span>
+    <span class="n">max_n</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">n_neighbours</span><span class="p">))</span>
+    <span class="n">mean_n</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">n_neighbours</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "6e01aeff02b14b4f86878c6ab5745324", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">h</span><span class="p">,</span> <span class="n">e</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">histogram</span><span class="p">(</span><span class="n">n_neighbours_highlight</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="n">e</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">/</span> <span class="mi">2</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="c1"># ax.plot([2.0, 2.0], (e[0], e[-1]), &quot;k&quot;)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">fill_betweenx</span><span class="p">(</span>
+    <span class="n">e</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">),</span> <span class="mf">2.0</span> <span class="o">+</span> <span class="n">h</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">,</span>
+    <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;k&quot;</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;gray&quot;</span>
+<span class="p">)</span>
+<span class="n">min_line</span><span class="p">,</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r_list</span><span class="p">,</span> <span class="n">min_n</span><span class="p">,</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span>
+<span class="n">max_line</span><span class="p">,</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r_list</span><span class="p">,</span> <span class="n">max_n</span><span class="p">,</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span>
+<span class="n">mean_line</span><span class="p">,</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">r_list</span><span class="p">,</span> <span class="n">mean_n</span><span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span>
+    <span class="p">[</span><span class="n">min_line</span><span class="p">,</span> <span class="n">mean_line</span><span class="p">],</span> <span class="p">[</span><span class="s2">&quot;min/max&quot;</span><span class="p">,</span> <span class="s2">&quot;mean&quot;</span><span class="p">],</span>
+    <span class="n">fancybox</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">framealpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s2">&quot;k&quot;</span>
+<span class="p">)</span>
+
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="p">{</span>
+    <span class="s2">&quot;xlim&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">r_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">r_list</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="s2">&quot;xlabel&quot;</span><span class="p">:</span> <span class="s2">&quot;$r$&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ylabel&quot;</span><span class="p">:</span> <span class="s2">&quot;#neighbours&quot;</span><span class="p">,</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[(0.25, 3.0), Text(0.5, 0, &#39;$r$&#39;), Text(0, 0.5, &#39;#neighbours&#39;)]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_23_1.png" src="../_images/tutorial_md_example_23_1.png" />
+</div>
+</div>
+<p>In the radius value regime of 2 and higher the number of neighbours per point quickly approaches the number of points in the whole data set. We can interpret these plots as upper bounds (max: hard bound; mean: soft bound) for <span class="math notranslate nohighlight">\(c\)</span> if <span class="math notranslate nohighlight">\(r\)</span> varies. Values of <span class="math notranslate nohighlight">\(c\)</span> much larger than say 5000 probably wont make to much sense for radii below around 2.0. If the radius cutoff is set to <span class="math notranslate nohighlight">\(r=1\)</span>, <span class="math notranslate nohighlight">\(c\)</span> is already capped at a few hundreds. We can also see that for a radius of 2.0, a
+substantial amount of the data points have close to no neighbour at all. Care has to taken that we do not loose an interesting portion of the feature space here when this radius is used.</p>
+</section>
+<section id="Clustering-root-data">
+<h2>Clustering root data<a class="headerlink" href="#Clustering-root-data" title="Permalink to this heading">¶</a></h2>
+<p>Let’s attempt a first clustering step with a relatively low density criterion (large <em>r</em> cutoff, low number of common neighbours <em>c</em>). When we cluster, we can judge the outcome by how many clusters we obtain and how many points end up as being classified as noise. For the first clustering steps, it can be a good idea to start with a low density cutoff and then increase it gradually (preferably by keeping <span class="math notranslate nohighlight">\(r\)</span> constant and increasing <span class="math notranslate nohighlight">\(c\)</span>). As we choose higher density criteria the
+number of resulting clusters will rise and so will the noise level. We need to find the point where we yield a large number of (reasonably sized) clusters without loosing relevant information in the noise regions. Keep in mind that the ideal number of clusters and noise ratio are not definable and highly dependent on the nature of the data and your (subjective) expectation if there is no dedicated way of clustering validation.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tree</span> <span class="o">=</span> <span class="n">KDTree</span><span class="p">(</span><span class="n">langerin</span><span class="o">.</span><span class="n">input_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="mf">1.5</span>
+
+<span class="n">neighbourhoods</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">query_radius</span><span class="p">(</span><span class="n">langerin</span><span class="o">.</span><span class="n">input_data</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">return_distance</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">neighbourhoods</span><span class="p">:</span>
+    <span class="n">n</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+<span class="n">langerin_neighbourhoods</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span>
+    <span class="n">neighbourhoods</span><span class="p">,</span>
+    <span class="n">preparation_hook</span><span class="o">=</span><span class="n">hooks</span><span class="o">.</span><span class="n">prepare_neighbourhoods</span><span class="p">,</span>
+    <span class="n">registered_recipe_key</span><span class="o">=</span><span class="s2">&quot;sorted_neighbourhoods&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[54]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">member_cutoff</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">langerin</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">_labels</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+-----------------------------------------------------------------------------------------------
+#points   r         c         min       max       #clusters %largest  %noise    time
+26528     1.500     2         10        None      11        0.702     0.005     00:00:0.408
+-----------------------------------------------------------------------------------------------
+
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[55]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">draw_evaluate</span><span class="p">(</span><span class="n">langerin</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_30_0.png" src="../_images/tutorial_md_example_30_0.png" />
+</div>
+</div>
+<p>We obtain a low number of noise points and a handful of clusters so we are at least not completely of track here with our initial guess on <span class="math notranslate nohighlight">\(r\)</span>. To get a better feeling for how the clustering changes with higher density-thresholds, one could scan a few more parameter combinations.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="mf">1.5</span>
+
+<span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">105</span><span class="p">,</span> <span class="mi">1</span><span class="p">)):</span>
+    <span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">member_cutoff</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">langerin</span><span class="o">.</span><span class="n">_summary</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">_summary</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "eeb70c85825349b8a8d42761b33cd226", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">langerin</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">to_DataFrame</span><span class="p">()</span>
+<span class="n">df</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
+</pre></div>
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>n_points</th>
+      <th>radius_cutoff</th>
+      <th>cnn_cutoff</th>
+      <th>member_cutoff</th>
+      <th>max_clusters</th>
+      <th>n_clusters</th>
+      <th>ratio_largest</th>
+      <th>ratio_noise</th>
+      <th>execution_time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>26528</td>
+      <td>1.5</td>
+      <td>0</td>
+      <td>10</td>
+      <td>&lt;NA&gt;</td>
+      <td>11</td>
+      <td>0.703935</td>
+      <td>0.002262</td>
+      <td>0.392356</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>26528</td>
+      <td>1.5</td>
+      <td>1</td>
+      <td>10</td>
+      <td>&lt;NA&gt;</td>
+      <td>11</td>
+      <td>0.702955</td>
+      <td>0.004033</td>
+      <td>0.379377</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>26528</td>
+      <td>1.5</td>
+      <td>2</td>
+      <td>10</td>
+      <td>&lt;NA&gt;</td>
+      <td>11</td>
+      <td>0.702201</td>
+      <td>0.005428</td>
+      <td>0.380070</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>26528</td>
+      <td>1.5</td>
+      <td>3</td>
+      <td>10</td>
+      <td>&lt;NA&gt;</td>
+      <td>11</td>
+      <td>0.701372</td>
+      <td>0.006672</td>
+      <td>0.380684</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>26528</td>
+      <td>1.5</td>
+      <td>4</td>
+      <td>10</td>
+      <td>&lt;NA&gt;</td>
+      <td>12</td>
+      <td>0.700317</td>
+      <td>0.007765</td>
+      <td>0.381347</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>26528</td>
+      <td>1.5</td>
+      <td>5</td>
+      <td>10</td>
+      <td>&lt;NA&gt;</td>
+      <td>11</td>
+      <td>0.699940</td>
+      <td>0.009650</td>
+      <td>0.383584</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>26528</td>
+      <td>1.5</td>
+      <td>6</td>
+      <td>10</td>
+      <td>&lt;NA&gt;</td>
+      <td>11</td>
+      <td>0.699337</td>
+      <td>0.010630</td>
+      <td>0.382752</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>26528</td>
+      <td>1.5</td>
+      <td>7</td>
+      <td>10</td>
+      <td>&lt;NA&gt;</td>
+      <td>11</td>
+      <td>0.698809</td>
+      <td>0.011610</td>
+      <td>0.383833</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>26528</td>
+      <td>1.5</td>
+      <td>8</td>
+      <td>10</td>
+      <td>&lt;NA&gt;</td>
+      <td>11</td>
+      <td>0.698206</td>
+      <td>0.012553</td>
+      <td>0.384226</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>26528</td>
+      <td>1.5</td>
+      <td>9</td>
+      <td>10</td>
+      <td>&lt;NA&gt;</td>
+      <td>11</td>
+      <td>0.697603</td>
+      <td>0.013571</td>
+      <td>0.384882</td>
+    </tr>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">c_values</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;cnn_cutoff&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<span class="n">n_cluster_values</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;n_clusters&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">c_values</span><span class="p">,</span> <span class="n">n_cluster_values</span><span class="p">,</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="p">{</span>
+    <span class="s2">&quot;xlim&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">c_values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">c_values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="s2">&quot;xlabel&quot;</span><span class="p">:</span> <span class="s2">&quot;$c$&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ylabel&quot;</span><span class="p">:</span> <span class="s2">&quot;#clusters&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;yticks&quot;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">n_cluster_values</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">n_cluster_values</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[(0.0, 104.0),
+ Text(0.5, 0, &#39;$c$&#39;),
+ Text(0, 0.5, &#39;#clusters&#39;),
+ [&lt;matplotlib.axis.YTick at 0x7f3e28be5280&gt;,
+  &lt;matplotlib.axis.YTick at 0x7f3e28d0da90&gt;,
+  &lt;matplotlib.axis.YTick at 0x7f3e28c6e550&gt;,
+  &lt;matplotlib.axis.YTick at 0x7f3e28affb20&gt;,
+  &lt;matplotlib.axis.YTick at 0x7f3e28affdc0&gt;,
+  &lt;matplotlib.axis.YTick at 0x7f3e28aff1f0&gt;]]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_34_1.png" src="../_images/tutorial_md_example_34_1.png" />
+</div>
+</div>
+<p>As we see here, increasing <span class="math notranslate nohighlight">\(c\)</span> and therefore the density-threshold only yields less clusters which potentially means we are starting to loose information. We can use hierarchical clustering to freeze the obtained clustering and increase the density-threshold only for a portion of the data set.</p>
+<p>To be sure, we can also double check the result with a somewhat larger radius to exclude that we already lost potential clusters with our first parameter combination.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="mf">2.5</span>
+
+<span class="n">neighbourhoods</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">query_radius</span><span class="p">(</span><span class="n">langerin</span><span class="o">.</span><span class="n">input_data</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">return_distance</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">neighbourhoods</span><span class="p">:</span>
+    <span class="n">n</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+<span class="n">langerin_neighbourhoods</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span>
+    <span class="n">neighbourhoods</span><span class="p">,</span>
+    <span class="n">preparation_hook</span><span class="o">=</span><span class="n">hooks</span><span class="o">.</span><span class="n">prepare_neighbourhoods</span><span class="p">,</span>
+    <span class="n">registered_recipe_key</span><span class="o">=</span><span class="s2">&quot;sorted_neighbourhoods&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">langerin</span><span class="o">.</span><span class="n">_summary</span><span class="o">.</span><span class="n">_list</span> <span class="o">=</span> <span class="p">[]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">105</span><span class="p">,</span> <span class="mi">1</span><span class="p">)):</span>
+    <span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">member_cutoff</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">langerin</span><span class="o">.</span><span class="n">_summary</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">_summary</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "4dfb27a006c448179ae0e4cb93afb582", "version_major": 2, "version_minor": 0}</script></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[40]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">langerin</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">to_DataFrame</span><span class="p">()</span>
+
+<span class="n">c_values</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;cnn_cutoff&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+<span class="n">n_cluster_values</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;n_clusters&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">c_values</span><span class="p">,</span> <span class="n">n_cluster_values</span><span class="p">,</span> <span class="s2">&quot;k&quot;</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="p">{</span>
+    <span class="s2">&quot;xlim&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">c_values</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">c_values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span>
+    <span class="s2">&quot;xlabel&quot;</span><span class="p">:</span> <span class="s2">&quot;$c$&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ylabel&quot;</span><span class="p">:</span> <span class="s2">&quot;#clusters&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;yticks&quot;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">n_cluster_values</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">n_cluster_values</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[40]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[(0.0, 104.0),
+ Text(0.5, 0, &#39;$c$&#39;),
+ Text(0, 0.5, &#39;#clusters&#39;),
+ [&lt;matplotlib.axis.YTick at 0x7f3e10112400&gt;,
+  &lt;matplotlib.axis.YTick at 0x7f3e28860a30&gt;,
+  &lt;matplotlib.axis.YTick at 0x7f3e101158b0&gt;]]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_39_1.png" src="../_images/tutorial_md_example_39_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[41]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">langerin</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">_labels</span>
+<span class="n">draw_evaluate</span><span class="p">(</span><span class="n">langerin</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+-----------------------------------------------------------------------------------------------
+#points   r         c         min       max       #clusters %largest  %noise    time
+26528     2.500     1         None      None      5         0.981     0.000     00:00:1.469
+-----------------------------------------------------------------------------------------------
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_40_1.png" src="../_images/tutorial_md_example_40_1.png" />
+</div>
+</div>
+<p>It looks like we obtain no additional cluster with the larger radius that is lost for the smaller one. For now we can deliberately stick with the smaller radius.</p>
+</section>
+<section id="Semi-automatic-hierarchical-clustering">
+<h2>Semi-automatic hierarchical clustering<a class="headerlink" href="#Semi-automatic-hierarchical-clustering" title="Permalink to this heading">¶</a></h2>
+<p>We described rationally guided, manual hierarchical clustering in the <a class="reference internal" href="hierarchical_clustering_basics.html"><span class="doc">Hierarchical clustering basics</span></a> tutorial using the <code class="docutils literal notranslate"><span class="pre">isolate</span></code> formalism. Here we want to take the different approach of generating a cluster hierarchy more or less automatically for a given cluster parameter range. We will use the radius of <span class="math notranslate nohighlight">\(r=2\)</span> from the last section and a grid of <span class="math notranslate nohighlight">\(c\)</span> values to cluster subsequently with higher density-thresholds while we keep track of the
+change in the cluster label assignments.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[42]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tree</span> <span class="o">=</span> <span class="n">KDTree</span><span class="p">(</span><span class="n">langerin</span><span class="o">.</span><span class="n">input_data</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[43]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="mf">1.5</span>
+
+<span class="n">neighbourhoods</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">query_radius</span><span class="p">(</span><span class="n">langerin</span><span class="o">.</span><span class="n">input_data</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">return_distance</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">neighbourhoods</span><span class="p">:</span>
+    <span class="n">n</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+<span class="n">langerin_neighbourhoods</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span>
+    <span class="n">neighbourhoods</span><span class="p">,</span>
+    <span class="n">preparation_hook</span><span class="o">=</span><span class="n">hooks</span><span class="o">.</span><span class="n">prepare_neighbourhoods</span><span class="p">,</span>
+    <span class="n">registered_recipe_key</span><span class="o">=</span><span class="s2">&quot;sorted_neighbourhoods&quot;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>We will start at <span class="math notranslate nohighlight">\(c=2\)</span> but we will also need to determine a reasonable endpoint. To check the deduction of an upper bound from the number-of-neioghbours plot in the last section, let’s have a look at a clustering with a very high density-threshold.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[89]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="mi">950</span><span class="p">)</span>
+<span class="n">langerin</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">_labels</span>
+<span class="n">draw_evaluate</span><span class="p">(</span><span class="n">langerin</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+-----------------------------------------------------------------------------------------------
+#points   r         c         min       max       #clusters %largest  %noise    time
+26528     1.500     950       None      None      4         0.314     0.430     00:00:4.802
+-----------------------------------------------------------------------------------------------
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_47_1.png" src="../_images/tutorial_md_example_47_1.png" />
+</div>
+</div>
+<p>At this point, the clustering does yield only clusters that are shrinking with even higher values for <span class="math notranslate nohighlight">\(c\)</span>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[84]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">c_range</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="nb">int</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="mf">1.2</span><span class="o">**</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">35</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="mf">1.2</span><span class="o">**</span><span class="n">x</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="mf">1.2</span><span class="o">**</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+<span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">c_range</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[2, 3, 4, 5, 7, 8, 10, 12, 14, 17, 21, 25, 30, 36, 44, 53, 63, 76, 92, 110, 132, 158, 190, 228, 274, 329, 395, 474, 569, 683, 820, 984]
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[90]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">fit_hierarchical</span><span class="p">(</span>
+    <span class="n">r</span><span class="p">,</span>
+    <span class="n">c_range</span><span class="p">,</span>
+    <span class="n">member_cutoff</span><span class="o">=</span><span class="mi">10</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Running step 0     (r = 1.5, c = 2)
+Running step 1     (r = 1.5, c = 3)
+Running step 2     (r = 1.5, c = 4)
+Running step 3     (r = 1.5, c = 5)
+Running step 4     (r = 1.5, c = 7)
+Running step 5     (r = 1.5, c = 8)
+Running step 6     (r = 1.5, c = 10)
+Running step 7     (r = 1.5, c = 12)
+Running step 8     (r = 1.5, c = 14)
+Running step 9     (r = 1.5, c = 17)
+Running step 10    (r = 1.5, c = 21)
+Running step 11    (r = 1.5, c = 25)
+Running step 12    (r = 1.5, c = 30)
+Running step 13    (r = 1.5, c = 36)
+Running step 14    (r = 1.5, c = 44)
+Running step 15    (r = 1.5, c = 53)
+Running step 16    (r = 1.5, c = 63)
+Running step 17    (r = 1.5, c = 76)
+Running step 18    (r = 1.5, c = 92)
+Running step 19    (r = 1.5, c = 110)
+Running step 20    (r = 1.5, c = 132)
+Running step 21    (r = 1.5, c = 158)
+Running step 22    (r = 1.5, c = 190)
+Running step 23    (r = 1.5, c = 228)
+Running step 24    (r = 1.5, c = 274)
+Running step 25    (r = 1.5, c = 329)
+Running step 26    (r = 1.5, c = 395)
+Running step 27    (r = 1.5, c = 474)
+Running step 28    (r = 1.5, c = 569)
+Running step 29    (r = 1.5, c = 683)
+Running step 30    (r = 1.5, c = 820)
+Running step 31    (r = 1.5, c = 984)
+</pre></div></div>
+</div>
+<p>The resulting hierarchy of clusterings can be visualised either as a tree or pie plot.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[91]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Cluster hierarchy as tree diagram</span>
+<span class="c1">#     (hierarchy level increasing from top to bottom)</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span>
+    <span class="n">figsize</span><span class="o">=</span><span class="p">(</span>
+        <span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;figure.figsize&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mf">2.5</span><span class="p">,</span>
+        <span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;figure.figsize&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mi">3</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+<span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">tree</span><span class="p">(</span>
+    <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+    <span class="n">draw_props</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;node_size&quot;</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span>
+        <span class="s2">&quot;node_shape&quot;</span><span class="p">:</span> <span class="s2">&quot;o&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;with_labels&quot;</span><span class="p">:</span> <span class="kc">False</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[91]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(&lt;Figure size 1875x1350 with 1 Axes&gt;, &lt;AxesSubplot:&gt;)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_52_1.png" src="../_images/tutorial_md_example_52_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[92]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Cluster hierarchy as pie diagram</span>
+<span class="c1">#     (hierarchy level increasing from the center outwards)</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">pie</span><span class="p">(</span>
+    <span class="n">pie_props</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;normalize&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_53_0.png" src="../_images/tutorial_md_example_53_0.png" />
+</div>
+</div>
+<p>And we can finally put everything together and incorporate the child clusters into the root data set. But first let’s process the hierarchy a little bit to avoid the shrinking of clusters.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[93]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">trim_shrinking_leafs</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[94]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">reel</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<p>After this call, cluster labeling may not be contiguous and sorted by size, which we can fix easily.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[95]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">sort_by_size</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[96]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">langerin</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">_labels</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[97]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">draw_evaluate</span><span class="p">(</span><span class="n">langerin</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_60_0.png" src="../_images/tutorial_md_example_60_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[98]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Label    Size&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;=============&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="o">*</span><span class="nb">sorted</span><span class="p">({</span><span class="n">k</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">langerin</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">mapping</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span><span class="o">.</span><span class="n">items</span><span class="p">()),</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Label    Size
+=============
+(0, 5437)
+(1, 8169)
+(2, 4206)
+(3, 2767)
+(4, 2526)
+(5, 1922)
+(6, 497)
+(7, 225)
+(8, 207)
+(9, 200)
+(10, 117)
+(11, 112)
+(12, 57)
+(13, 46)
+(14, 26)
+(15, 14)
+</pre></div></div>
+</div>
+<p>For later re-use, we can remember the clustering parameters leading to the isolation of each cluster and save the cluster labels.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[110]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">np</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;md_example/langerin_labels.npy&quot;</span><span class="p">,</span> <span class="n">langerin</span><span class="o">.</span><span class="n">labels</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[100]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Label&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;n&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">langerin</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="o">*</span><span class="n">v</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Label   r       n
+--------------------
+1       1.5     984
+2       1.5     7
+3       1.5     984
+4       1.5     3
+5       1.5     132
+6       1.5     30
+7       1.5     3
+8       1.5     3
+9       1.5     3
+10      1.5     3
+11      1.5     3
+12      1.5     7
+13      1.5     3
+14      1.5     3
+15      1.5     3
+</pre></div></div>
+</div>
+</section>
+<section id="MSM-estimation">
+<h2>MSM estimation<a class="headerlink" href="#MSM-estimation" title="Permalink to this heading">¶</a></h2>
+<p>Assuming our data was sampled in a time-correlated manner as it is the case for MD simulation data, we can use this clustering result as a basis for the estimation of a core-set Markov-state model.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">csmsm.estimator</span> <span class="kn">import</span> <span class="n">CoresetMarkovStateModel</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">langerin</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;md_example/langerin_projection.npy&quot;</span><span class="p">,</span> <span class="n">allow_pickle</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="n">alias</span><span class="o">=</span><span class="s2">&quot;C-type lectin langerin&quot;</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">langerin</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;md_example/langerin_labels.npy&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">M</span> <span class="o">=</span> <span class="n">CoresetMarkovStateModel</span><span class="p">(</span><span class="n">langerin</span><span class="o">.</span><span class="n">to_dtrajs</span><span class="p">(),</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;ns&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-intense-fg ansi-bold">---------------------------------------------------------------------------</span>
+<span class="ansi-red-intense-fg ansi-bold">TypeError</span>                                 Traceback (most recent call last)
+<span class="ansi-green-intense-fg ansi-bold">&lt;ipython-input-11-42957f32a014&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-intense-fg ansi-bold">----&gt; 1</span><span class="ansi-yellow-intense-fg ansi-bold"> </span>M <span class="ansi-yellow-intense-fg ansi-bold">=</span> CoresetMarkovStateModel<span class="ansi-yellow-intense-fg ansi-bold">(</span>langerin<span class="ansi-yellow-intense-fg ansi-bold">.</span>to_dtrajs<span class="ansi-yellow-intense-fg ansi-bold">(</span><span class="ansi-yellow-intense-fg ansi-bold">)</span><span class="ansi-yellow-intense-fg ansi-bold">,</span> unit<span class="ansi-yellow-intense-fg ansi-bold">=</span><span class="ansi-blue-intense-fg ansi-bold">&#34;ns&#34;</span><span class="ansi-yellow-intense-fg ansi-bold">,</span> step<span class="ansi-yellow-intense-fg ansi-bold">=</span><span class="ansi-cyan-intense-fg ansi-bold">1</span><span class="ansi-yellow-intense-fg ansi-bold">)</span>
+
+<span class="ansi-green-intense-fg ansi-bold">src/csmsm/estimator.pyx</span> in <span class="ansi-cyan-fg">csmsm.estimator.CoresetMarkovStateModel.__init__</span><span class="ansi-blue-intense-fg ansi-bold">()</span>
+
+<span class="ansi-red-intense-fg ansi-bold">TypeError</span>: __init__() got an unexpected keyword argument &#39;unit&#39;
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[251]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Estimate csMSM for different lag times (given in steps)</span>
+<span class="n">lags</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">30</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">lags</span><span class="p">:</span>
+    <span class="n">M</span><span class="o">.</span><span class="n">cmsm</span><span class="p">(</span><span class="n">lag</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">minlenfactor</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">M</span><span class="o">.</span><span class="n">get_its</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[252]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Plot the time scales</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">plot_its</span><span class="p">()</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="p">{</span>
+    <span class="s2">&quot;ylim&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[252]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[(0.0, 10459.606311240232)]
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_72_1.png" src="../_images/tutorial_md_example_72_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[224]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+<span class="n">matrix</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">mpl</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">inferno</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+<span class="n">ax</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="p">{</span>
+    <span class="s2">&quot;aspect&quot;</span><span class="p">:</span> <span class="s2">&quot;equal&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;xticks&quot;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">T</span><span class="p">)),</span>
+    <span class="s2">&quot;xticklabels&quot;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="s2">&quot;yticks&quot;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">T</span><span class="p">)),</span>
+    <span class="s2">&quot;yticklabels&quot;</span><span class="p">:</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">M</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="p">})</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_73_0.png" src="../_images/tutorial_md_example_73_0.png" />
+</div>
+</div>
+</section>
+<section id="Prediction">
+<h2>Prediction<a class="headerlink" href="#Prediction" title="Permalink to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[134]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Lets make sure we work on the correctly clustered object</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Label&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">langerin_reduced</span><span class="o">.</span><span class="n">labels</span><span class="o">.</span><span class="n">info</span><span class="o">.</span><span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="o">*</span><span class="n">v</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Label   r       c
+--------------------
+1       0.19    15
+2       0.4     5
+3       0.25    15
+4       0.4     5
+5       0.375   10
+6       0.375   10
+7       0.19    15
+8       0.19    15
+9       0.5     5
+10      0.5     5
+11      0.5     5
+12      0.5     5
+13      0.375   10
+14      0.375   10
+15      0.5     5
+16      0.19    15
+17      0.25    15
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[142]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">langerin_reduced_less</span> <span class="o">=</span> <span class="n">langerin</span><span class="o">.</span><span class="n">cut</span><span class="p">(</span><span class="n">points</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">50</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[143]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">langerin_reduced_less</span><span class="o">.</span><span class="n">calc_dist</span><span class="p">(</span><span class="n">langerin_reduced</span><span class="p">,</span> <span class="n">mmap</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">mmap_file</span><span class="o">=</span><span class="s2">&quot;/home/janjoswig/tmp/tmp.npy&quot;</span><span class="p">,</span> <span class="n">chunksize</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>  <span class="c1"># Distance map calculation</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-red-intense-fg ansi-bold">---------------------------------------------------------------------------</span>
+<span class="ansi-red-intense-fg ansi-bold">MemoryError</span>                               Traceback (most recent call last)
+<span class="ansi-green-intense-fg ansi-bold">&lt;ipython-input-143-4379ad10935c&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
+<span class="ansi-green-intense-fg ansi-bold">----&gt; 1</span><span class="ansi-yellow-intense-fg ansi-bold"> </span>langerin_reduced_less<span class="ansi-yellow-intense-fg ansi-bold">.</span>calc_dist<span class="ansi-yellow-intense-fg ansi-bold">(</span>langerin_reduced<span class="ansi-yellow-intense-fg ansi-bold">,</span> mmap<span class="ansi-yellow-intense-fg ansi-bold">=</span><span class="ansi-green-intense-fg ansi-bold">True</span><span class="ansi-yellow-intense-fg ansi-bold">,</span> mmap_file<span class="ansi-yellow-intense-fg ansi-bold">=</span><span class="ansi-blue-intense-fg ansi-bold">&#34;/home/janjoswig/tmp/tmp.npy&#34;</span><span class="ansi-yellow-intense-fg ansi-bold">,</span> chunksize<span class="ansi-yellow-intense-fg ansi-bold">=</span><span class="ansi-cyan-intense-fg ansi-bold">1000</span><span class="ansi-yellow-intense-fg ansi-bold">)</span>  <span class="ansi-red-intense-fg ansi-bold"># Distance map calculation</span>
+
+<span class="ansi-green-intense-fg ansi-bold">~/CNN/cnnclustering/cnn.py</span> in <span class="ansi-cyan-fg">calc_dist</span><span class="ansi-blue-intense-fg ansi-bold">(self, other, v, method, mmap, mmap_file, chunksize, progress, **kwargs)</span>
+<span class="ansi-green-fg">   1732</span>                 len_self <span class="ansi-yellow-intense-fg ansi-bold">=</span> self<span class="ansi-yellow-intense-fg ansi-bold">.</span>data<span class="ansi-yellow-intense-fg ansi-bold">.</span>points<span class="ansi-yellow-intense-fg ansi-bold">.</span>shape<span class="ansi-yellow-intense-fg ansi-bold">[</span><span class="ansi-cyan-intense-fg ansi-bold">0</span><span class="ansi-yellow-intense-fg ansi-bold">]</span>
+<span class="ansi-green-fg">   1733</span>                 len_other <span class="ansi-yellow-intense-fg ansi-bold">=</span> other<span class="ansi-yellow-intense-fg ansi-bold">.</span>data<span class="ansi-yellow-intense-fg ansi-bold">.</span>points<span class="ansi-yellow-intense-fg ansi-bold">.</span>shape<span class="ansi-yellow-intense-fg ansi-bold">[</span><span class="ansi-cyan-intense-fg ansi-bold">0</span><span class="ansi-yellow-intense-fg ansi-bold">]</span>
+<span class="ansi-green-intense-fg ansi-bold">-&gt; 1734</span><span class="ansi-yellow-intense-fg ansi-bold">                 self.data.distances = np.memmap(
+</span><span class="ansi-green-fg">   1735</span>                     mmap_file<span class="ansi-yellow-intense-fg ansi-bold">,</span>
+<span class="ansi-green-fg">   1736</span>                     dtype=settings.float_precision_map[
+
+<span class="ansi-green-intense-fg ansi-bold">~/CNN/cnnclustering/cnn.py</span> in <span class="ansi-cyan-fg">distances</span><span class="ansi-blue-intense-fg ansi-bold">(self, x)</span>
+<span class="ansi-green-fg">   1124</span>     <span class="ansi-green-intense-fg ansi-bold">def</span> distances<span class="ansi-yellow-intense-fg ansi-bold">(</span>self<span class="ansi-yellow-intense-fg ansi-bold">,</span> x<span class="ansi-yellow-intense-fg ansi-bold">)</span><span class="ansi-yellow-intense-fg ansi-bold">:</span>
+<span class="ansi-green-fg">   1125</span>         <span class="ansi-green-intense-fg ansi-bold">if</span> <span class="ansi-green-intense-fg ansi-bold">not</span> isinstance<span class="ansi-yellow-intense-fg ansi-bold">(</span>x<span class="ansi-yellow-intense-fg ansi-bold">,</span> Distances<span class="ansi-yellow-intense-fg ansi-bold">)</span><span class="ansi-yellow-intense-fg ansi-bold">:</span>
+<span class="ansi-green-intense-fg ansi-bold">-&gt; 1126</span><span class="ansi-yellow-intense-fg ansi-bold">             </span>x <span class="ansi-yellow-intense-fg ansi-bold">=</span> Distances<span class="ansi-yellow-intense-fg ansi-bold">(</span>x<span class="ansi-yellow-intense-fg ansi-bold">)</span>
+<span class="ansi-green-fg">   1127</span>         self<span class="ansi-yellow-intense-fg ansi-bold">.</span>_distances <span class="ansi-yellow-intense-fg ansi-bold">=</span> x
+<span class="ansi-green-fg">   1128</span>
+
+<span class="ansi-green-intense-fg ansi-bold">~/CNN/cnnclustering/cnn.py</span> in <span class="ansi-cyan-fg">__new__</span><span class="ansi-blue-intense-fg ansi-bold">(cls, d, reference)</span>
+<span class="ansi-green-fg">    722</span>             d <span class="ansi-yellow-intense-fg ansi-bold">=</span> <span class="ansi-yellow-intense-fg ansi-bold">[</span><span class="ansi-yellow-intense-fg ansi-bold">]</span>
+<span class="ansi-green-fg">    723</span>
+<span class="ansi-green-intense-fg ansi-bold">--&gt; 724</span><span class="ansi-yellow-intense-fg ansi-bold">         </span>obj <span class="ansi-yellow-intense-fg ansi-bold">=</span> np<span class="ansi-yellow-intense-fg ansi-bold">.</span>atleast_2d<span class="ansi-yellow-intense-fg ansi-bold">(</span>np<span class="ansi-yellow-intense-fg ansi-bold">.</span>asarray<span class="ansi-yellow-intense-fg ansi-bold">(</span>d<span class="ansi-yellow-intense-fg ansi-bold">,</span> dtype<span class="ansi-yellow-intense-fg ansi-bold">=</span>np<span class="ansi-yellow-intense-fg ansi-bold">.</span>float_<span class="ansi-yellow-intense-fg ansi-bold">)</span><span class="ansi-yellow-intense-fg ansi-bold">)</span><span class="ansi-yellow-intense-fg ansi-bold">.</span>view<span class="ansi-yellow-intense-fg ansi-bold">(</span>cls<span class="ansi-yellow-intense-fg ansi-bold">)</span>
+<span class="ansi-green-fg">    725</span>         obj<span class="ansi-yellow-intense-fg ansi-bold">.</span>_reference <span class="ansi-yellow-intense-fg ansi-bold">=</span> <span class="ansi-green-intense-fg ansi-bold">None</span>
+<span class="ansi-green-fg">    726</span>         <span class="ansi-green-intense-fg ansi-bold">return</span> obj
+
+<span class="ansi-green-intense-fg ansi-bold">~/.pyenv/versions/miniconda3-4.7.12/envs/cnnclustering/lib/python3.8/site-packages/numpy/core/_asarray.py</span> in <span class="ansi-cyan-fg">asarray</span><span class="ansi-blue-intense-fg ansi-bold">(a, dtype, order)</span>
+<span class="ansi-green-fg">     81</span>
+<span class="ansi-green-fg">     82</span>     &#34;&#34;&#34;
+<span class="ansi-green-intense-fg ansi-bold">---&gt; 83</span><span class="ansi-yellow-intense-fg ansi-bold">     </span><span class="ansi-green-intense-fg ansi-bold">return</span> array<span class="ansi-yellow-intense-fg ansi-bold">(</span>a<span class="ansi-yellow-intense-fg ansi-bold">,</span> dtype<span class="ansi-yellow-intense-fg ansi-bold">,</span> copy<span class="ansi-yellow-intense-fg ansi-bold">=</span><span class="ansi-green-intense-fg ansi-bold">False</span><span class="ansi-yellow-intense-fg ansi-bold">,</span> order<span class="ansi-yellow-intense-fg ansi-bold">=</span>order<span class="ansi-yellow-intense-fg ansi-bold">)</span>
+<span class="ansi-green-fg">     84</span>
+<span class="ansi-green-fg">     85</span>
+
+<span class="ansi-red-intense-fg ansi-bold">MemoryError</span>: Unable to allocate 10.5 GiB for an array with shape (52942, 26528) and data type float64
+</pre></div></div>
+</div>
+</section>
+<section id="Cluster-alternatives">
+<h2>Cluster alternatives<a class="headerlink" href="#Cluster-alternatives" title="Permalink to this heading">¶</a></h2>
+<p>It is always recommended to cross validate a clustering result with the outcome of other clustering approaches. We want to have a quick look at the alternative that density-peak clustering provides.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[61]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pydpc_clustering</span> <span class="o">=</span> <span class="n">pydpc</span><span class="o">.</span><span class="n">Cluster</span><span class="p">(</span><span class="n">langerin_reduced</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">points</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_80_0.png" src="../_images/tutorial_md_example_80_0.png" />
+</div>
+</div>
+<p>Clustering in this case is just a single step without the need of parameter specification. In the following, however, we need to extract the actual clusters by looking at the plot below. Points that are clearly isolated in this plot are highly reliable cluster centers.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[65]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pydpc_clustering</span><span class="o">.</span><span class="n">autoplot</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[66]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">pydpc_clustering</span><span class="o">.</span><span class="n">assign</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.8</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_83_0.png" src="../_images/tutorial_md_example_83_0.png" />
+</div>
+</div>
+<p>This gives us 7 clusters.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[70]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">langerin_reduced</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="p">(</span><span class="n">pydpc_clustering</span><span class="o">.</span><span class="n">membership</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">draw_evaluate</span><span class="p">(</span><span class="n">langerin_reduced</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_85_0.png" src="../_images/tutorial_md_example_85_0.png" />
+</div>
+</div>
+<p>As we are interested in core clusters we want to apply the core/halo criterion to disregard points with low cluster membership probabilitie as noise.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[71]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">langerin_reduced</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">pydpc_clustering</span><span class="o">.</span><span class="n">halo_idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">draw_evaluate</span><span class="p">(</span><span class="n">langerin_reduced</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_87_0.png" src="../_images/tutorial_md_example_87_0.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[72]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">M</span> <span class="o">=</span> <span class="n">cmsm</span><span class="o">.</span><span class="n">CMSM</span><span class="p">(</span><span class="n">langerin_reduced</span><span class="o">.</span><span class="n">get_dtraj</span><span class="p">(),</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;ns&quot;</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[73]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Estimate csMSM for different lag times (given in steps)</span>
+<span class="n">lags</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">30</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">lags</span><span class="p">:</span>
+    <span class="n">M</span><span class="o">.</span><span class="n">cmsm</span><span class="p">(</span><span class="n">lag</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">minlenfactor</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+    <span class="n">M</span><span class="o">.</span><span class="n">get_its</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+*********************************************************
+---------------------------------------------------------
+Computing coreset MSM at lagtime 1 ns
+---------------------------------------------------------
+
+Using 116 trajectories with 25900 steps over 7 coresets
+
+All sets are connected
+---------------------------------------------------------
+*********************************************************
+
+
+*********************************************************
+---------------------------------------------------------
+Computing coreset MSM at lagtime 2 ns
+---------------------------------------------------------
+
+Using 116 trajectories with 25900 steps over 7 coresets
+
+All sets are connected
+---------------------------------------------------------
+*********************************************************
+
+
+*********************************************************
+---------------------------------------------------------
+Computing coreset MSM at lagtime 4 ns
+---------------------------------------------------------
+
+Using 116 trajectories with 25900 steps over 7 coresets
+
+All sets are connected
+---------------------------------------------------------
+*********************************************************
+
+
+*********************************************************
+---------------------------------------------------------
+Computing coreset MSM at lagtime 8 ns
+---------------------------------------------------------
+
+Using 116 trajectories with 25900 steps over 7 coresets
+
+All sets are connected
+---------------------------------------------------------
+*********************************************************
+
+
+*********************************************************
+---------------------------------------------------------
+Computing coreset MSM at lagtime 15 ns
+---------------------------------------------------------
+
+Trajectories [0, 1, 73]
+are shorter then step threshold (lag * minlenfactor = 75)
+and will not be used to compute the MSM.
+
+Using 113 trajectories with 25732 steps over 7 coresets
+
+All sets are connected
+---------------------------------------------------------
+*********************************************************
+
+
+*********************************************************
+---------------------------------------------------------
+Computing coreset MSM at lagtime 30 ns
+---------------------------------------------------------
+
+Trajectories [0, 1, 4, 63, 73]
+are shorter then step threshold (lag * minlenfactor = 150)
+and will not be used to compute the MSM.
+
+Using 111 trajectories with 25447 steps over 7 coresets
+
+All sets are connected
+---------------------------------------------------------
+*********************************************************
+
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[74]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Plot the time scales</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">M</span><span class="o">.</span><span class="n">plot_its</span><span class="p">()</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">(</span><span class="n">pad</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_90_0.png" src="../_images/tutorial_md_example_90_0.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[75]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">figsize</span> <span class="o">=</span> <span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;figure.figsize&quot;</span><span class="p">]</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;figure.figsize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">figsize</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">figsize</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mf">0.2</span>
+<span class="n">M</span><span class="o">.</span><span class="n">plot_eigenvectors</span><span class="p">()</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rcParams</span><span class="p">[</span><span class="s2">&quot;figure.figsize&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">figsize</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_md_example_91_0.png" src="../_images/tutorial_md_example_91_0.png" />
+</div>
+</div>
+<p>This result is in good agreement with the one we obtained manually and argualbe faster and easier to achieve. If we decide that this result is exactly what we consider valid, then this is nice. If we on the other hand want to tune the clustering result further, with respect to splitting, noise level and what is considered noise in the first place we gain more flexibility with the manual approach.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">CommonNN Clustering</a></h1>
+
+
+
+<p class="blurb">A Python package for common-nearest-neighbour clustering</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=bkellerlab&repo=CommonNNClustering&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../_source/install.html">Installation instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../_source/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../_source/tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="basic_usage.html">Basic usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="scikit_learn_datasets.html">Clustering of scikit-learn toy data sets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html">Advanced usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interface_demo.html">Demonstration of (generic) interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hierarchical_clustering_basics.html">Hierarchical clustering basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="algorithm_explained.html">Density based clustering basics</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Molecular dynamics application example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../_source/api_reference.html">API Reference</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../_source/tutorials.html">Tutorials</a><ul>
+      <li>Previous: <a href="algorithm_explained.html" title="previous chapter">Density based clustering basics</a></li>
+      <li>Next: <a href="../_source/api_reference.html" title="next chapter">API Reference</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Jan-Oliver Kapp-Joswig.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.2.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/tutorial/md_example.ipynb.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
