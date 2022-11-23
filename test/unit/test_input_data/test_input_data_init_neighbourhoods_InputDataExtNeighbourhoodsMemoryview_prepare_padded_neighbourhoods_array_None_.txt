@@ -1,2 +1,2 @@
 InputDataExtNeighbourhoodsMemoryview
-neighbourhoods of 12 points
+InputDataExtNeighbourhoodsMemoryview(neighbourhoods of 12 points)

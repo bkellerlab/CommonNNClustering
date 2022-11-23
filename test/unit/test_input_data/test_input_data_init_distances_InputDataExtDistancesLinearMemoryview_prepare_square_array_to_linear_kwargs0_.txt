@@ -1,2 +1,2 @@
 InputDataExtDistancesLinearMemoryview
-distances of 12 points
+InputDataExtDistancesLinearMemoryview(distances of 12 points)

@@ -1,6 +1,2 @@
 NeighboursGetterBruteForce
-NeighboursGetterBruteForce(
-    dgetter=DistanceGetterLookup,
-    sorted=False,
-    selfcounting=True
-)
+NeighboursGetterBruteForce(dgetter=DistanceGetterLookup, sorted=False, selfcounting=True)
