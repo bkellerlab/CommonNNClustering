@@ -74,7 +74,7 @@ for category, fname in requirements_map.items():
 
 setup(
     name="commonnn-clustering",
-    version="0.0.1",
+    version="0.0.2",
     keywords=["density-based clustering"],
     author="Jan-Oliver Joswig",
     author_email="jan.joswig@fu-berlin.de",
