@@ -73,7 +73,7 @@ for category, fname in requirements_map.items():
         requirements[category] = fp.read().strip().split("\n")
 
 setup(
-    name="commonnn",
+    name="commonnn-clustering",
     version="0.0.1",
     keywords=["density-based clustering"],
     author="Jan-Oliver Joswig",

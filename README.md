@@ -43,7 +43,7 @@ Install
 Refer to the [documentation](https://bkellerlab.github.io/CommonNNClustering/_source/install.html) for more details. Install from PyPi
 
 ```bash
-$ pip install commonnn
+$ pip install commonnn-clustering
 ```
 
 or clone the development version and install from a local branch

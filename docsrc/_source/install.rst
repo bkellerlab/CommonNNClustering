@@ -26,13 +26,13 @@ The :mod:`commonnn` package is available on the Python package index.
 
 .. code-block:: bash
 
-   pip install commonnn
+   pip install commonnn-clustering
 
 To install with optional dependencies use:
 
 .. code-block:: bash
 
-   pip install commonnn[optional]
+   pip install commonnn-clustering[optional]
 
 Other extras can be specified with `[dev]`, `[docs]`, and `[test]`.
 
