@@ -311,7 +311,8 @@ div.rendered_html tbody tr:hover {
 <li><p><a class="reference internal" href="#CommonNN-clustering-using-data-point-coordinates-as-input"><span class="std std-ref">… point coordinates</span></a></p></li>
 <li><p><a class="reference internal" href="#CommonNN-clustering-with-pre-computed-distances"><span class="std std-ref">… pre-computed distances</span></a></p></li>
 <li><p><a class="reference internal" href="#CommonNN-clustering-with-pre-computed-neighbourhoods"><span class="std std-ref">… pre-computed neighbourhoods</span></a></p></li>
-<li><p>… pre-computed sorted neighbourhoods</p></li>
+<li><p><a class="reference internal" href="#CommonNN-clustering-with-pre-computed-neighbourhoods-(sorted-by-member-index)"><span class="std std-ref">… pre-computed sorted neighbourhoods</span></a></p></li>
+<li><p><a class="reference internal" href="#CommonNN-clustering-with-pre-computed-neighbourhoods-(sorted-by-member-index-and-neighbour-count)"><span class="std std-ref">… pre-computed doubly sorted neighbourhoods</span></a></p></li>
 </ul>
 </li>
 </ul>
@@ -332,9 +333,9 @@ div.rendered_html tbody tr:hover {
 <span class="kn">from</span> <span class="nn">sklearn.neighbors</span> <span class="kn">import</span> <span class="n">KDTree</span>
 <span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">StandardScaler</span>
 
-<span class="kn">import</span> <span class="nn">cnnclustering</span>
-<span class="kn">from</span> <span class="nn">cnnclustering</span> <span class="kn">import</span> <span class="n">cluster</span>
-<span class="kn">from</span> <span class="nn">cnnclustering</span> <span class="kn">import</span> <span class="n">_types</span><span class="p">,</span> <span class="n">_fit</span>
+<span class="kn">import</span> <span class="nn">commonnn</span>
+<span class="kn">from</span> <span class="nn">commonnn</span> <span class="kn">import</span> <span class="n">cluster</span>
+<span class="kn">from</span> <span class="nn">commonnn</span> <span class="kn">import</span> <span class="n">_types</span><span class="p">,</span> <span class="n">_fit</span>
 </pre></div>
 </div>
 </div>
@@ -342,10 +343,40 @@ div.rendered_html tbody tr:hover {
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Optional helper functionality from the benchmark module</span>
-<span class="c1">#     https://github.com/janjoswig/CommonNNClustering-Benchmark</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;../benchmark&quot;</span><span class="p">)</span>
-<span class="kn">import</span> <span class="nn">helper_base</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Helper function definitions</span>
+<span class="k">def</span> <span class="nf">indent_at_parens</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Take a string and introduce indention at parentheses&quot;&quot;&quot;</span>
+
+    <span class="n">o</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">level</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">saw_comma</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">saw_comma</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s2">&quot; &quot;</span><span class="p">:</span>
+                <span class="n">o</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;    &#39;</span> <span class="o">*</span> <span class="p">(</span><span class="n">level</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">o</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;    &#39;</span> <span class="o">*</span> <span class="p">(</span><span class="n">level</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="si">}{</span><span class="n">c</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">saw_comma</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s2">&quot;(&quot;</span><span class="p">:</span>
+            <span class="n">o</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;    &#39;</span> <span class="o">*</span> <span class="n">level</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">level</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s2">&quot;)&quot;</span><span class="p">:</span>
+            <span class="n">level</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="n">o</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;    &#39;</span> <span class="o">*</span> <span class="n">level</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s2">&quot;,&quot;</span><span class="p">:</span>
+            <span class="n">saw_comma</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">o</span> <span class="o">+=</span> <span class="s2">&quot;,&quot;</span>
+            <span class="k">continue</span>
+
+        <span class="n">o</span> <span class="o">+=</span> <span class="n">c</span>
+
+    <span class="k">return</span> <span class="n">o</span>
 </pre></div>
 </div>
 </div>
@@ -358,7 +389,7 @@ div.rendered_html tbody tr:hover {
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Python: &quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">sys</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">))</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Packages:&quot;</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="p">[</span><span class="n">mpl</span><span class="p">,</span> <span class="n">np</span><span class="p">,</span> <span class="n">sklearn</span><span class="p">,</span> <span class="n">cnnclustering</span><span class="p">]:</span>
+<span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="p">[</span><span class="n">mpl</span><span class="p">,</span> <span class="n">np</span><span class="p">,</span> <span class="n">sklearn</span><span class="p">,</span> <span class="n">commonnn</span><span class="p">]:</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">package</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">package</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -368,12 +399,12 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Python:  3.10.2 | packaged by conda-forge | (main, Jan 30 2022, 10:22:28) [GCC 9.4.0]
+Python:  3.10.7 (main, Sep 27 2022, 11:41:38) [GCC 10.2.1 20210110]
 Packages:
-    matplotlib: 3.5.1
-    numpy: 1.22.1
-    sklearn: 1.0.2
-    cnnclustering: 0.5.0
+    matplotlib: 3.6.0
+    numpy: 1.23.3
+    sklearn: 1.1.2
+    commonnn: 0.0.1
 </pre></div></div>
 </div>
 <p>We use <a class="reference external" href="https://matplotlib.org/">Matplotlib</a> to create plots. The <code class="docutils literal notranslate"><span class="pre">matplotlibrc</span></code> file in the root directory of the <code class="docutils literal notranslate"><span class="pre">CommonNNClustering</span></code> repository is used to customize the appearance of the plots.</p>
@@ -491,37 +522,37 @@ Packages:
 <span class="n">dsets</span> <span class="o">=</span> <span class="p">[</span> <span class="c1"># &quot;name&quot;, set, **parameters</span>
     <span class="p">(</span><span class="s1">&#39;circles&#39;</span><span class="p">,</span> <span class="n">noisy_circles</span><span class="p">,</span> <span class="p">{</span>
         <span class="s1">&#39;radius_cutoff&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
-        <span class="s1">&#39;cnn_cutoff&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+        <span class="s1">&#39;similarity_cutoff&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
         <span class="s1">&#39;member_cutoff&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
         <span class="s1">&#39;max_clusters&#39;</span><span class="p">:</span> <span class="kc">None</span>
         <span class="p">}),</span>
     <span class="p">(</span><span class="s1">&#39;moons&#39;</span><span class="p">,</span> <span class="n">noisy_moons</span><span class="p">,</span> <span class="p">{</span>
         <span class="s1">&#39;radius_cutoff&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
-        <span class="s1">&#39;cnn_cutoff&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+        <span class="s1">&#39;similarity_cutoff&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
         <span class="s1">&#39;member_cutoff&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
         <span class="s1">&#39;max_clusters&#39;</span><span class="p">:</span> <span class="kc">None</span>
         <span class="p">}),</span>
     <span class="p">(</span><span class="s1">&#39;varied&#39;</span><span class="p">,</span> <span class="n">varied</span><span class="p">,</span> <span class="p">{</span>
         <span class="s1">&#39;radius_cutoff&#39;</span><span class="p">:</span> <span class="mf">0.28</span><span class="p">,</span>
-        <span class="s1">&#39;cnn_cutoff&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+        <span class="s1">&#39;similarity_cutoff&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
         <span class="s1">&#39;member_cutoff&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
         <span class="s1">&#39;max_clusters&#39;</span><span class="p">:</span> <span class="kc">None</span>
         <span class="p">}),</span>
     <span class="p">(</span><span class="s1">&#39;aniso&#39;</span><span class="p">,</span> <span class="n">aniso</span><span class="p">,</span> <span class="p">{</span>
         <span class="s1">&#39;radius_cutoff&#39;</span><span class="p">:</span> <span class="mf">0.29</span><span class="p">,</span>
-        <span class="s1">&#39;cnn_cutoff&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
+        <span class="s1">&#39;similarity_cutoff&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
         <span class="s1">&#39;member_cutoff&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
         <span class="s1">&#39;max_clusters&#39;</span><span class="p">:</span> <span class="kc">None</span>
          <span class="p">}),</span>
     <span class="p">(</span><span class="s1">&#39;blobs&#39;</span><span class="p">,</span> <span class="n">blobs</span><span class="p">,</span> <span class="p">{</span>
         <span class="s1">&#39;radius_cutoff&#39;</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span>
-        <span class="s1">&#39;cnn_cutoff&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+        <span class="s1">&#39;similarity_cutoff&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
         <span class="s1">&#39;member_cutoff&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
         <span class="s1">&#39;max_clusters&#39;</span><span class="p">:</span> <span class="kc">None</span>
         <span class="p">}),</span>
     <span class="p">(</span><span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="n">no_structure</span><span class="p">,</span> <span class="p">{</span>
         <span class="s1">&#39;radius_cutoff&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
-        <span class="s1">&#39;cnn_cutoff&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+        <span class="s1">&#39;similarity_cutoff&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
         <span class="s1">&#39;member_cutoff&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
         <span class="s1">&#39;max_clusters&#39;</span><span class="p">:</span> <span class="kc">None</span>
         <span class="p">}),</span>
@@ -590,38 +621,38 @@ Packages:
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.500     20        100       None      2         0.500     0.000     00:00:0.173
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        100       None      2         0.500     0.000     00:00:0.119
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.500     20        2         None      2         0.500     0.000     00:00:0.193
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        2         None      2         0.500     0.000     00:00:0.134
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.280     20        20        None      3         0.338     0.114     00:00:0.254
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.280     20        20        None      3         0.338     0.114     00:00:0.176
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.290     30        5         None      3         0.319     0.050     00:00:0.160
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.290     30        5         None      3         0.319     0.050     00:00:0.136
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.400     20        2         None      3         0.334     0.001     00:00:0.247
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.400     20        2         None      3         0.334     0.001     00:00:0.239
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.500     20        1         None      1         1.000     0.000     00:00:0.124
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        1         None      1         1.000     0.000     00:00:0.115
 -----------------------------------------------------------------------------------------------
 
 
@@ -637,11 +668,11 @@ Packages:
 <p>When <em>raw</em> input data is presented to a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> on creation without specifying anything else, the obtained <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> object aggregates the needed clustering components, assuming that it got point coordinates as a sequence of sequences. The neighbourhood of a specific point will be collected brute-force by computing the (Euclidean) distances to all other points and comparing them to the radius cutoff. This will be the slowest possible approach but it has fairly conservative memory
 usage.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clustering components used by default (&quot;coordinates&quot; recipe)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">helper_base</span><span class="o">.</span><span class="n">indent_at_parens</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">clustering</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">indent_at_parens</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">clustering</span><span class="p">)))</span>
 </pre></div>
 </div>
 </div>
@@ -651,8 +682,10 @@ usage.</p>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Clustering(
-    input_data=InputDataExtComponentsMemoryview,
-    fitter=FitterExtBFS(
+    input_data=InputDataExtComponentsMemoryview(
+        components of 2000 points in 2 dimensions
+        ),
+    fitter=FitterExtCommonNNBFS(
         ngetter=NeighboursGetterExtBruteForce(
             dgetter=DistanceGetterExtMetric(
                 metric=MetricExtEuclideanReduced
@@ -660,12 +693,12 @@ Clustering(
             sorted=False,
             selfcounting=True
             ),
-        na=NeighboursExtVectorCPPUnorderedSet,
-        nb=NeighboursExtVectorCPPUnorderedSet,
+        na=NeighboursExtVectorUnorderedSet,
+        nb=NeighboursExtVectorUnorderedSet,
         checker=SimilarityCheckerExtSwitchContains,
         queue=QueueExtFIFOQueue
         ),
-    hfitter=None,
+    hierarchical_fitter=None,
     predictor=None
     )
 </pre></div></div>
@@ -674,7 +707,7 @@ Clustering(
 <section id="CommonNN-clustering-with-pre-computed-distances">
 <h2>CommonNN clustering with pre-computed distances<a class="headerlink" href="#CommonNN-clustering-with-pre-computed-distances" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
@@ -713,38 +746,38 @@ Clustering(
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.500     20        100       None      2         0.500     0.000     00:00:0.091
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        100       None      2         0.500     0.000     00:00:0.069
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.500     20        2         None      2         0.500     0.000     00:00:0.110
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        2         None      2         0.500     0.000     00:00:0.084
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.280     20        20        None      3         0.338     0.114     00:00:0.139
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.280     20        20        None      3         0.338     0.114     00:00:0.106
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.290     30        5         None      3         0.319     0.050     00:00:0.084
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.290     30        5         None      3         0.319     0.050     00:00:0.079
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.400     20        2         None      3         0.334     0.001     00:00:0.187
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.400     20        2         None      3         0.334     0.001     00:00:0.183
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.500     20        1         None      1         1.000     0.000     00:00:0.071
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        1         None      1         1.000     0.000     00:00:0.066
 -----------------------------------------------------------------------------------------------
 
 
@@ -760,11 +793,11 @@ Clustering(
 <p>When <em>raw</em> input data is presented to a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> on creation in terms of a dense distance matrix, the “distances” recipe can be chosen to make the obtained <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> object aggregate the needed clustering components. The neighbourhood of a specific point will be collected brute-force by looking up distances from the input data. This will be somewhat faster as no distances need to be calculated during the clustering but it has a high memory demand. It also allows to leverage smart
 external methods for the task of the distance calculation.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clustering components used by the &quot;distance&quot; recipe</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">helper_base</span><span class="o">.</span><span class="n">indent_at_parens</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">clustering_dist</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">indent_at_parens</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">clustering_dist</span><span class="p">)))</span>
 </pre></div>
 </div>
 </div>
@@ -774,8 +807,10 @@ external methods for the task of the distance calculation.</p>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Clustering(
-    input_data=InputDataExtComponentsMemoryview,
-    fitter=FitterExtBFS(
+    input_data=InputDataExtComponentsMemoryview(
+        components of 2000 points in 2000 dimensions
+        ),
+    fitter=FitterExtCommonNNBFS(
         ngetter=NeighboursGetterExtBruteForce(
             dgetter=DistanceGetterExtMetric(
                 metric=MetricExtPrecomputed
@@ -783,12 +818,12 @@ Clustering(
             sorted=False,
             selfcounting=True
             ),
-        na=NeighboursExtVectorCPPUnorderedSet,
-        nb=NeighboursExtVectorCPPUnorderedSet,
+        na=NeighboursExtVectorUnorderedSet,
+        nb=NeighboursExtVectorUnorderedSet,
         checker=SimilarityCheckerExtSwitchContains,
         queue=QueueExtFIFOQueue
         ),
-    hfitter=None,
+    hierarchical_fitter=None,
     predictor=None
     )
 </pre></div></div>
@@ -797,7 +832,7 @@ Clustering(
 <section id="CommonNN-clustering-with-pre-computed-neighbourhoods">
 <h2>CommonNN clustering with pre-computed neighbourhoods<a class="headerlink" href="#CommonNN-clustering-with-pre-computed-neighbourhoods" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
@@ -839,37 +874,37 @@ Clustering(
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.500     20        100       None      2         0.500     0.000     00:00:0.045
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        100       None      2         0.500     0.000     00:00:0.033
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.500     20        2         None      2         0.500     0.000     00:00:0.063
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        2         None      2         0.500     0.000     00:00:0.046
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.280     20        20        None      3         0.338     0.114     00:00:0.075
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.280     20        20        None      3         0.338     0.114     00:00:0.056
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
+#points   r         nc        min       max       #clusters %largest  %noise    time
 2000      0.290     30        5         None      3         0.319     0.050     00:00:0.038
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.400     20        2         None      3         0.334     0.001     00:00:0.135
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.400     20        2         None      3         0.334     0.001     00:00:0.133
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
+#points   r         nc        min       max       #clusters %largest  %noise    time
 2000      0.500     20        1         None      1         1.000     0.000     00:00:0.030
 -----------------------------------------------------------------------------------------------
 
@@ -887,11 +922,11 @@ Clustering(
 calculation.</p>
 <p>Note, that the “neighbourhoods” recipe requires the <em>raw</em> neighbourhoods in the concrete format of a matrix in which the neighbourhoods of individual points are padded to the length of the largest neighbourhood. If neighbourhoods are presented in terms of a sequence of sequences (with varying length) as one would get from a tree query to <code class="docutils literal notranslate"><span class="pre">sklearn.neighbors.KDTree</span></code>, this can be transformed into the suitable format using the preparation hook <code class="docutils literal notranslate"><span class="pre">hooks.prepare_neighbourhoods</span></code>.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clustering components used by the &quot;distance&quot; recipe</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">helper_base</span><span class="o">.</span><span class="n">indent_at_parens</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">clustering_neighbourhoods</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">indent_at_parens</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">clustering_neighbourhoods</span><span class="p">)))</span>
 </pre></div>
 </div>
 </div>
@@ -901,27 +936,29 @@ calculation.</p>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Clustering(
-    input_data=InputDataExtNeighbourhoodsMemoryview,
-    fitter=FitterExtBFS(
+    input_data=InputDataExtNeighbourhoodsMemoryview(
+        neighbourhoods of 2000 points
+        ),
+    fitter=FitterExtCommonNNBFS(
         ngetter=NeighboursGetterExtLookup(
             sorted=False,
             selfcounting=True
             ),
-        na=NeighboursExtVectorCPPUnorderedSet,
-        nb=NeighboursExtVectorCPPUnorderedSet,
+        na=NeighboursExtVectorUnorderedSet,
+        nb=NeighboursExtVectorUnorderedSet,
         checker=SimilarityCheckerExtSwitchContains,
         queue=QueueExtFIFOQueue
         ),
-    hfitter=None,
+    hierarchical_fitter=None,
     predictor=None
     )
 </pre></div></div>
 </div>
 </section>
-<section id="Common-nearest-neighbours-clustering-with-pre-computed-neighbourhoods-(sorted-by-member-index)">
-<h2>Common-nearest-neighbours clustering with pre-computed neighbourhoods (sorted by member index)<a class="headerlink" href="#Common-nearest-neighbours-clustering-with-pre-computed-neighbourhoods-(sorted-by-member-index)" title="Permalink to this heading">¶</a></h2>
+<section id="CommonNN-clustering-with-pre-computed-neighbourhoods-(sorted-by-member-index)">
+<h2>CommonNN clustering with pre-computed neighbourhoods (sorted by member index)<a class="headerlink" href="#CommonNN-clustering-with-pre-computed-neighbourhoods-(sorted-by-member-index)" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
@@ -967,37 +1004,37 @@ Clustering(
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.500     20        100       None      2         0.500     0.000     00:00:0.004
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        100       None      2         0.500     0.000     00:00:0.003
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.500     20        2         None      2         0.500     0.000     00:00:0.005
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        2         None      2         0.500     0.000     00:00:0.004
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.280     20        20        None      3         0.338     0.114     00:00:0.007
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.280     20        20        None      3         0.338     0.114     00:00:0.006
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.290     30        5         None      3         0.319     0.050     00:00:0.005
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.290     30        5         None      3         0.319     0.050     00:00:0.004
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.400     20        2         None      3         0.334     0.001     00:00:0.014
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.400     20        2         None      3         0.334     0.001     00:00:0.011
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
+#points   r         nc        min       max       #clusters %largest  %noise    time
 2000      0.500     20        1         None      1         1.000     0.000     00:00:0.004
 -----------------------------------------------------------------------------------------------
 
@@ -1013,11 +1050,11 @@ Clustering(
 </div>
 <p>Pre-computed neighbourhood information can be additionally sorted in terms of the indices of the members (i.e. so that within each neighbourhood the members are stored in increasing order of there index in the data set). While this has the same memory demand as using unsorted neighbourhoods, it offers the fastest clustering.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[54]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clustering components used by the &quot;distance&quot; recipe</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">helper_base</span><span class="o">.</span><span class="n">indent_at_parens</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">clustering_neighbourhoods_sorted</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">indent_at_parens</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">clustering_neighbourhoods_sorted</span><span class="p">)))</span>
 </pre></div>
 </div>
 </div>
@@ -1027,8 +1064,10 @@ Clustering(
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Clustering(
-    input_data=InputDataExtNeighbourhoodsMemoryview,
-    fitter=FitterExtBFS(
+    input_data=InputDataExtNeighbourhoodsMemoryview(
+        neighbourhoods of 2000 points
+        ),
+    fitter=FitterExtCommonNNBFS(
         ngetter=NeighboursGetterExtLookup(
             sorted=True,
             selfcounting=True
@@ -1038,16 +1077,16 @@ Clustering(
         checker=SimilarityCheckerExtScreensorted,
         queue=QueueExtFIFOQueue
         ),
-    hfitter=None,
+    hierarchical_fitter=None,
     predictor=None
     )
 </pre></div></div>
 </div>
 </section>
-<section id="Common-nearest-neighbours-clustering-with-pre-computed-neighbourhoods-(sorted-by-member-index-and-neighbour-count)">
-<h2>Common-nearest-neighbours clustering with pre-computed neighbourhoods (sorted by member index and neighbour count)<a class="headerlink" href="#Common-nearest-neighbours-clustering-with-pre-computed-neighbourhoods-(sorted-by-member-index-and-neighbour-count)" title="Permalink to this heading">¶</a></h2>
+<section id="CommonNN-clustering-with-pre-computed-neighbourhoods-(sorted-by-member-index-and-neighbour-count)">
+<h2>CommonNN clustering with pre-computed neighbourhoods (sorted by member index and neighbour count)<a class="headerlink" href="#CommonNN-clustering-with-pre-computed-neighbourhoods-(sorted-by-member-index-and-neighbour-count)" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[53]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
@@ -1105,37 +1144,37 @@ Clustering(
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.500     20        100       None      2         0.500     0.000     00:00:0.004
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        100       None      2         0.500     0.000     00:00:0.003
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.500     20        2         None      2         0.500     0.000     00:00:0.004
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        2         None      2         0.500     0.000     00:00:0.005
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-2000      0.280     20        20        None      3         0.338     0.114     00:00:0.005
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.280     20        20        None      3         0.338     0.114     00:00:0.006
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
+#points   r         nc        min       max       #clusters %largest  %noise    time
 2000      0.290     30        5         None      3         0.319     0.050     00:00:0.004
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
+#points   r         nc        min       max       #clusters %largest  %noise    time
 2000      0.400     20        2         None      3         0.334     0.001     00:00:0.011
 -----------------------------------------------------------------------------------------------
 
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
+#points   r         nc        min       max       #clusters %largest  %noise    time
 2000      0.500     20        1         None      1         1.000     0.000     00:00:0.003
 -----------------------------------------------------------------------------------------------
 
@@ -1151,11 +1190,11 @@ Clustering(
 </div>
 <p>As a further addition to the sorting of each neighbourhood by member indices, it is possible to sort all neighbourhoods according to their member count (i.e. so that the point with the highest neighbour count becomes the first point in the data set). It is not guaranteed but this additional sorting can make the clustering even more efficient.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[55]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clustering components used by the &quot;distance&quot; recipe</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">helper_base</span><span class="o">.</span><span class="n">indent_at_parens</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">clustering_neighbourhoods_sorted</span><span class="p">)))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">indent_at_parens</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">clustering_neighbourhoods_sorted</span><span class="p">)))</span>
 </pre></div>
 </div>
 </div>
@@ -1165,8 +1204,10 @@ Clustering(
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Clustering(
-    input_data=InputDataExtNeighbourhoodsMemoryview,
-    fitter=FitterExtBFS(
+    input_data=InputDataExtNeighbourhoodsMemoryview(
+        neighbourhoods of 2000 points
+        ),
+    fitter=FitterExtCommonNNBFS(
         ngetter=NeighboursGetterExtLookup(
             sorted=True,
             selfcounting=True
@@ -1176,7 +1217,7 @@ Clustering(
         checker=SimilarityCheckerExtScreensorted,
         queue=QueueExtFIFOQueue
         ),
-    hfitter=None,
+    hierarchical_fitter=None,
     predictor=None
     )
 </pre></div></div>
@@ -1219,7 +1260,7 @@ Clustering(
 <li class="toctree-l2"><a class="reference internal" href="advanced_usage.html">Advanced usage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interface_demo.html">Demonstration of (generic) interfaces</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hierarchical_clustering_basics.html">Hierarchical clustering basics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="algorithm_explained.html">Density based clustering basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="algorithm_explained.html">Density-based clustering basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="md_example.html">Molecular dynamics application example</a></li>
 </ul>
 </li>
