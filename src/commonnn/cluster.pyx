@@ -97,6 +97,8 @@ class Clustering:
                         :obj:`~commonnn.recipes.REGISTERED_RECIPES`
                     )
                     * A recipe, i.e. a mapping of component keywords to component types
+            **recipe_kwargs: Passed on to override entries in the base `recipe`. Use double
+                underscores in key names instead of dots, e.g. fitter__na instead of fitter.na.
         """
 
         builder = recipes.Builder(recipe, **recipe_kwargs)
@@ -208,9 +210,9 @@ class Clustering:
 
     def __str__(self):
         attr_str = ", ".join([
-            f"input_data={self._bundle._input_data}",
+            f"input_data={self._bundle._input_data if self._bundle is not None else None}",
             f"fitter={self._fitter}",
-            f"hierarchical_fitterh={self._hierarchical_fitter}",
+            f"hierarchical_fitter={self._hierarchical_fitter}",
             f"predictor={self._predictor}",
         ])
 
@@ -219,7 +221,7 @@ class Clustering:
     def __getitem__(self, key):
         return self._bundle.get_child(key)
 
-    def __setitem___(self, key, value):
+    def __setitem__(self, key, value):
         self._bundle.add_child(key, value)
 
     def _fit(

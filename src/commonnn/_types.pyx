@@ -421,7 +421,7 @@ class InputDataComponents(InputData):
         """Return input data as NumPy array of shape (#points, #components)"""
 
     def __str__(self):
-        return f"components of {self.n_points} points in {self.n_dim} dimensions"
+        return f"{type(self).__name__}(components of {self.n_points} points in {self.n_dim} dimensions)"
 
 
 class InputDataPairwiseDistances(InputData):
@@ -432,7 +432,7 @@ class InputDataPairwiseDistances(InputData):
         """Return the pairwise distance between two points"""
 
     def __str__(self):
-        return f"distances of {self.n_points} points"
+        return f"{type(self).__name__}(distances of {self.n_points} points)"
 
 
 class InputDataPairwiseDistancesComputer(InputDataPairwiseDistances):
@@ -455,7 +455,7 @@ class InputDataNeighbourhoods(InputData):
         """Return a member for point"""
 
     def __str__(self):
-        return f"neighbourhoods of {self.n_points} points"
+        return f"{type(self).__name__}(neighbourhoods of {self.n_points} points)"
 
 class InputDataNeighbourhoodsComputer(InputDataNeighbourhoods):
     """Extends the neighbourhood input data interface for computable neighbourhoods"""
@@ -1917,13 +1917,13 @@ class NeighboursGetterBruteForce(NeighboursGetter):
         self._distance_getter = distance_getter
 
     def __str__(self):
-        attr_str = ",".join([
-            f"    dgetter={self._distance_getter}",
-            f"\n    sorted={self._is_sorted}",
-            f"\n    selfcounting={self._is_selfcounting}",
+        attr_str = ", ".join([
+            f"dgetter={self._distance_getter}",
+            f"sorted={self._is_sorted}",
+            f"selfcounting={self._is_selfcounting}",
         ])
 
-        return f"{type(self).__name__}(\n{attr_str}\n)"
+        return f"{type(self).__name__}({attr_str})"
 
     @classmethod
     def get_builder_kwargs(cls):
@@ -2004,13 +2004,13 @@ cdef class NeighboursGetterExtBruteForce(NeighboursGetterExtInterface):
         pass
 
     def __str__(self):
-        attr_str = ",".join([
-            f"    dgetter={self._distance_getter}",
-            f"\n    sorted={self.is_sorted}",
-            f"\n    selfcounting={self.is_selfcounting}",
+        attr_str = ", ".join([
+            f"dgetter={self._distance_getter}",
+            f"sorted={self.is_sorted}",
+            f"selfcounting={self.is_selfcounting}",
         ])
 
-        return f"{type(self).__name__}(\n{attr_str}\n)"
+        return f"{type(self).__name__}({attr_str})"
 
     cdef void _get(
             self,

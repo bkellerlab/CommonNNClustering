@@ -11,3 +11,7 @@ div.body h5,
 div.body h6 {
     text-align: left;
 }
+
+dl {
+    margin-bottom: 15px;
+}
