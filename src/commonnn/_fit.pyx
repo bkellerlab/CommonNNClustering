@@ -88,6 +88,7 @@ class FitterCommonNN(Fitter):
                 kwargs["start_label"] = max(old_label_set) + 1
 
         cluster_params = self.make_parameters(**kwargs)
+        original_params = self.make_parameters(original=True, **kwargs)
 
         _, execution_time = report.timed(self._fit)(
             bundle._input_data, bundle._labels, cluster_params
@@ -96,7 +97,7 @@ class FitterCommonNN(Fitter):
         if info:
             new_label_set = bundle._labels.to_set()
             params = {
-                k: (cluster_params.radius_cutoff, cluster_params.similarity_cutoff)
+                k: (original_params.radius_cutoff, original_params.similarity_cutoff)
                 for k in new_label_set - old_label_set
                 if k != 0
                 }
@@ -108,9 +109,9 @@ class FitterCommonNN(Fitter):
             old_params = bundle._labels.meta.get("params", {})
             old_params.update(meta["params"])
             meta["params"] = old_params
-            bundle._labels.meta.update(meta)
+            bundle._labels._meta = meta
 
-        return execution_time, self.make_parameters(original=True, **kwargs)
+        return execution_time, original_params
 
     def make_parameters(
             self, similarity_offset=0, original=False, **kwargs) -> Type["ClusterParameters"]:
@@ -258,6 +259,7 @@ class PredictorCommonNN(Predictor):
                 )
 
         cluster_params = self.make_parameters(**kwargs)
+        original_params = self.make_parameters(original=True, **kwargs)
 
         if clusters is None:
            clusters = bundle._labels.to_set() - {0}
@@ -272,7 +274,7 @@ class PredictorCommonNN(Predictor):
 
         if info:
             params = {
-                k: (cluster_params.radius_cutoff, cluster_params.similarity_cutoff)
+                k: (original_params.radius_cutoff, original_params.similarity_cutoff)
                 for k in clusters
                 if k != 0
                 }
@@ -284,7 +286,7 @@ class PredictorCommonNN(Predictor):
             old_params = other._labels.meta.get("params", {})
             old_params.update(meta["params"])
             meta["params"] = old_params
-            other._labels.meta.update(meta)
+            other._labels._meta = meta
 
         other._labels.meta["frozen"] = True
 
@@ -1208,11 +1210,13 @@ class HierarchicalFitterRepeat(HierarchicalFitter):
                         for k in parent_bundle._labels.to_set()
                         if k != 0
                     }
-                    parent_bundle._labels.meta.update({
+                    meta = parent_bundle._labels.meta
+                    meta.update({
                         "params": params,
                         "reference": weakref.proxy(parent_bundle),
                         "origin": "fit"
                     })
+                    parent_bundle._labels._meta = meta
 
                 parent_bundle.isolate(isolate_input_data=False)
 
