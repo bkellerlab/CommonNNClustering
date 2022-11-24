@@ -364,7 +364,7 @@ Packages:
     numpy: 1.23.3
     scipy: 1.9.1
     sklearn: 1.1.2
-    commonnn: 0.0.1
+    commonnn: 0.0.2
 </pre></div></div>
 </div>
 <p>We use <a class="reference external" href="https://matplotlib.org/">Matplotlib</a> to create plots. The <code class="docutils literal notranslate"><span class="pre">matplotlibrc</span></code> file in the root directory of the <code class="docutils literal notranslate"><span class="pre">CommonNNClustering</span></code> repository is used to customize the appearance of the plots.</p>
@@ -492,7 +492,7 @@ Packages:
 </div>
 <p>We have two maxima in the distribution. An intuitive classification would separate the two peaks into two different clusters. In threshold-based density-based clustering we define the two clusters as the regions of high density where we have low density in between. By applying an iso-value cutoff on the density, we can specify what should be considered high or low density. In a dense region, the density is at least as high as the density criterion requires.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">density_criterion</span> <span class="o">=</span> <span class="mf">0.1</span>
@@ -553,10 +553,10 @@ Packages:
 <img alt="../_images/tutorial_algorithm_explained_16_0.png" src="../_images/tutorial_algorithm_explained_16_0.png" />
 </div>
 </div>
-<p>Choosing the density criterion in this way, defines the two clusters as we would have expected. We can label the regions, i.e. we can assign a number to them, that denotes their cluster membership. We use 0 to indicate that a region is not part of any cluster and positive integers as cluster numbers. When we vary the density criterion, we can influence the outcome of the clustering by changing the definition of what is dense enough to be a cluster. This could leave us with both density maxima in
-one cluster, clusters of different broadness, or no cluster at all.</p>
+<p>Choosing the density criterion in this way, defines the two clusters as we would have expected. We can label the regions, i.e. we can assign a number to them, that denotes their cluster membership. We use 0 to indicate that a region is not part of any cluster and positive integers as cluster numbers. When we vary the density criterion, we can influence the outcome of the clustering by changing the definition of what is dense enough to be a cluster. This could leave us with both the density
+maxima in one cluster, clusters of different broadness, or no cluster at all.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">Ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
@@ -604,7 +604,7 @@ one cluster, clusters of different broadness, or no cluster at all.</p>
 <p>When we operate on data sets (in maybe high dimensional spaces), however, we normally do not have a continuous description of the density that we can directly use. Instead we may have sample points from an underlying (unknown) distribution. To apply a density-based clustering on them, we need to approximate the density in some way. For this approximation, a number of different possibilities exist, which provide a different notion of what (local) density is or how it could be estimated from
 scattered data. To illustrate this, let’s draw samples from the above used bimodal distribution to emulate data points.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">distribution</span> <span class="o">=</span> <span class="n">multigauss_distribution</span><span class="p">(</span>
@@ -648,10 +648,10 @@ scattered data. To illustrate this, let’s draw samples from the above used bim
 <p>In general, point density can be expressed in simple terms by the number of points <span class="math notranslate nohighlight">\(n\)</span> found on a volume <span class="math notranslate nohighlight">\(V\)</span>.</p>
 <section id="DBSCAN">
 <h3>DBSCAN<a class="headerlink" href="#DBSCAN" title="Permalink to this heading">¶</a></h3>
-<p>In DBSCAN, local point density is expressed for each point as the number of neighbouring points <span class="math notranslate nohighlight">\(k_r\)</span> with respect to a neighbour search radius <span class="math notranslate nohighlight">\(r\)</span>. The density criterion is formulated as such: Points that have at least <span class="math notranslate nohighlight">\(k\)</span> nearest neighbours in their neighbourhood <span class="math notranslate nohighlight">\(r\)</span> qualify as part of a dense region, i.e. a cluster. Points that fulfill the density criterion can be also referred to as <em>core points</em>. Additionally, it is possible to describe points that do not fulfill the
-density criterion themselves but are neighbours of those core points as <em>edge points</em>. For our samples above this could look as shown below if we choose the density criterion to be <span class="math notranslate nohighlight">\(k=1\)</span> and <span class="math notranslate nohighlight">\(r=0.5\)</span>. To determine the number of neighbours for each point, we calculated pairwise point distances and compare them to <span class="math notranslate nohighlight">\(r\)</span>.</p>
+<p>In DBSCAN, local point density is expressed for each point as the number of neighbouring points <span class="math notranslate nohighlight">\(n_r\)</span> with respect to a neighbour search radius <span class="math notranslate nohighlight">\(r\)</span>. The density criterion is formulated as such: Points that have at least <span class="math notranslate nohighlight">\(n_\mathrm{c}\)</span> nearest neighbours in their neighbourhood <span class="math notranslate nohighlight">\(r\)</span> qualify as part of a dense region, i.e. a cluster. Points that fulfill the density criterion can be also referred to as <em>core points</em>. Additionally, it is possible to describe points that do not
+fulfill the density criterion themselves but are neighbours of those core points as <em>edge points</em>. For our samples above this could look as shown below if we choose the density criterion to be <span class="math notranslate nohighlight">\(n_\mathrm{c}=1\)</span> and <span class="math notranslate nohighlight">\(r=0.5\)</span>. To determine the number of neighbours for each point, we calculated pairwise point distances and compare them to <span class="math notranslate nohighlight">\(r\)</span>.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Density criterion</span>
@@ -671,7 +671,7 @@ density criterion themselves but are neighbours of those core points as <em>edge
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -682,7 +682,7 @@ array([ True,  True,  True,  True,  True,  True,  True,  True, False,
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">xlimit</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
@@ -737,8 +737,8 @@ additionally need to define when two points are actually part of the same dense 
 </section>
 <section id="Common-nearest-neighbour-clustering">
 <h3>Common-nearest-neighbour clustering<a class="headerlink" href="#Common-nearest-neighbour-clustering" title="Permalink to this heading">¶</a></h3>
-<p>While the DBSCAN approach to threshold-based density-based clustering estimates point density locally per point, we determine the density between two points in CommonNN clustering. As a consequence, checking the density-criterion and defining if two points are connected become essentially the same thing. Two points that fulfill the density requirement together are automatically identified as part of the same cluster. The density threshold (points per volume) is formulated as such: two points
-that share a minimum number of <span class="math notranslate nohighlight">\(n_\mathrm{c}\)</span> common neighbours with respect to a neighbour search radius <em>r</em> are considered <em>dense</em>. The figure below illustrates this. The green and the blue point pass the density-criterion check for CommonNN cutoffs of <span class="math notranslate nohighlight">\(n_\mathrm{c} \leq2\)</span> because they share the two yellow points as their common neighbours.</p>
+<p>While the DBSCAN approach to threshold-based density-based clustering estimates point density locally per point, we determine the density with respect to two points in CommonNN clustering. As a consequence, checking the density-criterion and defining if two points are connected become essentially the same thing. Two points that fulfill the density requirement together are automatically identified as part of the same cluster. The density threshold (points per volume) is formulated as such: two
+points that share a minimum number of <span class="math notranslate nohighlight">\(n_\mathrm{c}\)</span> common neighbours with respect to a neighbour search radius <em>r</em> are considered <em>dense</em>. The figure below illustrates this. The green and the blue point pass the density-criterion check for CommonNN cutoffs of <span class="math notranslate nohighlight">\(n_\mathrm{c} \leq2\)</span> because they share the two yellow points as their common neighbours.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
@@ -831,15 +831,15 @@ that share a minimum number of <span class="math notranslate nohighlight">\(n_\m
 <img alt="../_images/tutorial_algorithm_explained_30_1.png" src="../_images/tutorial_algorithm_explained_30_1.png" />
 </div>
 </div>
-<p>How the density criterion check and the clustering could be implemented should be explained further down.</p>
+<p>How the density criterion check and the clustering could be implemented should be explained further below.</p>
 </section>
 <section id="Summary-on-density-criteria">
 <h3>Summary on density criteria<a class="headerlink" href="#Summary-on-density-criteria" title="Permalink to this heading">¶</a></h3>
 <p>A point is part of a dense region if the point …</p>
 <ul class="simple">
-<li><p>DBSCAN: … has at least <span class="math notranslate nohighlight">\(k_r\)</span> neighbours within a radius <span class="math notranslate nohighlight">\(r\)</span></p></li>
-<li><p>Jarvis-Patrick: … shares at least <span class="math notranslate nohighlight">\(c\)</span> common neighbours with a another point among their <span class="math notranslate nohighlight">\(k\)</span> nearest neighbours</p></li>
-<li><p>CommonNN: … shares at least <span class="math notranslate nohighlight">\(c\)</span> common neighbours with a another point with respect to a radius <span class="math notranslate nohighlight">\(r\)</span></p></li>
+<li><p>DBSCAN: … has at least <span class="math notranslate nohighlight">\(n_\mathrm{c}\)</span> neighbours within a radius <span class="math notranslate nohighlight">\(r\)</span></p></li>
+<li><p>Jarvis-Patrick: … shares at least <span class="math notranslate nohighlight">\(n_\mathrm{c}\)</span> common neighbours with another point among their <span class="math notranslate nohighlight">\(k\)</span> nearest neighbours</p></li>
+<li><p>CommonNN: … shares at least <span class="math notranslate nohighlight">\(n_\mathrm{c}\)</span> common neighbours with another point with respect to a radius <span class="math notranslate nohighlight">\(r\)</span></p></li>
 </ul>
 <p>Two points are part of the same dense region … - DBSCAN: … if at least one of them is dense and the two points are neighbours - Jarvis-Patrick: … if they together pass the density criterion - CommonNN: … if they together pass the density criterion</p>
 </section>
@@ -848,8 +848,8 @@ that share a minimum number of <span class="math notranslate nohighlight">\(n_\m
 <h2>Identification of connected components of points<a class="headerlink" href="#Identification-of-connected-components-of-points" title="Permalink to this heading">¶</a></h2>
 <p>Classifying points as part of a dense or a sparse region according to a density criterion, is only one aspect of assigning points to clusters. We still need to identify groups of points that are part of the same region. In this context, the term <em>density reachable</em> is often used to describe the situation where a point is directly connected to a dense point. We also use the term <em>density connected</em> for points that are part of the same dense region, i.e. they are directly or indirectly connected
 to any other point in the region by a chain of density reachable points. In other words, it is not enough to know which points are dense but we also need to be aware of the relationship between dense points. As mentioned earlier, for CommonNN clustering density reachability is a direct consequence of how the density-criterion is checked. For DBSCAN, this is a separate definition.</p>
-<p>When we express the connectivity relationship between points in a graph, the problem of identifying clusters of density connected points comes down to finding connected components of nodes within this graph. In the above example, we where primarily interested in the information if a point was part of a dense region by checking the density criterion. Let’s now construct a density graph instead in which each dense point constitutes a node and each vertex represent the density reachability between
-two points. We neglect the concept of edge points (points that are not dense but density reachable from a dense point) for the sake of simplicity here. It should be noted, that the inclusion of edge points may also lead to ambiguous clustering results in the case where a low density point is a neighbour of two or more dense points in different clusters.</p>
+<p>When we express the connectivity relationship between points in a graph, the problem of identifying clusters of density connected points comes down to finding connected components of nodes within this graph. In the above example, we where primarily interested in the information if a point was part of a dense region by checking the density criterion. Let’s now construct a density graph instead in which each dense point constitutes a node and each edge represents the density reachability between
+two points. We neglect the concept of edge points (points that are not dense but density reachable from a dense point) for the sake of simplicity here. It should be noted, that the inclusion of edge points may lead to ambiguous clustering results in the case where a low density point is a neighbour of two or more dense points in different clusters.</p>
 <section id="id1">
 <h3>DBSCAN<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
 <div class="nbinput docutils container">
@@ -1331,7 +1331,7 @@ two points. We neglect the concept of edge points (points that are not dense but
 </div>
 <center><video controls src="algorithm_explained/iteration.mp4" height="500px"/></center><section id="Debug-mode">
 <h3>Debug mode<a class="headerlink" href="#Debug-mode" title="Permalink to this heading">¶</a></h3>
-<p>In the current version of the <code class="docutils literal notranslate"><span class="pre">cnnclustering</span></code> package, CommonNN clustering is in detail quite differently implemented than shown in the previous section. To get a closer look at what is going on during a clustering, we provide a fitter type that can yield the state of the assignment during a clustering procedure.</p>
+<p>In the current version of the <code class="docutils literal notranslate"><span class="pre">commonnn</span></code> package, CommonNN clustering is in detail implemented quite differently than shown in the previous section. To get a closer look at what is going on during a clustering, we provide a <code class="docutils literal notranslate"><span class="pre">Fitter</span></code> type that can yield the state of the assignment during a clustering procedure.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
@@ -1346,35 +1346,52 @@ two points. We neglect the concept of edge points (points that are not dense but
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Clustering(input_data=InputDataExtComponentsMemoryview, fitter=FitterExtBFSDebug(ngetter=NeighboursGetterExtBruteForce(dgetter=DistanceGetterExtMetric(metric=MetricExtEuclideanReduced), sorted=False, selfcounting=True), na=NeighboursExtVectorCPPUnorderedSet, nb=NeighboursExtVectorCPPUnorderedSet, checker=SimilarityCheckerExtSwitchContains, queue=QueueExtFIFOQueue, verbose=True, yielding=True), predictor=None)
+Clustering(input_data=InputDataExtComponentsMemoryview(components of 200 points in 2 dimensions), fitter=FitterCommonNNBFSDebug(ngetter=NeighboursGetterExtBruteForce(dgetter=DistanceGetterExtMetric(metric=MetricExtEuclideanReduced), sorted=False, selfcounting=True), na=NeighboursExtVectorUnorderedSet, nb=NeighboursExtVectorUnorderedSet, checker=SimilarityCheckerExtSwitchContains, queue=QueueExtFIFOQueue, verbose=True, yielding=True), hierarchical_fitter=None, predictor=None)
 </pre></div></div>
 </div>
-<p>As the <code class="docutils literal notranslate"><span class="pre">fit</span></code> method of the debug fitter <code class="docutils literal notranslate"><span class="pre">_types.FitterExtBFSDebug</span></code> is returning generator, we can not invoke it directly from the <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> object but have to call it manually.</p>
+<p>The debug fitter <code class="docutils literal notranslate"><span class="pre">_types.FitterCommonNNBFSDebug</span></code> has an additional <code class="docutils literal notranslate"><span class="pre">_fit_debug</span></code> method that is returning generator. We can not invoke it directly from the <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> object but have to call it explicitly.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">clustering</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">clustering</span><span class="o">.</span><span class="n">_input_data</span><span class="o">.</span><span class="n">n_points</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
-<span class="n">iterations</span> <span class="o">=</span> <span class="n">clustering</span><span class="o">.</span><span class="n">fitter</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
-    <span class="n">clustering</span><span class="o">.</span><span class="n">_input_data</span><span class="p">,</span>
-    <span class="n">clustering</span><span class="o">.</span><span class="n">_labels</span><span class="p">,</span>
-    <span class="n">_types</span><span class="o">.</span><span class="n">ClusterParameters</span><span class="p">(</span><span class="mf">0.7</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">clustering</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">_input_data</span><span class="o">.</span><span class="n">n_points</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+200
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">clustering</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">clustering</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">_input_data</span><span class="o">.</span><span class="n">n_points</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+<span class="n">iterations</span> <span class="o">=</span> <span class="n">clustering</span><span class="o">.</span><span class="n">fitter</span><span class="o">.</span><span class="n">_fit_debug</span><span class="p">(</span>
+    <span class="n">clustering</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">_input_data</span><span class="p">,</span>
+    <span class="n">clustering</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">_labels</span><span class="p">,</span>
+    <span class="n">clustering</span><span class="o">.</span><span class="n">fitter</span><span class="o">.</span><span class="n">make_parameters</span><span class="p">(</span><span class="n">radius_cutoff</span><span class="o">=</span><span class="mf">0.7</span><span class="p">,</span> <span class="n">similarity_cutoff</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
 <span class="p">)</span>
 <span class="n">iterations</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-&lt;generator at 0x7f14d9f89c10&gt;
+&lt;_cython_3_0_0a11.generator at 0x7f001dfcb060&gt;
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">state</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">iterations</span><span class="p">)</span>
@@ -1386,21 +1403,24 @@ Clustering(input_data=InputDataExtComponentsMemoryview, fitter=FitterExtBFSDebug
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-CommonNN clustering - FitterExtBFSDebug
+CommonNN clustering - FitterCommonNNBFSDebug
 ================================================================================
 200 points
-radius_cutoff                : 0.7
-similarity_cutoff            : 5
-similarity_cutoff_continuous : 0.0
-n_member_cutoff              : 5
-current_start                : 1
+radius_cutoff                : 0.48999999999999994
+similarity_cutoff            : 7
+_support_cutoff              : 6
+start_label                  : 1
 
 New source: 0
     ... new cluster 1
 </pre></div></div>
 </div>
+<div class="admonition note">
+<p><strong>Info:</strong> Note that the cluster parameters printed in this overview are different to the once specified when creating the cluster parameters. This is because the fitter is aware of the used neighbours getter and metric and adjusts the parameters as needed. In this case, the metric requires a reduced radius and the neighbourhoods are self-counting, i.e. contain one additional point that needs to be accounted for. When checking if a computed neighbourhood has enough points, the <code class="docutils literal notranslate"><span class="pre">_support_cutoff</span></code>
+is used.</p>
+</div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">state</span>
@@ -1408,7 +1428,7 @@ New source: 0
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -1417,7 +1437,7 @@ New source: 0
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">state</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">iterations</span><span class="p">)</span>
@@ -1429,7 +1449,7 @@ New source: 0
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-    ... loop over 15 neighbours
+    ... loop over 11 neighbours
         ... current neighbour 0
         ... already visited
 
@@ -1439,7 +1459,7 @@ New source: 0
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">state</span>
@@ -1447,7 +1467,7 @@ New source: 0
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -1456,7 +1476,7 @@ New source: 0
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">clustering</span><span class="o">.</span><span class="n">labels</span>
@@ -1464,7 +1484,7 @@ New source: 0
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -1481,6 +1501,7 @@ array([1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
        0, 0])
 </pre></div></div>
 </div>
+<p>In this way, one can check the state of the clustering after each cluster label assignment.</p>
 </section>
 </section>
 </section>
