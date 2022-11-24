@@ -344,7 +344,7 @@ class Clustering:
         self._predictor.predict(bundle, other, **kwargs)
 
 
-    def trim(self, Bundle bundle, protocol="shrinking", **kwargs):
+    def trim(self, Bundle bundle = None, protocol="shrinking", **kwargs):
 
         if bundle is None:
             bundle = self._bundle
@@ -357,6 +357,10 @@ class Clustering:
             _bundle.trim_shrinking(bundle)
         elif protocol == "trivial":
             _bundle.trim_trivial(bundle)
+        elif protocol == "lonechild":
+            _bundle.trim_lonechild(bundle)
+        elif protocol == "small":
+            _bundle.trim_small(bundle, **kwargs)
         else:
             raise ValueError(f"Unknown protocol {protocol}")
 

@@ -501,29 +501,71 @@ def bfs_leafs(Bundle root):
             for child in children.values():
                 q.append(child)
 
+def trim_small(Bundle bundle, member_cutoff=2):
+    """Scan cluster hierarchy for removable nodes
+
+    If a cluster's child does not have enough members, it will be removed.
+    """
+
+    def _trim_small(bundle, member_cutoff):
+        pass
+
+    _trim_small(bundle, member_cutoff)
+
+def trim_lonechild(Bundle bundle):
+    """Scan cluster hierarchy for removable nodes
+
+    If a cluster does only have one child, the child will be replaced by
+    the grandchildren.
+    """
+    def _trim_lonechild(Bundle bundle):
+        # print(bundle.alias)
+
+        if not bundle._children:
+            # print("    has no children")
+            return
+
+        while len(bundle._children) == 1:
+            # print("    has only one child")
+            _, child = bundle._children.popitem()
+            bundle._children = child._children
+            bundle._labels._meta = child._labels._meta
+
+            blabels = bundle._labels.labels
+            clabels = child._labels.labels
+            parent_indices = child._reference_indices.parent
+            for i in range(child._labels.n_points):
+               blabels[parent_indices[i]] = clabels[i]
+
+        for child in bundle.children.values():
+            _trim_lonechild(child)
+
+    _trim_lonechild(bundle)
+
+    return
 
 def trim_shrinking(Bundle bundle):
     """Scan cluster hierarchy for removable nodes
 
     If a cluster does only shrink (i.e. has only one actual child with
     lower or equal member count) and does not split at any later point,
-    it children will be removed.
+    its children will be removed.
     """
     def _trim_shrinking(Bundle bundle):
 
         if not bundle._children:
             splits = will_split = False
-            print(f"{bundle.alias} has no children")
+            # print(f"{bundle.alias} has no children")
         else:
             label_set = bundle._labels.set
             label_set.discard(0)
 
             if len(label_set) <= 1:
                 splits = False
-                print(f"{bundle.alias} has not enough children")
+                # print(f"{bundle.alias} has not enough children")
             else:
                 splits = True
-                print(f"{bundle.alias} splits")
+                # print(f"{bundle.alias} splits")
 
             will_split = []
             for child in bundle.children.values():
@@ -532,10 +574,10 @@ def trim_shrinking(Bundle bundle):
                 )
 
             will_split = any(will_split)
-            print(f"Will a child of {bundle.alias} split? {will_split}")
+            # print(f"Will a child of {bundle.alias} split? {will_split}")
 
         keep = will_split or splits
-        print(f"Keep {bundle.alias}? {keep}")
+        # print(f"Keep {bundle.alias}? {keep}")
         if not keep:
             bundle._labels = None
             bundle._children = None
@@ -549,7 +591,7 @@ def trim_shrinking(Bundle bundle):
 def trim_trivial(bundle=None):
     """Scan cluster hierarchy for removable nodes
 
-    If the cluster label assignments on a clustering are all zero
+    If the cluster label assignments on a bundle are all zero
     (noise), the clustering is considered trivial.  In this case,
     the labels and children are reset to `None`.
     """
