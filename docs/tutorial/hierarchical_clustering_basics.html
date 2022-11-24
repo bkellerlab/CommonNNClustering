@@ -21,7 +21,7 @@
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Density based clustering basics" href="algorithm_explained.html" />
+    <link rel="next" title="Density-based clustering basics" href="algorithm_explained.html" />
     <link rel="prev" title="Demonstration of (generic) interfaces" href="interface_demo.html" />
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
@@ -305,7 +305,13 @@ div.rendered_html tbody tr:hover {
 <p>Go to:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#Notebook-configuration"><span class="std std-ref">Notebook configuration</span></a></p></li>
-<li><p><a class="reference internal" href="#Dissimilar-blobs-showcase"><span class="std std-ref">Dissimilar blobs showcase</span></a></p></li>
+<li><p><a class="reference internal" href="#Dissimilar-blobs-showcase"><span class="std std-ref">Dissimilar blobs showcase</span></a></p>
+<ul>
+<li><p><a class="reference internal" href="#Parameter-scan"><span class="std std-ref">Parameter scan</span></a></p></li>
+<li><p><a class="reference internal" href="#Manual-hierarchical-clustering"><span class="std std-ref">Manual hierarchical clustering</span></a></p></li>
+<li><p><a class="reference internal" href="#Label-prediction"><span class="std std-ref">Label prediction</span></a></p></li>
+</ul>
+</li>
 </ul>
 <section id="Notebook-configuration">
 <h2>Notebook configuration<a class="headerlink" href="#Notebook-configuration" title="Permalink to this heading">¶</a></h2>
@@ -325,9 +331,9 @@ div.rendered_html tbody tr:hover {
 <span class="kn">from</span> <span class="nn">sklearn.preprocessing</span> <span class="kn">import</span> <span class="n">StandardScaler</span>
 <span class="kn">from</span> <span class="nn">tqdm.notebook</span> <span class="kn">import</span> <span class="n">tqdm</span>
 
-<span class="kn">import</span> <span class="nn">cnnclustering</span>
-<span class="kn">from</span> <span class="nn">cnnclustering</span> <span class="kn">import</span> <span class="n">cluster</span><span class="p">,</span> <span class="n">plot</span>
-<span class="kn">from</span> <span class="nn">cnnclustering</span> <span class="kn">import</span> <span class="n">_fit</span>
+<span class="kn">import</span> <span class="nn">commonnn</span>
+<span class="kn">from</span> <span class="nn">commonnn</span> <span class="kn">import</span> <span class="n">cluster</span><span class="p">,</span> <span class="n">plot</span>
+<span class="kn">from</span> <span class="nn">commonnn</span> <span class="kn">import</span> <span class="n">_fit</span>
 </pre></div>
 </div>
 </div>
@@ -340,7 +346,7 @@ div.rendered_html tbody tr:hover {
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Python: &quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">sys</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">))</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Packages:&quot;</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="p">[</span><span class="n">mpl</span><span class="p">,</span> <span class="n">np</span><span class="p">,</span> <span class="n">pd</span><span class="p">,</span> <span class="n">sklearn</span><span class="p">,</span> <span class="n">cnnclustering</span><span class="p">]:</span>
+<span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="p">[</span><span class="n">mpl</span><span class="p">,</span> <span class="n">np</span><span class="p">,</span> <span class="n">pd</span><span class="p">,</span> <span class="n">sklearn</span><span class="p">,</span> <span class="n">commonnn</span><span class="p">]:</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">package</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">package</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -350,13 +356,13 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Python:  3.8.8 (default, Mar 11 2021, 08:58:19)  [GCC 8.3.0]
+Python:  3.10.7 (main, Sep 27 2022, 11:41:38) [GCC 10.2.1 20210110]
 Packages:
-    matplotlib: 3.3.4
-    numpy: 1.20.1
-    pandas: 1.2.3
-    sklearn: 0.24.1
-    cnnclustering: 0.4.3
+    matplotlib: 3.6.0
+    numpy: 1.23.3
+    pandas: 1.5.0
+    sklearn: 1.1.2
+    commonnn: 0.0.2
 </pre></div></div>
 </div>
 <p>We use <a class="reference external" href="https://matplotlib.org/">Matplotlib</a> to create plots. The <code class="docutils literal notranslate"><span class="pre">matplotlibrc</span></code> file in the root directory of the <code class="docutils literal notranslate"><span class="pre">CommonNNClustering</span></code> repository is used to customize the appearance of the plots.</p>
@@ -407,8 +413,8 @@ Packages:
 </section>
 <section id="Dissimilar-blobs-showcase">
 <h2>Dissimilar blobs showcase<a class="headerlink" href="#Dissimilar-blobs-showcase" title="Permalink to this heading">¶</a></h2>
-<p>Learn in this tutorial how to use the <code class="docutils literal notranslate"><span class="pre">cnnclustering.cluster</span></code> module for step-wise hierarchical clusterings, where one cluster step does not deliver a satisfactory result. We will also show how to use a data set of reduced size for cluster exploration and how we can transfer the result to the original full size data set.</p>
-<p>We will generate a sample data set of three clusters that have very different point densities and are spatially not very well separated. As we will see, it can be non-trivial (if not impossible) to extract all three clusters with a single set of cluster parameters. We will solve the problem by extracting the clusters in a two step procedure.</p>
+<p>Learn in this tutorial how to use the <code class="docutils literal notranslate"><span class="pre">commonnn.cluster</span></code> module for step-wise hierarchical clusterings, where one cluster step does not deliver a satisfactory result. We will also show how to use a data set of reduced size for cluster exploration and how we can transfer the result to the original full size data set.</p>
+<p>We will generate a sample data set of three clusters that have very different point densities and are spatially not very well separated. As we will see, it can be non-trivial (if not impossible) to extract all three clusters with a single set of cluster parameters. We will solve the problem by extracting the clusters in a two step procedure. We refer to this kind of hierarchical approach as <em>manual</em> hierarchical clustering.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
@@ -438,7 +444,7 @@ Packages:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get basic information about the clustering instance</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">clustering</span><span class="o">.</span><span class="n">info</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">clustering</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">info</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -449,9 +455,9 @@ Packages:
 <div class="highlight"><pre>
 alias: &#39;root&#39;
 hierarchy_level: 0
-access: coordinates
+access: components
 points: 100000
-children: None
+children: 0
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -469,7 +475,7 @@ children: None
 
 <span class="n">rect</span> <span class="o">=</span> <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">get_position</span><span class="p">()</span><span class="o">.</span><span class="n">bounds</span>
 <span class="n">cax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">add_axes</span><span class="p">([</span><span class="n">rect</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">rect</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.02</span><span class="p">,</span> <span class="n">rect</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mf">0.025</span><span class="p">,</span> <span class="n">rect</span><span class="p">[</span><span class="mi">3</span><span class="p">]])</span>
-<span class="n">cbar</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">plotted</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
+<span class="n">cbar</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">plotted</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">cax</span><span class="o">=</span><span class="n">cax</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">7</span><span class="p">))</span>
 <span class="n">cbar</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s2">&quot;density&quot;</span><span class="p">,</span> <span class="n">labelpad</span><span class="o">=-</span><span class="mi">15</span><span class="p">)</span>
 <span class="n">cbar</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">set_yticklabels</span><span class="p">((</span><span class="s2">&quot;high&quot;</span><span class="p">,</span> <span class="s2">&quot;low&quot;</span><span class="p">))</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">):</span>
@@ -495,7 +501,7 @@ children: None
 </pre></div>
 </div>
 </div>
-<p>Here, we created a cluster object holding a smaller data set by using a point stride of 100, leaving us with only 1000 points that can be clustered very fast. By visual inspection, we can now clearly spot three point clouds.</p>
+<p>Here, we created a cluster object holding a smaller data set by using a point stride of 100, leaving us with only 1000 points that can be clustered very quickly. By visual inspection, we can now also clearly spot three point clouds.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
@@ -504,8 +510,8 @@ children: None
 <span class="n">fig</span><span class="p">,</span> <span class="n">Ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
 <span class="n">_</span> <span class="o">=</span> <span class="n">clustering</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">Ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ax_props</span><span class="o">=</span><span class="n">ax_props</span><span class="p">)</span>
 <span class="n">_</span> <span class="o">=</span> <span class="n">rclustering</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">Ax</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ax_props</span><span class="o">=</span><span class="n">ax_props</span><span class="p">)</span>
-<span class="n">Ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">clustering</span><span class="o">.</span><span class="n">_input_data</span><span class="o">.</span><span class="n">n_points</span><span class="si">}</span><span class="s2"> points&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
-<span class="n">Ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">rclustering</span><span class="o">.</span><span class="n">_input_data</span><span class="o">.</span><span class="n">n_points</span><span class="si">}</span><span class="s2"> points&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">Ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">clustering</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">_input_data</span><span class="o">.</span><span class="n">n_points</span><span class="si">}</span><span class="s2"> points&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="n">Ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">rclustering</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">_input_data</span><span class="o">.</span><span class="n">n_points</span><span class="si">}</span><span class="s2"> points&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -533,7 +539,7 @@ complicated data sets this approximation is not valid, but we can still get a fe
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">distances</span> <span class="o">=</span> <span class="n">pairwise_distances</span><span class="p">(</span><span class="n">rclustering</span><span class="o">.</span><span class="n">input_data</span><span class="p">)</span>
-<span class="n">distance_rclustering</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">registered_recipe_key</span><span class="o">=</span><span class="s2">&quot;distances&quot;</span><span class="p">)</span>
+<span class="n">distance_rclustering</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span><span class="n">distances</span><span class="p">,</span> <span class="n">recipe</span><span class="o">=</span><span class="s2">&quot;distances&quot;</span><span class="p">)</span>
 
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
 <span class="n">_</span> <span class="o">=</span> <span class="n">plot</span><span class="o">.</span><span class="n">plot_histogram</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">distances</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">maxima</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">maxima_props</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;order&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">})</span>
@@ -547,8 +553,8 @@ complicated data sets this approximation is not valid, but we can still get a fe
 <img alt="../_images/tutorial_hierarchical_clustering_basics_23_0.png" src="../_images/tutorial_hierarchical_clustering_basics_23_0.png" />
 </div>
 </div>
-<p>As a handy rational for a first guess on a suitable radius cutoff, we can use the first maximum in the just plotted distance distribution. For larger numbers of points, the radius can be usually smaller than for poorly sampled data sets. In this particular example, we could start with a radius cutoff of <span class="math notranslate nohighlight">\(r\approx 0.3\)</span> considering that we have a low number of points in the reduced data set. With this radius fixed, we can than vary the common-nearest-neighbours cutoff <span class="math notranslate nohighlight">\(c\)</span> to tune the
-density threshold for the clustering.</p>
+<p>As a handy rational for a first guess on a suitable radius cutoff, we can use the first maximum in the just plotted distance distribution. For larger numbers of points, the radius can be usually smaller than for poorly sampled data sets. In this particular example, we could start with a radius cutoff of say <span class="math notranslate nohighlight">\(r\approx 0.3\)</span> considering that we have a low number of points in the reduced data set. With this radius fixed, we can than vary the common-nearest-neighbours cutoff <span class="math notranslate nohighlight">\(c\)</span> to tune
+the density threshold for the clustering.</p>
 <section id="Parameter-scan">
 <h3>Parameter scan<a class="headerlink" href="#Parameter-scan" title="Permalink to this heading">¶</a></h3>
 <p>Blindly starting to cluster a data set in a happy-go-lucky attempt may already lead to a satisfactory result in some cases, but let’s tackle this problem in a more systematic way to see how different cluster parameters effect the outcome. A scan of a few parameters shows that it is difficult to extract the three clusters at once with one parameter set. We also apply a member cutoff of 10 to prevent that we obtain clusters that are definitely too small.</p>
@@ -560,7 +566,7 @@ density threshold for the clustering.</p>
 
 <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">101</span><span class="p">)):</span>
     <span class="c1"># fit from pre-calculated distances</span>
-    <span class="n">distance_rclustering</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">member_cutoff</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">distance_rclustering</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">radius_cutoff</span><span class="o">=</span><span class="n">r</span><span class="p">,</span> <span class="n">similarity_cutoff</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">member_cutoff</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -568,7 +574,7 @@ density threshold for the clustering.</p>
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "df16107008164ca69250ff066ead6a7d", "version_major": 2, "version_minor": 0}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "32dc0ae75b6b4306bcb80a07029d0742", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <p>Each cluster result will be added to the <code class="docutils literal notranslate"><span class="pre">summary</span></code> attribute of our cluster object.</p>
 <div class="nbinput docutils container">
@@ -585,28 +591,28 @@ density threshold for the clustering.</p>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-1000      0.300     0         10        None      1         0.979     0.021     00:00:0.028
+#points   r         nc        min       max       #clusters %largest  %noise    time
+1000      0.300     0         10        None      1         0.979     0.021     00:00:0.024
 -----------------------------------------------------------------------------------------------
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-1000      0.300     1         10        None      1         0.965     0.035     00:00:0.026
+#points   r         nc        min       max       #clusters %largest  %noise    time
+1000      0.300     1         10        None      1         0.965     0.035     00:00:0.024
 -----------------------------------------------------------------------------------------------
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-1000      0.300     2         10        None      1         0.950     0.050     00:00:0.026
+#points   r         nc        min       max       #clusters %largest  %noise    time
+1000      0.300     2         10        None      1         0.950     0.050     00:00:0.024
 -----------------------------------------------------------------------------------------------
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-1000      0.300     3         10        None      2         0.667     0.065     00:00:0.027
+#points   r         nc        min       max       #clusters %largest  %noise    time
+1000      0.300     3         10        None      2         0.667     0.065     00:00:0.024
 -----------------------------------------------------------------------------------------------
 
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-1000      0.300     4         10        None      3         0.665     0.087     00:00:0.027
+#points   r         nc        min       max       #clusters %largest  %noise    time
+1000      0.300     4         10        None      3         0.665     0.087     00:00:0.024
 -----------------------------------------------------------------------------------------------
 
 </pre></div></div>
@@ -620,7 +626,7 @@ density threshold for the clustering.</p>
 <span class="n">df</span> <span class="o">=</span> <span class="n">distance_rclustering</span><span class="o">.</span><span class="n">summary</span><span class="o">.</span><span class="n">to_DataFrame</span><span class="p">()</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="s1">&#39;n_clusters&#39;</span><span class="p">)</span>
 
 <span class="c1"># Show cluster results where we have 3 clusters</span>
-<span class="n">df</span><span class="p">[(</span><span class="n">df</span><span class="o">.</span><span class="n">n_clusters</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">&quot;radius_cutoff&quot;</span><span class="p">,</span> <span class="s2">&quot;cnn_cutoff&quot;</span><span class="p">])</span>
+<span class="n">df</span><span class="p">[(</span><span class="n">df</span><span class="o">.</span><span class="n">n_clusters</span> <span class="o">==</span> <span class="mi">3</span><span class="p">)]</span><span class="o">.</span><span class="n">sort_values</span><span class="p">([</span><span class="s2">&quot;radius_cutoff&quot;</span><span class="p">,</span> <span class="s2">&quot;similarity_cutoff&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
 </div>
@@ -649,7 +655,7 @@ density threshold for the clustering.</p>
       <th></th>
       <th>n_points</th>
       <th>radius_cutoff</th>
-      <th>cnn_cutoff</th>
+      <th>similarity_cutoff</th>
       <th>member_cutoff</th>
       <th>max_clusters</th>
       <th>n_clusters</th>
@@ -669,7 +675,7 @@ density threshold for the clustering.</p>
       <td>3</td>
       <td>0.665</td>
       <td>0.087</td>
-      <td>0.026910</td>
+      <td>0.023985</td>
     </tr>
     <tr>
       <th>7</th>
@@ -680,8 +686,8 @@ density threshold for the clustering.</p>
       <td>&lt;NA&gt;</td>
       <td>3</td>
       <td>0.656</td>
-      <td>0.150</td>
-      <td>0.027577</td>
+      <td>0.15</td>
+      <td>0.024447</td>
     </tr>
     <tr>
       <th>8</th>
@@ -693,7 +699,7 @@ density threshold for the clustering.</p>
       <td>3</td>
       <td>0.652</td>
       <td>0.182</td>
-      <td>0.027540</td>
+      <td>0.02423</td>
     </tr>
     <tr>
       <th>9</th>
@@ -703,9 +709,9 @@ density threshold for the clustering.</p>
       <td>10</td>
       <td>&lt;NA&gt;</td>
       <td>3</td>
-      <td>0.650</td>
+      <td>0.65</td>
       <td>0.198</td>
-      <td>0.028366</td>
+      <td>0.024639</td>
     </tr>
     <tr>
       <th>10</th>
@@ -716,8 +722,8 @@ density threshold for the clustering.</p>
       <td>&lt;NA&gt;</td>
       <td>3</td>
       <td>0.645</td>
-      <td>0.210</td>
-      <td>0.027894</td>
+      <td>0.21</td>
+      <td>0.024605</td>
     </tr>
     <tr>
       <th>18</th>
@@ -727,9 +733,9 @@ density threshold for the clustering.</p>
       <td>10</td>
       <td>&lt;NA&gt;</td>
       <td>3</td>
-      <td>0.620</td>
+      <td>0.62</td>
       <td>0.298</td>
-      <td>0.030822</td>
+      <td>0.026852</td>
     </tr>
     <tr>
       <th>20</th>
@@ -741,7 +747,7 @@ density threshold for the clustering.</p>
       <td>3</td>
       <td>0.614</td>
       <td>0.326</td>
-      <td>0.031672</td>
+      <td>0.02807</td>
     </tr>
     <tr>
       <th>21</th>
@@ -753,7 +759,7 @@ density threshold for the clustering.</p>
       <td>3</td>
       <td>0.609</td>
       <td>0.336</td>
-      <td>0.032149</td>
+      <td>0.02796</td>
     </tr>
     <tr>
       <th>22</th>
@@ -764,8 +770,8 @@ density threshold for the clustering.</p>
       <td>&lt;NA&gt;</td>
       <td>3</td>
       <td>0.602</td>
-      <td>0.360</td>
-      <td>0.032596</td>
+      <td>0.36</td>
+      <td>0.028592</td>
     </tr>
     <tr>
       <th>25</th>
@@ -777,13 +783,13 @@ density threshold for the clustering.</p>
       <td>3</td>
       <td>0.341</td>
       <td>0.399</td>
-      <td>0.031528</td>
+      <td>0.027648</td>
     </tr>
   </tbody>
 </table>
 </div></div>
 </div>
-<p>The summary shows indeed that we got clustering with 3 clusters (as desired) for some parameter combinations. Apart from the number of clusters, it is, however often also of interest, how many data points ended up in the clusters and how many are considered outliers (noise). In this case we expect 3 clusters of more or less equal size (member wise) and we may be interested in keeping the outliers-level low. In the results giving 3 clusters, in one case the largest cluster entails one third of
+<p>The summary shows indeed that we got a clustering with 3 clusters (as desired) for some parameter combinations. Apart from the number of clusters, it is, however often also of interest, how many data points ended up in the clusters and how many are considered outliers (noise). In this case we expect 3 clusters of more or less equal size (member wise) and we may be interested in keeping the outliers-level low. In the results giving 3 clusters, in one case the largest cluster entails one third of
 the data points (which is good), but the noise level is around 40 % (which is most likely not what we want). Let’s plot a few results to see what is going on here.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
@@ -793,8 +799,12 @@ the data points (which is good), but the noise level is around 40 % (which is mo
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
 <span class="n">Ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mi">25</span><span class="p">)]):</span>
-    <span class="n">distance_rclustering</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">*</span><span class="n">pair</span><span class="p">,</span> <span class="n">member_cutoff</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">record</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">rclustering</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="n">distance_rclustering</span><span class="o">.</span><span class="n">_labels</span>
+    <span class="n">distance_rclustering</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+        <span class="n">radius_cutoff</span><span class="o">=</span><span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">similarity_cutoff</span><span class="o">=</span><span class="n">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">member_cutoff</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">record</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+    <span class="n">rclustering</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">distance_rclustering</span><span class="o">.</span><span class="n">labels</span>
 
     <span class="n">_</span> <span class="o">=</span> <span class="n">rclustering</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">Ax</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ax_props</span><span class="o">=</span><span class="n">ax_props</span><span class="p">)</span>
     <span class="n">Ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
@@ -829,7 +839,11 @@ them, one after the other.</p>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">tqdm</span><span class="p">([</span><span class="n">x</span><span class="o">/</span><span class="mi">10</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span> <span class="k">if</span> <span class="n">x</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">]):</span>
     <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">101</span><span class="p">):</span>
         <span class="c1"># fit from pre-calculated distances</span>
-        <span class="n">distance_rclustering</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">member_cutoff</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">distance_rclustering</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+            <span class="n">radius_cutoff</span><span class="o">=</span><span class="n">r</span><span class="p">,</span>
+            <span class="n">similarity_cutoff</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+            <span class="n">member_cutoff</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -837,7 +851,7 @@ them, one after the other.</p>
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<script type="application/vnd.jupyter.widget-view+json">{"model_id": "46efc8e4f306459f94dc4de1d4eaae33", "version_major": 2, "version_minor": 0}</script></div>
+<script type="application/vnd.jupyter.widget-view+json">{"model_id": "c9302fb69d664f2793f1a3a0288c8de1", "version_major": 2, "version_minor": 0}</script></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
@@ -850,7 +864,7 @@ them, one after the other.</p>
     <span class="n">contour_props</span><span class="o">=</span><span class="p">{</span>
         <span class="s2">&quot;levels&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>
         <span class="p">}</span>
-    <span class="p">)[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="n">colorbar</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">mappable</span><span class="o">=</span><span class="n">contour</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
 <span class="n">colorbar</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s2">&quot;time / s&quot;</span><span class="p">)</span>
 </pre></div>
@@ -875,7 +889,7 @@ them, one after the other.</p>
     <span class="n">contour_props</span><span class="o">=</span><span class="p">{</span>
         <span class="s2">&quot;levels&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">x</span><span class="o">/</span><span class="mi">100</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">101</span><span class="p">)],</span>
         <span class="p">}</span>
-<span class="p">)[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="n">colorbar</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">mappable</span><span class="o">=</span><span class="n">contour</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 <span class="n">colorbar</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s2">&quot;noise / %&quot;</span><span class="p">)</span>
 </pre></div>
@@ -900,7 +914,7 @@ them, one after the other.</p>
     <span class="n">contour_props</span><span class="o">=</span><span class="p">{</span>
         <span class="s2">&quot;levels&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">x</span><span class="o">/</span><span class="mi">100</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">101</span><span class="p">)],</span>
         <span class="p">}</span>
-<span class="p">)[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="n">colorbar</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">mappable</span><span class="o">=</span><span class="n">contour</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 <span class="n">colorbar</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s2">&quot;largest / %&quot;</span><span class="p">)</span>
 </pre></div>
@@ -930,7 +944,7 @@ them, one after the other.</p>
         <span class="s2">&quot;vmax&quot;</span><span class="p">:</span> <span class="n">show_n</span><span class="p">,</span>
         <span class="s2">&quot;extend&quot;</span><span class="p">:</span> <span class="s2">&quot;max&quot;</span>
     <span class="p">}</span>
-<span class="p">)[</span><span class="mi">2</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+<span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 <span class="n">colorbar</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">mappable</span><span class="o">=</span><span class="n">contour</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">ticks</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">show_n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
 <span class="n">colorbar</span><span class="o">.</span><span class="n">set_label</span><span class="p">(</span><span class="s2">&quot;# clusters&quot;</span><span class="p">)</span>
 </pre></div>
@@ -945,10 +959,10 @@ them, one after the other.</p>
 </div>
 <p>The probably most telling view is given by the <em>number of clusters</em> plots. The analysis demonstrates nicely that for this data set a splitting into 3 meaningful clusters is hard to achieve. With increased density threshold, the number of obtained clusters does at first increase before it drops again when low density clusters become part of the noise. In general, clusterings that are stable over a wider range of parameter combinations tend to be more meaningful.</p>
 </section>
-<section id="Hierarchical-clustering">
-<h3>Hierarchical clustering<a class="headerlink" href="#Hierarchical-clustering" title="Permalink to this heading">¶</a></h3>
-<p>To use the hierarchical approach on clustering this data set, we will apply a pair of cluster parameters that will extract the lesser dense region of the data as an isolated cluster in a first step. That means we choose a comparably low value for the similarity criterion <em>c</em>. We can refer to these parameters as <em>soft</em> parameters, leaving the more dense regions of the data untouched and in one cluster. Remember that density in terms of common-nearest-neighbour clustering is estimated as the
-number of common neighbours within the neighbourhood intersection of two points with respect to a radius <em>r</em>. More common neighbours (higher similarity cutoff <em>c</em>) and/or a smaller neighbourhood radius (smaller <em>r</em>) will result in a higher density requirement. To make this more clear let’s have a look again at some clusterings.</p>
+<section id="Manual-hierarchical-clustering">
+<h3>Manual hierarchical clustering<a class="headerlink" href="#Manual-hierarchical-clustering" title="Permalink to this heading">¶</a></h3>
+<p>To use the (manual) hierarchical approach on clustering this data set, we will apply a pair of cluster parameters that will extract the lesser dense region of the data as an isolated cluster in a first step. That means we choose a comparably low value for the similarity criterion <em>c</em>. We can refer to these parameters as <em>soft</em> parameters, leaving the more dense regions of the data untouched and in one cluster. Remember that density in terms of common-nearest-neighbour clustering is estimated as
+the number of common neighbours within the neighbourhood intersection of two points with respect to a radius <em>r</em>. More common neighbours (higher similarity cutoff <em>c</em>) and/or a smaller neighbourhood radius (smaller <em>r</em>) will result in a higher density requirement. To make this more clear let’s have a look again at some clusterings.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
 </pre></div>
@@ -957,8 +971,12 @@ number of common neighbours within the neighbourhood intersection of two points 
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
 <span class="n">Ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">([(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span> <span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mi">100</span><span class="p">)]):</span>
-    <span class="n">distance_rclustering</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">*</span><span class="n">pair</span><span class="p">,</span> <span class="n">member_cutoff</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">record</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">rclustering</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="n">distance_rclustering</span><span class="o">.</span><span class="n">_labels</span>
+    <span class="n">distance_rclustering</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+        <span class="n">radius_cutoff</span><span class="o">=</span><span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">similarity_cutoff</span><span class="o">=</span><span class="n">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="n">member_cutoff</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">record</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">)</span>
+    <span class="n">rclustering</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">distance_rclustering</span><span class="o">.</span><span class="n">labels</span>
     <span class="n">_</span> <span class="o">=</span> <span class="n">rclustering</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">Ax</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ax_props</span><span class="o">=</span><span class="n">ax_props</span><span class="p">)</span>
     <span class="n">Ax</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 
@@ -975,28 +993,31 @@ number of common neighbours within the neighbourhood intersection of two points 
 <img alt="../_images/tutorial_hierarchical_clustering_basics_46_0.png" src="../_images/tutorial_hierarchical_clustering_basics_46_0.png" />
 </div>
 </div>
-<p>For these clustering, we again keep the radius fixed while we increase the similarity cutoff and therefore the density threshold.</p>
-<p><strong>Upper left</strong>: Choosing a low (soft) threshold, results in no cluster splitting. The data set as a whole forms clusters in which the point density is <em>at least</em> as high as our density requirement.</p>
+<p>For these clusterings, we again keep the radius fixed while we increase the similarity cutoff and therefore the density threshold.</p>
+<p><strong>Upper left</strong>: Choosing a low (soft) threshold, results in no cluster splitting. The data set as a whole forms a cluster in which the point density is <em>at least</em> as high as our density requirement.</p>
 <p><strong>Upper right</strong>: When we increase the density requirement just a bit, we observe a splitting between the broadly distributed lower density cluster and the more dense clusters. Within both the resulting clusters the point density is higher than required by the parameters but they are separated by a low density region and therefore split. This parameter set can be used for the first step of the hierarchical clustering.</p>
 <p><strong>Lower left</strong>: Increasing the density requirement further, eventually leads to a splitting between the two denser clusters. At his point, the broader low density cluster has already vanished into noise because the density within this cluster is lower than the density between the just split denser clusters. We could use this parameter set in a second hierarchical clustering step.</p>
 <p><strong>lower right</strong>: Choosing even harder parameters leaves only the densest cluster. The second densest cluster falls into the noise region.</p>
-<p>The central element of the hierarchical cluster functionality is the <code class="docutils literal notranslate"><span class="pre">isolate</span></code> method of a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> object. After a clustering (with soft parameters) we can <em>freeze</em> the result before we start to re-cluster.</p>
+<p>The central element of the manual hierarchical cluster functionality is the <code class="docutils literal notranslate"><span class="pre">isolate</span></code> method of a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> object. After a clustering (with soft parameters) we can <em>freeze</em> the result before we start to re-cluster.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># After the first step, we need to isolate the cluster result</span>
-<span class="n">rclustering</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">member_cutoff</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">record</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">rclustering</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">radius_cutoff</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">similarity_cutoff</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">member_cutoff</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">record</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
 <span class="n">rclustering</span><span class="o">.</span><span class="n">isolate</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">isolate</span></code> method will create a new <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> object (a child clustering) for every cluster of a cluster result. In our case we get two new child clusters (plus one for outliers). The clusters are stored in a dictionary under the <code class="docutils literal notranslate"><span class="pre">children</span></code> attribute of the parent <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> object. The children dictionary of the data after isolation holds a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> object for each cluster found in the last step.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">isolate</span></code> method will create a new <code class="docutils literal notranslate"><span class="pre">Bundle</span></code> object (a child) for every cluster of a cluster result. In our case we get two new child clusters (plus one for outliers). The clusters are stored in a dictionary under the <code class="docutils literal notranslate"><span class="pre">children</span></code> attribute of the parent <code class="docutils literal notranslate"><span class="pre">Bundle</span></code> object. The children dictionary of the root data after isolation holds a <code class="docutils literal notranslate"><span class="pre">Bundle</span></code> object for each cluster found in the last step.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">rclustering</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span><span class="o">.</span><span class="n">alias</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">rclustering</span><span class="o">.</span><span class="n">children</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
 </pre></div>
 </div>
 </div>
@@ -1006,23 +1027,40 @@ number of common neighbours within the neighbourhood intersection of two points 
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-{1: cnnclustering.cluster.Clustering,
- 2: cnnclustering.cluster.Clustering,
- 0: cnnclustering.cluster.Clustering}
+{1: &#39;root.1&#39;, 2: &#39;root.2&#39;}
 </pre></div></div>
 </div>
-<p>Since we will use different cluster parameters now for different clusters it would be nice to have something to keep the overview of which cluster has been identified under which parameters. This information is provided by the <code class="docutils literal notranslate"><span class="pre">meta</span></code> attribute on the object that stores the cluster label assignments on the <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> which we get with <code class="docutils literal notranslate"><span class="pre">Clustering._labels</span></code>. Note that this is different to <code class="docutils literal notranslate"><span class="pre">Clustering._labels</span></code> which only return the actual labels in form of a NumPy array. The label meta
-information tells us three things:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">origin</span></code>: How have these labels been assigned? The entry <code class="docutils literal notranslate"><span class="pre">&quot;fit&quot;</span></code> means, they were obtained by a regular clustering.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">reference</span></code>: This is a related clustering object, i.e. the object that is associated to the data for which the labels are valid. For <code class="docutils literal notranslate"><span class="pre">&quot;fitted&quot;</span></code> labels this is a reference to the clustering object itself that carries the labels.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">params</span></code>: This is a dictionary stating the cluster parameters (<em>r</em>, <em>c</em>) that led to each cluster. For <code class="docutils literal notranslate"><span class="pre">&quot;fitted&quot;</span></code> labels, each cluster has the same parameters.</p></li>
-</ul>
+<p>When we access the chidren dictionary from our <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> object, we are actually looking at the children of the respective root bundle.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">v</span><span class="si">!r}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">rclustering</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">items</span><span class="p">()),</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">rclustering</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">children</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{1: Bundle(alias=&#39;root.1&#39;, hierarchy_level=1),
+ 2: Bundle(alias=&#39;root.2&#39;, hierarchy_level=1)}
+</pre></div></div>
+</div>
+<p>Since we will use different cluster parameters now for different clusters it would be nice to have something to keep the overview of which cluster has been identified under which parameters. This information is provided by the <code class="docutils literal notranslate"><span class="pre">meta</span></code> attribute on the object that stores the cluster label assignments on the <code class="docutils literal notranslate"><span class="pre">Bundle</span></code> which we get with <code class="docutils literal notranslate"><span class="pre">Bundle._labels</span></code>. Note that this is different to <code class="docutils literal notranslate"><span class="pre">Clustering.labels</span></code> which only return the actual labels in form of a NumPy array. The label meta information
+tells us three things:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">origin</span></code>: How have these labels been assigned? The entry <code class="docutils literal notranslate"><span class="pre">&quot;fit&quot;</span></code> means, they were obtained by a regular clustering.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reference</span></code>: This is a related clustering object, i.e. the object that is associated to the data for which the labels are valid. For <code class="docutils literal notranslate"><span class="pre">&quot;fitted&quot;</span></code> labels this is a reference to the bundle object itself that carries the labels.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">params</span></code>: This is a dictionary stating the cluster parameters (<em>r</em>, <em>c</em>) that led to each cluster. For <code class="docutils literal notranslate"><span class="pre">&quot;fitted&quot;</span></code> labels, each cluster has the same parameters.</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">v</span><span class="si">!r}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">rclustering</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">meta</span><span class="o">.</span><span class="n">items</span><span class="p">()),</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1032,16 +1070,16 @@ information tells us three things:</p>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 params: {1: (0.3, 3), 2: (0.3, 3)}
-reference: &lt;weakproxy at 0x7f88c0c44720 to Clustering at 0x7f88c61d2ac0&gt;
+reference: &lt;weakproxy at 0x7fa08182df30 to commonnn._bundle.Bundle at 0x7fa08d0928c0&gt;
 origin: &#39;fit&#39;
 </pre></div></div>
 </div>
-<p>Every single isolated child cluster is represented by a full-fledged, completely functional <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> object itself. When we want to re-cluster a child <code class="docutils literal notranslate"><span class="pre">Clustering</span></code>, this is no different to clustering a parent <code class="docutils literal notranslate"><span class="pre">Clustering</span></code>.</p>
+<p>Every single isolated child bundle is represented by a full-fledged, completely functional <code class="docutils literal notranslate"><span class="pre">Bundle</span></code> object itself. When we want to re-cluster a child, this is no different to clustering a parent.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">child1</span> <span class="o">=</span> <span class="n">rclustering</span><span class="o">.</span><span class="n">children</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">child1</span> <span class="o">=</span> <span class="n">rclustering</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># rclustering.children[1]</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">child1</span><span class="o">.</span><span class="n">info</span><span class="p">())</span>  <span class="c1"># Child cluster 1</span>
 </pre></div>
 </div>
@@ -1051,21 +1089,21 @@ origin: &#39;fit&#39;
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-alias: &#39;rootroot - 1&#39;
+alias: &#39;root.1&#39;
 hierarchy_level: 1
-access: coordinates
+access: components
 points: 667
-children: None
+children: 0
 </pre></div></div>
 </div>
 <p>Note, that the <code class="docutils literal notranslate"><span class="pre">hierarchy_level</span></code> in the above overview has increased to 1. We can again plot the distance distribution within this child cluster to see how this changed.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">distances_child1</span> <span class="o">=</span> <span class="n">pairwise_distances</span><span class="p">(</span><span class="n">child1</span><span class="o">.</span><span class="n">input_data</span><span class="p">)</span>
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-<span class="n">_</span> <span class="o">=</span> <span class="n">plot</span><span class="o">.</span><span class="n">plot_histogram</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">distances_child1</span><span class="p">,</span> <span class="n">maxima</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">maxima_props</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;order&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">})</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">plot</span><span class="o">.</span><span class="n">plot_histogram</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">distances_child1</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">maxima</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">maxima_props</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;order&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">})</span>
 </pre></div>
 </div>
 </div>
@@ -1073,18 +1111,21 @@ children: None
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorial_hierarchical_clustering_basics_57_0.png" src="../_images/tutorial_hierarchical_clustering_basics_57_0.png" />
+<img alt="../_images/tutorial_hierarchical_clustering_basics_59_0.png" src="../_images/tutorial_hierarchical_clustering_basics_59_0.png" />
 </div>
 </div>
-<p>And then we can attempt the second clustering step.</p>
+<p>And then we can attempt the second clustering step. Note that we need to pass the child bundle to the fit function as the first argument (or the <code class="docutils literal notranslate"><span class="pre">bundle</span></code> keyword argument).</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Now cluster the child cluster</span>
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
-<span class="n">child1</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="mf">0.3</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="n">member_cutoff</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-<span class="n">_</span> <span class="o">=</span> <span class="n">child1</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">ax_props</span><span class="o">=</span><span class="n">ax_props</span><span class="p">)</span>
+<span class="n">rclustering</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+    <span class="n">child1</span><span class="p">,</span>  <span class="c1"># bundle</span>
+    <span class="n">radius_cutoff</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>
+    <span class="n">similarity_cutoff</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">member_cutoff</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">rclustering</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span> <span class="n">ax_props</span><span class="o">=</span><span class="n">ax_props</span><span class="p">,</span> <span class="n">bundle</span><span class="o">=</span><span class="n">child1</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1094,43 +1135,10 @@ children: None
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 -----------------------------------------------------------------------------------------------
-#points   r         c         min       max       #clusters %largest  %noise    time
-667       0.300     30        10        None      2         0.505     0.153     00:00:0.036
+#points   r         nc        min       max       #clusters %largest  %noise    time
+667       0.300     30        10        None      2         0.505     0.153     00:00:0.032
 -----------------------------------------------------------------------------------------------
 
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/tutorial_hierarchical_clustering_basics_59_1.png" src="../_images/tutorial_hierarchical_clustering_basics_59_1.png" />
-</div>
-</div>
-<p>As a little extra feature a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> object has a <code class="docutils literal notranslate"><span class="pre">pie</span></code> method that allows to visualize the current state and splitting on the different hierarchy levels as a pie-diagram (from level 0 in the middle to lower levels to the outside).</p>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># The cluster hierarchy can be visualised as pie diagram</span>
-<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">plotted</span> <span class="o">=</span> <span class="n">rclustering</span><span class="o">.</span><span class="n">pie</span><span class="p">(</span>
-    <span class="n">pie_props</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mf">0.15</span><span class="p">,</span>
-        <span class="s2">&quot;wedgeprops&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
-    <span class="p">}</span>
-<span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-(-0.3, 0.3)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1140,65 +1148,25 @@ children: None
 <img alt="../_images/tutorial_hierarchical_clustering_basics_61_1.png" src="../_images/tutorial_hierarchical_clustering_basics_61_1.png" />
 </div>
 </div>
-<p>Alternatively, a hierarchical tree can be drawn using the <code class="docutils literal notranslate"><span class="pre">tree</span></code> method.</p>
+<p>As a little extra feature a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> object has a <code class="docutils literal notranslate"><span class="pre">pie</span></code> method that allows to visualize the current state and splitting on the different hierarchy levels as a pie-diagram (from level 0 in the middle to lower levels to the outside).</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Tree shows only isolated clusterings</span>
-<span class="n">child1</span><span class="o">.</span><span class="n">isolate</span><span class="p">()</span>
-<span class="n">rclustering</span><span class="o">.</span><span class="n">tree</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
-</pre></div>
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-(&lt;Figure size 750x450 with 1 Axes&gt;, &lt;AxesSubplot:&gt;)
-</pre></div></div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/tutorial_hierarchical_clustering_basics_63_1.png" src="../_images/tutorial_hierarchical_clustering_basics_63_1.png" />
-</div>
-</div>
-<p>Now that we have isolated one cluster in the first step and two others in a further splitting on a lower hierarchy level, the last step that remains, is to put everything back together. This can be done automatically by calling <code class="docutils literal notranslate"><span class="pre">reel</span></code> on the parent cluster object into which the child cluster results should be integrated.</p>
-<div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Wrap up the hierarchical clustering and integrate the child clusters into</span>
-<span class="c1"># the parent cluster</span>
-<span class="n">rclustering</span><span class="o">.</span><span class="n">reel</span><span class="p">()</span>
-
-<span class="c1"># Manually sort clusters by size (make largest be cluster number 1)</span>
-<span class="n">rclustering</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">sort_by_size</span><span class="p">()</span>
-</pre></div>
-</div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">rclustering</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="kc">None</span>
-<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">*</span><span class="n">plotted</span> <span class="o">=</span> <span class="n">rclustering</span><span class="o">.</span><span class="n">pie</span><span class="p">(</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># The cluster hierarchy can be visualised as pie diagram</span>
+<span class="n">rclustering</span><span class="o">.</span><span class="n">pie</span><span class="p">(</span>
     <span class="n">pie_props</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span>
-        <span class="s2">&quot;wedgeprops&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mf">0.15</span><span class="p">,</span>
+        <span class="s2">&quot;wedgeprops&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mf">0.15</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
     <span class="p">}</span>
 <span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
-<span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -1210,11 +1178,76 @@ children: None
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorial_hierarchical_clustering_basics_66_1.png" src="../_images/tutorial_hierarchical_clustering_basics_66_1.png" />
+<img alt="../_images/tutorial_hierarchical_clustering_basics_63_1.png" src="../_images/tutorial_hierarchical_clustering_basics_63_1.png" />
+</div>
+</div>
+<p>Alternatively, a hierarchical tree can be drawn using the <code class="docutils literal notranslate"><span class="pre">tree</span></code> method.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Tree shows only isolated bundles</span>
+<span class="n">child1</span><span class="o">.</span><span class="n">isolate</span><span class="p">()</span>
+<span class="n">rclustering</span><span class="o">.</span><span class="n">tree</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_hierarchical_clustering_basics_65_0.png" src="../_images/tutorial_hierarchical_clustering_basics_65_0.png" />
+</div>
+</div>
+<p>Now that we have isolated one cluster in the first step and two others in a further splitting on a lower hierarchy level, the last step that remains, is to put everything back together. This can be done automatically by calling <code class="docutils literal notranslate"><span class="pre">reel</span></code> on the parent cluster object into which the child cluster results should be integrated.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Wrap up the hierarchical clustering and integrate the child clusters into</span>
+<span class="c1">#   the parent cluster</span>
+<span class="n">rclustering</span><span class="o">.</span><span class="n">reel</span><span class="p">()</span>
+
+<span class="c1"># Manually sort clusters by size (make largest be cluster number 1)</span>
+<span class="n">rclustering</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">sort_by_size</span><span class="p">()</span>
+</pre></div>
 </div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Remove children</span>
+<span class="n">rclustering</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">_children</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="n">rclustering</span><span class="o">.</span><span class="n">pie</span><span class="p">(</span>
+    <span class="n">pie_props</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;radius&quot;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span>
+        <span class="s2">&quot;wedgeprops&quot;</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="o">-</span><span class="mf">0.3</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+(-0.3, 0.3)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_hierarchical_clustering_basics_68_1.png" src="../_images/tutorial_hierarchical_clustering_basics_68_1.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
@@ -1226,39 +1259,39 @@ children: None
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorial_hierarchical_clustering_basics_67_0.png" src="../_images/tutorial_hierarchical_clustering_basics_67_0.png" />
+<img alt="../_images/tutorial_hierarchical_clustering_basics_69_0.png" src="../_images/tutorial_hierarchical_clustering_basics_69_0.png" />
 </div>
 </div>
 </section>
 <section id="Label-prediction">
 <h3>Label prediction<a class="headerlink" href="#Label-prediction" title="Permalink to this heading">¶</a></h3>
-<p>Now, the parameter information saved for the labels becomes useful as they differ for the clusters from different clustering steps.</p>
+<p>Now, the parameter information saved for the labels becomes even more useful as they differ for the clusters from different clustering steps.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">rclustering</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">meta</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">rclustering</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">meta</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 {&#39;params&#39;: {2: (0.3, 3), 3: (0.3, 30), 1: (0.3, 30)},
- &#39;reference&#39;: &lt;cnnclustering.cluster.Clustering at 0x7f88c0c44720&gt;,
+ &#39;reference&#39;: &lt;weakproxy at 0x7fa08182df30 to commonnn._bundle.Bundle at 0x7fa08d0928c0&gt;,
  &#39;origin&#39;: &#39;reel&#39;}
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Label&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;n&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Label&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">rclustering</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">rclustering</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="o">*</span><span class="n">v</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1268,7 +1301,7 @@ children: None
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Label   r       n
+Label   r       c
 --------------------
 1       0.3     30
 2       0.3     3
@@ -1281,12 +1314,12 @@ need relative neighbourhoods between two data sets. We want to compute the neigh
 <p><strong>Info:</strong> A cluster label prediction requires a <code class="docutils literal notranslate"><span class="pre">Predictor</span></code> in the same way as a clustering requires a <code class="docutils literal notranslate"><span class="pre">Fitter</span></code>. See tutorial <a class="reference internal" href="advanced_usage.html"><span class="doc">Advanced usage</span></a> for details.</p>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">rclustering</span><span class="o">.</span><span class="n">_predictor</span> <span class="o">=</span> <span class="n">_fit</span><span class="o">.</span><span class="n">PredictorFirstmatch</span><span class="p">(</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">rclustering</span><span class="o">.</span><span class="n">_predictor</span> <span class="o">=</span> <span class="n">_fit</span><span class="o">.</span><span class="n">PredictorCommonNNFirstmatch</span><span class="p">(</span>
     <span class="n">rclustering</span><span class="o">.</span><span class="n">_fitter</span><span class="o">.</span><span class="n">_neighbours_getter</span><span class="p">,</span>
-    <span class="n">rclustering</span><span class="o">.</span><span class="n">_fitter</span><span class="o">.</span><span class="n">_neighbours_getter</span><span class="p">,</span>
+    <span class="n">clustering</span><span class="o">.</span><span class="n">_fitter</span><span class="o">.</span><span class="n">_neighbours_getter</span><span class="p">,</span>
     <span class="n">rclustering</span><span class="o">.</span><span class="n">_fitter</span><span class="o">.</span><span class="n">_neighbours</span><span class="p">,</span>
     <span class="n">rclustering</span><span class="o">.</span><span class="n">_fitter</span><span class="o">.</span><span class="n">_neighbour_neighbours</span><span class="p">,</span>
     <span class="n">rclustering</span><span class="o">.</span><span class="n">_fitter</span><span class="o">.</span><span class="n">_similarity_checker</span><span class="p">,</span>
@@ -1295,24 +1328,34 @@ need relative neighbourhoods between two data sets. We want to compute the neigh
 <span class="n">fig</span><span class="p">,</span> <span class="n">Ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 
 <span class="n">r</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">;</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">30</span>
-<span class="n">rclustering</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">clustering</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">clusters</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">purge</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">rclustering</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+    <span class="n">clustering</span><span class="o">.</span><span class="n">root</span><span class="p">,</span>
+    <span class="n">radius_cutoff</span><span class="o">=</span><span class="n">r</span><span class="p">,</span> <span class="n">similarity_cutoff</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">clusters</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">purge</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
 <span class="n">_</span> <span class="o">=</span> <span class="n">clustering</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">Ax</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ax_props</span><span class="o">=</span><span class="n">ax_props</span><span class="p">)</span>
 <span class="n">Ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;1 </span><span class="si">{</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 
 <span class="n">r</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">;</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">3</span>
-<span class="n">rclustering</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">clustering</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">clusters</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">rclustering</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+    <span class="n">clustering</span><span class="o">.</span><span class="n">root</span><span class="p">,</span>
+    <span class="n">radius_cutoff</span><span class="o">=</span><span class="n">r</span><span class="p">,</span> <span class="n">similarity_cutoff</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">clusters</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">purge</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="n">_</span> <span class="o">=</span> <span class="n">clustering</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">Ax</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">ax_props</span><span class="o">=</span><span class="n">ax_props</span><span class="p">)</span>
 <span class="n">Ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;2 </span><span class="si">{</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 
 <span class="n">r</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">;</span> <span class="n">c</span> <span class="o">=</span> <span class="mi">30</span>
-<span class="n">rclustering</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">clustering</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">clusters</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+<span class="n">rclustering</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+    <span class="n">clustering</span><span class="o">.</span><span class="n">root</span><span class="p">,</span>
+    <span class="n">radius_cutoff</span><span class="o">=</span><span class="n">r</span><span class="p">,</span> <span class="n">similarity_cutoff</span><span class="o">=</span><span class="n">c</span><span class="p">,</span>
+    <span class="n">clusters</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">purge</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="n">_</span> <span class="o">=</span> <span class="n">clustering</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">Ax</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">ax_props</span><span class="o">=</span><span class="n">ax_props</span><span class="p">)</span>
 <span class="n">Ax</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;3 </span><span class="si">{</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -1324,16 +1367,16 @@ Text(0.5, 1.0, &#39;3 (0.3, 30)&#39;)
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorial_hierarchical_clustering_basics_74_1.png" src="../_images/tutorial_hierarchical_clustering_basics_74_1.png" />
+<img alt="../_images/tutorial_hierarchical_clustering_basics_76_1.png" src="../_images/tutorial_hierarchical_clustering_basics_76_1.png" />
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[37]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Label&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;n&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Label&quot;</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="s2">&quot;c&quot;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">clustering</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">clustering</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">_labels</span><span class="o">.</span><span class="n">meta</span><span class="p">[</span><span class="s2">&quot;params&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="o">*</span><span class="n">v</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -1343,7 +1386,7 @@ Text(0.5, 1.0, &#39;3 (0.3, 30)&#39;)
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Label   r       n
+Label   r       c
 --------------------
 1       0.3     30
 2       0.3     3
@@ -1389,7 +1432,7 @@ Label   r       n
 <li class="toctree-l2"><a class="reference internal" href="advanced_usage.html">Advanced usage</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interface_demo.html">Demonstration of (generic) interfaces</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Hierarchical clustering basics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="algorithm_explained.html">Density based clustering basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="algorithm_explained.html">Density-based clustering basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="md_example.html">Molecular dynamics application example</a></li>
 </ul>
 </li>
@@ -1402,7 +1445,7 @@ Label   r       n
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="../_source/tutorials.html">Tutorials</a><ul>
       <li>Previous: <a href="interface_demo.html" title="previous chapter">Demonstration of (generic) interfaces</a></li>
-      <li>Next: <a href="algorithm_explained.html" title="next chapter">Density based clustering basics</a></li>
+      <li>Next: <a href="algorithm_explained.html" title="next chapter">Density-based clustering basics</a></li>
   </ul></li>
   </ul></li>
 </ul>
