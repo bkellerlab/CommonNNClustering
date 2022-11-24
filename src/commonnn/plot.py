@@ -306,7 +306,9 @@ def plot_summary(
 
     pivot = summary.groupby(
         ["radius_cutoff", "similarity_cutoff"]
-    ).mean()[quantity].reset_index().pivot("radius_cutoff", "similarity_cutoff")
+    ).mean()[quantity].reset_index().pivot(
+        index="radius_cutoff", columns="similarity_cutoff"
+        )
 
     X_, Y_ = np.meshgrid(pivot.index.values, pivot.columns.levels[1].values)
 
