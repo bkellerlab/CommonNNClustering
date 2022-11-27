@@ -508,7 +508,7 @@ def trim_small(Bundle bundle, member_cutoff=2):
     """
 
     def _trim_small(bundle, member_cutoff):
-        pass
+        raise NotImplementedError('comming soon')
 
     _trim_small(bundle, member_cutoff)
 

@@ -32,8 +32,8 @@
    "execution_count": 1,
    "metadata": {
     "ExecuteTime": {
-     "end_time": "2022-11-24T11:07:38.312797Z",
-     "start_time": "2022-11-24T11:07:34.903553Z"
+     "end_time": "2022-11-27T19:22:20.942205Z",
+     "start_time": "2022-11-27T19:22:18.278589Z"
     }
    },
    "outputs": [],
@@ -1739,7 +1739,7 @@
     "height": "calc(100% - 180px)",
     "left": "10px",
     "top": "150px",
-    "width": "212.969px"
+    "width": "165px"
    },
    "toc_section_display": true,
    "toc_window_display": true

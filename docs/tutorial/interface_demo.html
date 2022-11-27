@@ -309,29 +309,29 @@ div.rendered_html tbody tr:hover {
 <section id="Notebook-configuration">
 <h2>Notebook configuration<a class="headerlink" href="#Notebook-configuration" title="Permalink to this heading">¶</a></h2>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">import</span> <span class="nn">cnnclustering</span>
-<span class="kn">from</span> <span class="nn">cnnclustering</span> <span class="kn">import</span> <span class="n">cluster</span>
-<span class="kn">from</span> <span class="nn">cnnclustering</span> <span class="kn">import</span> <span class="n">_types</span><span class="p">,</span> <span class="n">_fit</span>
+<span class="kn">import</span> <span class="nn">commonnn</span>
+<span class="kn">from</span> <span class="nn">commonnn</span> <span class="kn">import</span> <span class="n">cluster</span>
+<span class="kn">from</span> <span class="nn">commonnn</span> <span class="kn">import</span> <span class="n">_types</span><span class="p">,</span> <span class="n">_fit</span>
 </pre></div>
 </div>
 </div>
 <p>Print Python and package version information:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Version information</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Python: &quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">sys</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">))</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Packages:&quot;</span><span class="p">)</span>
-<span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="p">[</span><span class="n">np</span><span class="p">,</span> <span class="n">cnnclustering</span><span class="p">]:</span>
+<span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="p">[</span><span class="n">np</span><span class="p">,</span> <span class="n">commonnn</span><span class="p">]:</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">package</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">package</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -341,10 +341,10 @@ div.rendered_html tbody tr:hover {
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Python:  3.8.8 (default, Mar 11 2021, 08:58:19)  [GCC 8.3.0]
+Python:  3.10.7 (main, Sep 27 2022, 11:41:38) [GCC 10.2.1 20210110]
 Packages:
-    numpy: 1.20.1
-    cnnclustering: 0.4.3
+    numpy: 1.23.3
+    commonnn: 0.0.2
 </pre></div></div>
 </div>
 </section>
@@ -357,11 +357,12 @@ Packages:
 <li><p><code class="docutils literal notranslate"><span class="pre">Labels(labels,</span> <span class="pre">consider=consider)</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Labels(labels,</span> <span class="pre">consider=consider,</span> <span class="pre">meta=meta)</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">Labels.from_sequence(labels_list,</span> <span class="pre">consider=consider_list,</span> <span class="pre">meta=meta)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Labels.from_length(n,</span> <span class="pre">meta=meta)</span></code></p></li>
 </ul>
 <p>Technically, <code class="docutils literal notranslate"><span class="pre">Labels</span></code> is not used as a generic class. A clustering, i.e. the assignments of cluster labels to points through a fitter (using a bunch of generic interfaces), uses an instance of <code class="docutils literal notranslate"><span class="pre">Labels</span></code> by directly modifying the underlying array of labels, a Cython memoryview that can be accessed from the C level as <code class="docutils literal notranslate"><span class="pre">Labels._labels</span></code>. <code class="docutils literal notranslate"><span class="pre">Labels.labels</span></code> provides a NumPy array view to <code class="docutils literal notranslate"><span class="pre">Labels._labels</span></code>.</p>
 <p>Examples:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Requires labels to be initialised</span>
@@ -376,17 +377,17 @@ Packages:
 <div class="highlight"><pre>
 <span class="ansi-red-intense-fg ansi-bold">---------------------------------------------------------------------------</span>
 <span class="ansi-red-intense-fg ansi-bold">TypeError</span>                                 Traceback (most recent call last)
-<span class="ansi-green-intense-fg ansi-bold">&lt;ipython-input-5-a465ac6e3f53&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-fg">      1</span> <span class="ansi-red-intense-fg ansi-bold"># Requires labels to be initialised</span>
-<span class="ansi-green-intense-fg ansi-bold">----&gt; 2</span><span class="ansi-yellow-intense-fg ansi-bold"> </span>labels <span class="ansi-yellow-intense-fg ansi-bold">=</span> _types<span class="ansi-yellow-intense-fg ansi-bold">.</span>Labels<span class="ansi-yellow-intense-fg ansi-bold">(</span><span class="ansi-yellow-intense-fg ansi-bold">)</span>
+Cell <span class="ansi-green-intense-fg ansi-bold">In [3], line 2</span>
+<span class="ansi-green-fg">      1</span> <span style="color: rgb(95,135,135)"># Requires labels to be initialised</span>
+<span class="ansi-green-intense-fg ansi-bold">----&gt; 2</span> labels <span style="color: rgb(98,98,98)">=</span> _types<span style="color: rgb(98,98,98)">.</span>Labels()
 
-<span class="ansi-green-intense-fg ansi-bold">src/cnnclustering/_types.pyx</span> in <span class="ansi-cyan-fg">cnnclustering._types.Labels.__cinit__</span><span class="ansi-blue-intense-fg ansi-bold">()</span>
+File <span class="ansi-green-intense-fg ansi-bold">src/commonnn/_types.pyx:155</span>, in <span class="ansi-cyan-fg">commonnn._types.Labels.__cinit__</span><span class="ansi-blue-intense-fg ansi-bold">()</span>
 
 <span class="ansi-red-intense-fg ansi-bold">TypeError</span>: __cinit__() takes exactly 1 positional argument (0 given)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span> <span class="o">=</span> <span class="n">_types</span><span class="o">.</span><span class="n">Labels</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]))</span>
@@ -395,7 +396,7 @@ Packages:
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -404,7 +405,7 @@ Labels([1, 1, 2, 2, 2, 0])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span> <span class="o">=</span> <span class="n">_types</span><span class="o">.</span><span class="n">Labels</span><span class="o">.</span><span class="n">from_sequence</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
@@ -413,7 +414,7 @@ Labels([1, 1, 2, 2, 2, 0])
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -422,7 +423,7 @@ Labels([1, 1, 2, 2, 2, 0])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
@@ -438,7 +439,7 @@ Labels([1, 1, 2, 2, 2, 0])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span><span class="o">.</span><span class="n">labels</span>
@@ -446,7 +447,7 @@ Labels([1, 1, 2, 2, 2, 0])
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -455,7 +456,7 @@ array([1, 1, 2, 2, 2, 0])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span><span class="o">.</span><span class="n">consider</span>
@@ -463,7 +464,7 @@ array([1, 1, 2, 2, 2, 0])
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -472,7 +473,7 @@ array([1, 1, 1, 1, 1, 1], dtype=uint8)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span><span class="o">.</span><span class="n">meta</span>
@@ -480,7 +481,7 @@ array([1, 1, 1, 1, 1, 1], dtype=uint8)
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -489,7 +490,7 @@ array([1, 1, 1, 1, 1, 1], dtype=uint8)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span><span class="o">.</span><span class="n">set</span>
@@ -497,7 +498,7 @@ array([1, 1, 1, 1, 1, 1], dtype=uint8)
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -506,7 +507,7 @@ array([1, 1, 1, 1, 1, 1], dtype=uint8)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span><span class="o">.</span><span class="n">mapping</span>
@@ -514,7 +515,7 @@ array([1, 1, 1, 1, 1, 1], dtype=uint8)
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[22]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -523,7 +524,7 @@ defaultdict(list, {1: [0, 1], 2: [2, 3, 4], 0: [5]})
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span><span class="o">.</span><span class="n">sort_by_size</span><span class="p">()</span>
@@ -539,23 +540,40 @@ defaultdict(list, {1: [0, 1], 2: [2, 3, 4], 0: [5]})
 [2 2 1 1 1 0]
 </pre></div></div>
 </div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">labels</span><span class="o">.</span><span class="n">sort_by_size</span><span class="p">(</span><span class="n">member_cutoff</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+[0 0 1 1 1 0]
+</pre></div></div>
+</div>
 </section>
 <section id="Cluster-parameters">
 <h2>Cluster parameters<a class="headerlink" href="#Cluster-parameters" title="Permalink to this heading">¶</a></h2>
-<p>An instance of <code class="docutils literal notranslate"><span class="pre">_types.ClusterParameters</span></code> is used during a clustering to pass around cluster parameters.</p>
+<p>An instance of a <code class="docutils literal notranslate"><span class="pre">_types.ClusterParameters</span></code> subclass (e.g. <code class="docutils literal notranslate"><span class="pre">CommonNNParameters</span></code>) is used during a clustering to pass around cluster parameters.</p>
 <p>Initialise <code class="docutils literal notranslate"><span class="pre">ClusterParameters</span></code> as:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">ClusterParameters(radius_cutoff)</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ClusterParameters(radius_cutoff,</span> <span class="pre">similarity_cutoff)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ClusterParameters(fparams,</span> <span class="pre">iparams)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ClusterParameters.from_mapping(mapping)</span></code></p></li>
 <li><p>…</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">ClusterParameters</span></code> is a simple struct like class that offers collective access and passing of cluster parameters.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ClusterParameters</span></code> are simple classes that carry two C-arrays, one for floating point parameters and one for integer parameters. The order of parameters in these arrays is important. Descriptive names are stored under <code class="docutils literal notranslate"><span class="pre">ClusterParameters._fparam_names</span></code> and <code class="docutils literal notranslate"><span class="pre">ClusterParameters._iparam_names</span></code>.</p>
 <p>Examples:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Requires at least a radius</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Requires two sequences</span>
 <span class="n">_types</span><span class="o">.</span><span class="n">ClusterParameters</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -567,21 +585,57 @@ defaultdict(list, {1: [0, 1], 2: [2, 3, 4], 0: [5]})
 <div class="highlight"><pre>
 <span class="ansi-red-intense-fg ansi-bold">---------------------------------------------------------------------------</span>
 <span class="ansi-red-intense-fg ansi-bold">TypeError</span>                                 Traceback (most recent call last)
-<span class="ansi-green-intense-fg ansi-bold">&lt;ipython-input-27-d3c71fb983e3&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-fg">      1</span> <span class="ansi-red-intense-fg ansi-bold"># Requires at least a radius</span>
-<span class="ansi-green-intense-fg ansi-bold">----&gt; 2</span><span class="ansi-yellow-intense-fg ansi-bold"> </span>_types<span class="ansi-yellow-intense-fg ansi-bold">.</span>ClusterParameters<span class="ansi-yellow-intense-fg ansi-bold">(</span><span class="ansi-yellow-intense-fg ansi-bold">)</span>
+Cell <span class="ansi-green-intense-fg ansi-bold">In [23], line 2</span>
+<span class="ansi-green-fg">      1</span> <span style="color: rgb(95,135,135)"># Requires two sequences</span>
+<span class="ansi-green-intense-fg ansi-bold">----&gt; 2</span> _types<span style="color: rgb(98,98,98)">.</span>ClusterParameters()
 
-<span class="ansi-green-intense-fg ansi-bold">src/cnnclustering/_types.pyx</span> in <span class="ansi-cyan-fg">cnnclustering._types.ClusterParameters.__cinit__</span><span class="ansi-blue-intense-fg ansi-bold">()</span>
+File <span class="ansi-green-intense-fg ansi-bold">src/commonnn/_types.pyx:30</span>, in <span class="ansi-cyan-fg">commonnn._types.ClusterParameters.__cinit__</span><span class="ansi-blue-intense-fg ansi-bold">()</span>
 
-<span class="ansi-red-intense-fg ansi-bold">TypeError</span>: __cinit__() takes at least 1 positional argument (0 given)
+<span class="ansi-red-intense-fg ansi-bold">TypeError</span>: __cinit__() takes exactly 2 positional arguments (0 given)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Consistency is not checked for required parameters</span>
+<span class="n">_types</span><span class="o">.</span><span class="n">CommonNNParameters</span><span class="p">([],</span> <span class="p">[])</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;radius_cutoff&#39;: 4.63809877625237e-310, &#39;similarity_cutoff&#39;: 93876154254304, &#39;_support_cutoff&#39;: 0, &#39;start_label&#39;: 0}
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">cluster_params</span> <span class="o">=</span> <span class="n">_types</span><span class="o">.</span><span class="n">ClusterParameters</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">cluster_params</span><span class="p">)</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># The order of parameters matters</span>
+<span class="n">_types</span><span class="o">.</span><span class="n">CommonNNParameters</span><span class="p">([</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">])</span>
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;radius_cutoff&#39;: 1.0, &#39;similarity_cutoff&#39;: 2, &#39;_support_cutoff&#39;: 3, &#39;start_label&#39;: 4}
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># More robust initialisation via a mapping (checks required)</span>
+<span class="n">_types</span><span class="o">.</span><span class="n">CommonNNParameters</span><span class="o">.</span><span class="n">from_mapping</span><span class="p">({</span><span class="s2">&quot;similarity_cutoff&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
 </pre></div>
 </div>
 </div>
@@ -590,23 +644,51 @@ defaultdict(list, {1: [0, 1], 2: [2, 3, 4], 0: [5]})
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-{&#39;radius_cutoff&#39;: 1.0, &#39;similarity_cutoff&#39;: 0, &#39;similarity_cutoff_continuous&#39;: 0.0, &#39;n_member_cutoff&#39;: 0, &#39;current_start&#39;: 1}
+<span class="ansi-red-intense-fg ansi-bold">---------------------------------------------------------------------------</span>
+<span class="ansi-red-intense-fg ansi-bold">KeyError</span>                                  Traceback (most recent call last)
+Cell <span class="ansi-green-intense-fg ansi-bold">In [30], line 2</span>
+<span class="ansi-green-fg">      1</span> <span style="color: rgb(95,135,135)"># More robust initialisation via a mapping</span>
+<span class="ansi-green-intense-fg ansi-bold">----&gt; 2</span> _types<span style="color: rgb(98,98,98)">.</span>CommonNNParameters<span style="color: rgb(98,98,98)">.</span>from_mapping({<span style="color: rgb(175,0,0)">&#34;</span><span style="color: rgb(175,0,0)">similarity_cutoff</span><span style="color: rgb(175,0,0)">&#34;</span>: <span style="color: rgb(98,98,98)">2</span>})
+
+File <span class="ansi-green-intense-fg ansi-bold">src/commonnn/_types.pyx:54</span>, in <span class="ansi-cyan-fg">commonnn._types.ClusterParameters.from_mapping</span><span class="ansi-blue-intense-fg ansi-bold">()</span>
+
+<span class="ansi-red-intense-fg ansi-bold">KeyError</span>: &#39;radius_cutoff&#39;
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># More robust initialisation via a mapping (provided defaults)</span>
+<span class="n">_types</span><span class="o">.</span><span class="n">CommonNNParameters</span><span class="o">.</span><span class="n">from_mapping</span><span class="p">({</span><span class="s2">&quot;radius_cutoff&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;similarity_cutoff&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+{&#39;radius_cutoff&#39;: 1.0, &#39;similarity_cutoff&#39;: 2, &#39;_support_cutoff&#39;: 2, &#39;start_label&#39;: 1}
 </pre></div></div>
 </div>
 </section>
 <section id="Input-data">
 <h2>Input data<a class="headerlink" href="#Input-data" title="Permalink to this heading">¶</a></h2>
-<p>Common-nearest-neighbours clustering can be done on data in a variety of different input formats with variations in the actual execution of the procedure. A typical case for example, would be to use the coordinates of a number of points in some feature space. These coordinates may be stored in a 2-dimensional (NumPy-)array but they could be also held in a database. Maybe instead of point coordinates, we can also begin the clustering with pre-computed pairwise distances between the points. The
-present implementation in the <code class="docutils literal notranslate"><span class="pre">cnnclustering</span></code> package is aimed to be generic and widely agnostic about the source of input data. This is achieved by wrapping the input data structure into an <em>input data</em> object that complies with a universal <em>input data interface</em>. The input data interface is on the Python level defined through the abstract base class <code class="docutils literal notranslate"><span class="pre">_types.InputData</span></code> and specialised through its abstract subclasses <code class="docutils literal notranslate"><span class="pre">InputDataComponents</span></code>, <code class="docutils literal notranslate"><span class="pre">InputDataPairwiseDistances</span></code>,
-<code class="docutils literal notranslate"><span class="pre">InputDataPairwiseComuter</span></code>, <code class="docutils literal notranslate"><span class="pre">InputDataNeighbourhoods</span></code>, and <code class="docutils literal notranslate"><span class="pre">InputDataNeighbourhoodsComputer</span></code>. Valid input data types inherit from one of these abstract types and provide concrete implementation for the required methods. On the Cython level, the input data interface is universally defined through <code class="docutils literal notranslate"><span class="pre">_types.InputDataExtInterface</span></code>. Realisations of the interface by Cython extension types inherit from <code class="docutils literal notranslate"><span class="pre">InputDataExtInterface</span></code> and should be registered as a concrete implementation of on of the
-Python abstract base classes.</p>
-<p><code class="docutils literal notranslate"><span class="pre">InputData</span></code> objects should expose the following (typed) attributes:</p>
+<p>Common-nearest-neighbour clustering can be done on data in a variety of different input formats with variations in the actual execution of the procedure. A typical case for example, would be to use the coordinates of a number of points in some feature space. These coordinates may be stored in a 2-dimensional (NumPy-)array but they could be also held in a database. Maybe instead of point coordinates, we can also begin the clustering with pre-computed pairwise distances between the points. The
+present implementation in the <code class="docutils literal notranslate"><span class="pre">commonnn</span></code> package is aimed to be generic and widely agnostic about the source of input data. This is achieved by wrapping the input data structure into an <em>input data</em> object that complies with a universal <em>input data interface</em>. The input data interface is on the Python level defined through the abstract base class <code class="docutils literal notranslate"><span class="pre">_types.InputData</span></code> and specialised through its abstract subclasses <code class="docutils literal notranslate"><span class="pre">InputDataComponents</span></code>, <code class="docutils literal notranslate"><span class="pre">InputDataPairwiseDistances</span></code>,
+<code class="docutils literal notranslate"><span class="pre">InputDataPairwiseDistancesComputer</span></code>, <code class="docutils literal notranslate"><span class="pre">InputDataNeighbourhoods</span></code>, and <code class="docutils literal notranslate"><span class="pre">InputDataNeighbourhoodsComputer</span></code>. Valid input data types inherit from one of these abstract types and provide concrete implementation for the required methods. On the Cython level, the input data interface is universally defined through <code class="docutils literal notranslate"><span class="pre">_types.InputDataExtInterface</span></code>. Realisations of the interface by Cython extension types inherit from <code class="docutils literal notranslate"><span class="pre">InputDataExtInterface</span></code> and should be registered as a concrete implementation of
+one of the Python abstract base classes.</p>
+<p><code class="docutils literal notranslate"><span class="pre">InputData</span></code> objects should expose the following (typed) attributes and methods:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">data</span></code> (any): If applicable, a representation of the underlying data, preferably as NumPy array. Not strictly required for the clustering.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n_points</span></code> (<code class="docutils literal notranslate"><span class="pre">int</span></code>): The total number of points in the data set.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">meta</span></code> (<code class="docutils literal notranslate"><span class="pre">dict</span></code>): A Python dictionary storing meta-information about the data. Used keys are for example:</p>
 <ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">&quot;access_coords&quot;</span></code>: Can point coordinates be retrieved from the input data (bool)?</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;access_components&quot;</span></code>: Can point coordinates be retrieved from the input data (bool)?</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;access_distances&quot;</span></code>: Can distances be retrieved from the input data (bool)?</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;access_neighbours&quot;</span></code>: Can neighbourhoods be retrieved from the input data (bool)?</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;edges&quot;</span></code>: If stored input data points are actually belonging to more than one data source, a list of integers can state the number of points per parts.</p></li>
 </ul>
 </li>
@@ -637,17 +719,17 @@ Python abstract base classes.</p>
 <div class="highlight"><pre>
 <span class="ansi-red-intense-fg ansi-bold">---------------------------------------------------------------------------</span>
 <span class="ansi-red-intense-fg ansi-bold">TypeError</span>                                 Traceback (most recent call last)
-<span class="ansi-green-intense-fg ansi-bold">&lt;ipython-input-32-41a19cb81e61&gt;</span> in <span class="ansi-cyan-fg">&lt;module&gt;</span>
-<span class="ansi-green-fg">      1</span> <span class="ansi-red-intense-fg ansi-bold"># Requires data to initialise</span>
-<span class="ansi-green-intense-fg ansi-bold">----&gt; 2</span><span class="ansi-yellow-intense-fg ansi-bold"> </span>_types<span class="ansi-yellow-intense-fg ansi-bold">.</span>InputDataExtComponentsMemoryview<span class="ansi-yellow-intense-fg ansi-bold">(</span><span class="ansi-yellow-intense-fg ansi-bold">)</span>
+Cell <span class="ansi-green-intense-fg ansi-bold">In [32], line 2</span>
+<span class="ansi-green-fg">      1</span> <span style="color: rgb(95,135,135)"># Requires data to initialise</span>
+<span class="ansi-green-intense-fg ansi-bold">----&gt; 2</span> _types<span style="color: rgb(98,98,98)">.</span>InputDataExtComponentsMemoryview()
 
-<span class="ansi-green-intense-fg ansi-bold">src/cnnclustering/_types.pyx</span> in <span class="ansi-cyan-fg">cnnclustering._types.InputDataExtComponentsMemoryview.__cinit__</span><span class="ansi-blue-intense-fg ansi-bold">()</span>
+File <span class="ansi-green-intense-fg ansi-bold">src/commonnn/_types.pyx:1042</span>, in <span class="ansi-cyan-fg">commonnn._types.InputDataExtComponentsMemoryview.__cinit__</span><span class="ansi-blue-intense-fg ansi-bold">()</span>
 
 <span class="ansi-red-intense-fg ansi-bold">TypeError</span>: __cinit__() takes exactly 1 positional argument (0 given)
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">input_data</span> <span class="o">=</span> <span class="n">_types</span><span class="o">.</span><span class="n">InputDataExtComponentsMemoryview</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))</span>
@@ -660,14 +742,31 @@ Python abstract base classes.</p>
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-InputDataExtComponentsMemoryview
+InputDataExtComponentsMemoryview(components of 10 points in 3 dimensions)
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">input_data</span><span class="o">.</span><span class="n">data</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[34]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+&lt;MemoryView of &#39;ndarray&#39; at 0x7fd289696c20&gt;
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[36]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">input_data</span><span class="o">.</span><span class="n">data</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">input_data</span><span class="o">.</span><span class="n">to_components_array</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -677,16 +776,16 @@ InputDataExtComponentsMemoryview
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-array([[0.15423156, 0.048149  , 0.21238066],
-       [0.31544151, 0.45775574, 0.61957889],
-       [0.56523987, 0.25913205, 0.89349825],
-       [0.13423745, 0.81121165, 0.73824816],
-       [0.40574509, 0.27321913, 0.03709493],
-       [0.31003679, 0.03195195, 0.29738916],
-       [0.16060228, 0.12021594, 0.53725757],
-       [0.64273307, 0.32431991, 0.17237345],
-       [0.46686891, 0.8965295 , 0.52424868],
-       [0.84518244, 0.49240724, 0.18182637]])
+array([[0.63713848, 0.59261714, 0.11073944],
+       [0.50103405, 0.21809186, 0.17320056],
+       [0.02821558, 0.87189284, 0.35115627],
+       [0.15125287, 0.66732633, 0.46516895],
+       [0.98859881, 0.76153395, 0.72389632],
+       [0.85745918, 0.47118309, 0.52671906],
+       [0.90798414, 0.52142208, 0.87590641],
+       [0.15672554, 0.67594873, 0.61782398],
+       [0.86505685, 0.13480431, 0.8690348 ],
+       [0.94010104, 0.34241657, 0.75876202]])
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -703,11 +802,11 @@ array([[0.15423156, 0.048149  , 0.21238066],
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-{&#39;access_coords&#39;: True}
+{&#39;access_components&#39;: True}
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">input_data</span><span class="o">.</span><span class="n">n_points</span>
@@ -715,7 +814,7 @@ array([[0.15423156, 0.048149  , 0.21238066],
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[35]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -724,7 +823,7 @@ array([[0.15423156, 0.048149  , 0.21238066],
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">input_data</span><span class="o">.</span><span class="n">n_dim</span>
@@ -732,7 +831,7 @@ array([[0.15423156, 0.048149  , 0.21238066],
 </div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[38]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[39]:
 </pre></div>
 </div>
 <div class="output_area docutils container">
@@ -783,7 +882,7 @@ array([[0.15423156, 0.048149  , 0.21238066],
 <li class="toctree-l2"><a class="reference internal" href="advanced_usage.html">Advanced usage</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Demonstration of (generic) interfaces</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hierarchical_clustering_basics.html">Hierarchical clustering basics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="algorithm_explained.html">Density based clustering basics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="algorithm_explained.html">Density-based clustering basics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="md_example.html">Molecular dynamics application example</a></li>
 </ul>
 </li>
