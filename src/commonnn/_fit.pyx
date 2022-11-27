@@ -1109,7 +1109,7 @@ class HierarchicalFitterRepeat(HierarchicalFitter):
             radius_cutoffs,
             similarity_cutoffs,
             *,
-            sort_by_size=False,
+            sort_by_size=True,
             member_cutoff=None,
             max_clusters=None,
             info=True,
