@@ -20,6 +20,7 @@ github:
 
 clean_github:
 	@rm -rf ../docs/*
+	@rm -rf ../docsrc/_build*
 	@touch ../docs/.nojekyll
 
 
