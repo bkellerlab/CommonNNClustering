@@ -356,7 +356,7 @@ Packages:
     matplotlib: 3.6.0
     numpy: 1.23.3
     sklearn: 1.1.2
-    commonnn: 0.0.2
+    commonnn: 0.0.3
 </pre></div></div>
 </div>
 <p>We use <a class="reference external" href="https://matplotlib.org/">Matplotlib</a> to create plots. The <code class="docutils literal notranslate"><span class="pre">matplotlibrc</span></code> file in the root directory of the <code class="docutils literal notranslate"><span class="pre">CommonNNClustering</span></code> repository is used to customize the appearance of the plots.</p>
@@ -1023,7 +1023,7 @@ higher density criteria the number of resulting clusters will rise and so will t
 <p>We described rationally guided, manual hierarchical clustering in the <a class="reference internal" href="hierarchical_clustering_basics.html"><span class="doc">Hierarchical clustering basics</span></a> tutorial using the <code class="docutils literal notranslate"><span class="pre">isolate</span></code> formalism. Here we want to take the different approach of generating a cluster hierarchy more or less automatically for a given cluster parameter range. We will use the radius of <span class="math notranslate nohighlight">\(r=1.5\)</span> from the last section and a grid of <span class="math notranslate nohighlight">\(n_\mathrm{c}\)</span> values to cluster subsequently with higher density-thresholds while we keep
 track of the change in the cluster label assignments.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">tree</span> <span class="o">=</span> <span class="n">KDTree</span><span class="p">(</span><span class="n">langerin</span><span class="o">.</span><span class="n">input_data</span><span class="p">)</span>
@@ -1031,7 +1031,7 @@ track of the change in the cluster label assignments.</p>
 </div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">r</span> <span class="o">=</span> <span class="mf">1.5</span>
@@ -1078,7 +1078,7 @@ track of the change in the cluster label assignments.</p>
 </div>
 <p>At this point, the clustering does yield only clusters that are shrinking with even higher values for <span class="math notranslate nohighlight">\(n_\mathrm{c}\)</span>. To perform a semi-automatic hierarchical clustering, we can use the <code class="docutils literal notranslate"><span class="pre">HierarchicalFitter</span></code> class <code class="docutils literal notranslate"><span class="pre">HierarchicalFitterRepeat</span></code>. This type uses a fitter repeatedly to build a cluster hierarchy.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">_hierarchical_fitter</span> <span class="o">=</span> <span class="n">_fit</span><span class="o">.</span><span class="n">HierarchicalFitterRepeat</span><span class="p">(</span>
@@ -1088,7 +1088,7 @@ track of the change in the cluster label assignments.</p>
 </div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">c_range</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span>
@@ -1108,7 +1108,7 @@ track of the change in the cluster label assignments.</p>
 </pre></div></div>
 </div>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">fit_hierarchical</span><span class="p">(</span>
@@ -1293,25 +1293,6 @@ array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 <img alt="../_images/tutorial_md_example_65_0.png" src="../_images/tutorial_md_example_65_0.png" />
 </div>
 </div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Cluster hierarchy as pie diagram</span>
-<span class="c1">#     (hierarchy level increasing from the center outwards)</span>
-<span class="n">_</span> <span class="o">=</span> <span class="n">langerin_neighbourhoods</span><span class="o">.</span><span class="n">pie</span><span class="p">(</span>
-    <span class="n">pie_props</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;normalize&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<img alt="../_images/tutorial_md_example_66_0.png" src="../_images/tutorial_md_example_66_0.png" />
-</div>
-</div>
 <p>Another simplification is achieved through the <code class="docutils literal notranslate"><span class="pre">&quot;lonechild&quot;</span></code> protocol that will remove all the intermediate sole bundles at hierarchy levels where a cluster is only shrinking.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
@@ -1349,7 +1330,7 @@ array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorial_md_example_69_0.png" src="../_images/tutorial_md_example_69_0.png" />
+<img alt="../_images/tutorial_md_example_68_0.png" src="../_images/tutorial_md_example_68_0.png" />
 </div>
 </div>
 <p>And we can finally put everything together and incorporate the child clusters into the root data set. Note that for this, the <code class="docutils literal notranslate"><span class="pre">&quot;shrinking&quot;</span></code> protocol would have been sufficient.</p>
@@ -1390,7 +1371,7 @@ array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorial_md_example_75_0.png" src="../_images/tutorial_md_example_75_0.png" />
+<img alt="../_images/tutorial_md_example_74_0.png" src="../_images/tutorial_md_example_74_0.png" />
 </div>
 </div>
 <div class="nbinput docutils container">
@@ -1420,7 +1401,7 @@ array([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/tutorial_md_example_76_1.png" src="../_images/tutorial_md_example_76_1.png" />
+<img alt="../_images/tutorial_md_example_75_1.png" src="../_images/tutorial_md_example_75_1.png" />
 </div>
 </div>
 <div class="nbinput docutils container">
