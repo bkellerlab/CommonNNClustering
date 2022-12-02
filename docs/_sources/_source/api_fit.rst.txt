@@ -14,7 +14,7 @@ Go to:
 
    * :ref:`Fitter <sec_api_commonnn_fit_fitter>`
    * :ref:`HierarchicalFitter <sec_api_commonnn_fit_hfitter>`
-   * :ref:`Fitter <sec_api_commonnn_fit_predictor>`
+   * :ref:`Predictor <sec_api_commonnn_fit_predictor>`
 
 
 .. _sec_api_commonnn_fit_fitter:
