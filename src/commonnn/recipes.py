@@ -428,7 +428,7 @@ COMPONENT_NAME_TYPE_MAP = {
         "fifo": _types.QueueExtFIFOQueue
     },
     "priority_queue": {
-        "maxheap": _types.PriorityQueueMaxHeap
+        "maxheap": _types.PriorityQueueExtMaxHeap
     },
     "fitter": {
         "bfs": _fit.FitterExtCommonNNBFS,

@@ -9,7 +9,8 @@ from commonnn import _types
         (_types.QueueFIFODeque),
         (_types.QueueExtFIFOQueue),
         (_types.QueueExtLIFOVector),
-        (_types.PriorityQueueMaxHeap)
+        (_types.PriorityQueueMaxHeap),
+        (_types.PriorityQueueExtMaxHeap)
     ]
 )
 def test_init_queue(queue_type, file_regression):
@@ -52,6 +53,11 @@ def test_use_queue(queue_type, kind):
     [
         (
             _types.PriorityQueueMaxHeap,
+            [(1, 2, 1,), (7, 8, 5,), (9, 3, 3,)],
+            [(7, 8, 5,), (9, 3, 3,), (1, 2, 1,)],
+        ),
+        (
+            _types.PriorityQueueExtMaxHeap,
             [(1, 2, 1,), (7, 8, 5,), (9, 3, 3,)],
             [(7, 8, 5,), (9, 3, 3,), (1, 2, 1,)],
         ),
