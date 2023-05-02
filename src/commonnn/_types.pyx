@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections import Counter, defaultdict, deque
 from collections.abc import Container, Iterator, Sequence
-import heapq
+import _heapq
 from itertools import count
 from typing import Any, Optional, Type
 
@@ -963,7 +963,6 @@ class PriorityQueue(ABC):
         return []
 
 
-# TODO: Remove no cover pragma once concrete type is available
 cdef class PriorityQueueExtInterface:
 
     cdef void _reset(self) nogil: ...
@@ -973,26 +972,28 @@ cdef class PriorityQueueExtInterface:
     cdef AINDEX _size(self) nogil: ...
 
     def push(self, a: int, b: int, weight: float):
-        self._push(a, b, weight)  # pragma: no cover
+        self._push(a, b, weight)
 
     def pop(self) -> (int, int, float):
-        return self._pop()  # pragma: no cover
+        if self._size() < 1:
+            raise RuntimeError("Cannot pop from an empty queue")
+        return self._pop()
 
     def is_empty(self) -> bool:
-        return self._is_empty()  # pragma: no cover
+        return self._is_empty()
 
     def size(self) -> int:
-        return self._size()  # pragma: no cover
+        return self._size()
 
     def reset(self) -> None:
-        return self._reset()  # pragma: no cover
+        return self._reset()
 
     def __repr__(self):
-        return f"{type(self).__name__}"  # pragma: no cover
+        return f"{type(self).__name__}"
 
     @classmethod
     def get_builder_kwargs(cls):
-        return []  # pragma: no cover
+        return []
 
 
 class InputDataComponentsSequence(InputDataComponents):
@@ -3161,7 +3162,7 @@ Queue.register(QueueExtFIFOQueue)
 
 
 class PriorityQueueMaxHeap(PriorityQueue):
-    """Defines the prioqueue interface"""
+    """Implements the priority queue interface"""
 
     def __init__(self):
        self.reset()
@@ -3171,11 +3172,11 @@ class PriorityQueueMaxHeap(PriorityQueue):
 
     def push(self, a, b, weight) -> None:
         """Put values into the queue"""
-        heapq.heappush(self._queue, (-weight, (a, b)))
+        _heapq.heappush(self._queue, (-weight, (a, b)))
 
     def pop(self) -> (int, int, float):
         """Retrieve values from the queue"""
-        weight, (a, b) = heapq.heappop(self._queue)
+        weight, (a, b) = _heapq.heappop(self._queue)
         return a, b, -weight
 
     def is_empty(self) -> bool:
@@ -3187,3 +3188,48 @@ class PriorityQueueMaxHeap(PriorityQueue):
 
     def size(self):
         return len(self._queue)
+
+
+cdef class PriorityQueueExtMaxHeap(PriorityQueueExtInterface):
+    """Implements the priority queue interface"""
+
+    cdef inline void _reset(self) nogil:
+        while self._queue.size() > 0:
+            self._queue.pop()
+
+    cdef inline void _push(self, const AINDEX a, const AINDEX b, const AVALUE weight) nogil:
+
+        cdef stdpair[AINDEX, AINDEX] edge_pair
+        cdef stdpair[AVALUE, stdpair[AINDEX, AINDEX]] full_pair
+
+        edge_pair.first = a
+        edge_pair.second = b
+        full_pair.first = weight
+        full_pair.second = edge_pair
+
+        self._queue.push(full_pair)
+
+    cdef inline (AINDEX, AINDEX, AVALUE) _pop(self) nogil:
+        """
+
+        Note:
+            Never try to pop from an empty queue. This will set the size
+            to negative values, which confuses `q.empty`.
+            A check is ommitted for efficiency here but included in
+            `:class:`~commonnn._types.PriorityQueueExtMaxHeap.pop()`
+        """
+
+        cdef stdpair[AVALUE, stdpair[AINDEX, AINDEX]] full_pair
+
+        full_pair = self._queue.top()
+        self._queue.pop()
+        return full_pair.second.first, full_pair.second.second, full_pair.first
+
+    cdef inline bint _is_empty(self) nogil:
+        return self._queue.empty()
+
+    cdef AINDEX _size(self) nogil:
+        return self._queue.size()
+
+
+PriorityQueue.register(PriorityQueueExtMaxHeap)

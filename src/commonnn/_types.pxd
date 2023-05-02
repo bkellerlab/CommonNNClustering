@@ -7,6 +7,7 @@ from libcpp.unordered_set cimport unordered_set as stduset
 from libcpp.set cimport set as stdset
 from libcpp.vector cimport vector as stdvector
 from libcpp.queue cimport queue as stdqueue, priority_queue as stdprioqueue
+from libcpp.pair cimport pair as stdpair
 
 
 cdef extern from "<algorithm>" namespace "std":
@@ -214,3 +215,8 @@ cdef class QueueExtLIFOVector(QueueExtInterface):
 
 cdef class QueueExtFIFOQueue(QueueExtInterface):
     cdef stdqueue[AINDEX] _queue
+
+cdef class PriorityQueueExtMaxHeap(PriorityQueueExtInterface):
+    cdef stdprioqueue[stdpair[AVALUE, stdpair[AINDEX, AINDEX]]] _queue
+    cdef stdpair[AINDEX, AINDEX] _edge_pair
+    cdef stdpair[AVALUE, stdpair[AINDEX, AINDEX]] _full_pair
