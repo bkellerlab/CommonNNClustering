@@ -1036,7 +1036,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
                 top._graph.add_edges_from(left._graph.edges(data=True))
                 children = top.children
                 children[label] = left
-                top._children =  children
+                top._children = children
                 del top_bundles[la - n_points]
                 label += 1
 
@@ -1045,7 +1045,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
                 top._graph.add_edges_from(right._graph.edges(data=True))
                 children = top.children
                 children[label] = right
-                top._children =  children
+                top._children = children
                 del top_bundles[lb - n_points]
 
             parent_indicator[ra] = rb
