@@ -1153,7 +1153,92 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
             self,
             InputDataExtInterface input_data,
             Labels labels,
-            ClusterParameters cluster_params) nogil: ...
+            ClusterParameters cluster_params) nogil:
+
+        cdef AINDEX n_points, point, n_members, member, member_index, a, b
+        cdef AVALUE weight
+        cdef AINDEX* _labels = &labels._labels[0]
+        cdef ABOOL* _consider = &labels._consider[0]
+        cdef (AINDEX, AINDEX, AVALUE) edge
+
+        self._priority_queue._reset()
+        self._priority_queue_tree._reset()
+
+        n_points = input_data._n_points
+        for point in range(n_points):
+            if _consider[point] == 0:
+                continue
+            _consider[point] = 0
+
+            self._neighbours_getter._get(
+                point,
+                input_data,
+                self._neighbours,
+                cluster_params
+                )
+
+            n_members = self._neighbours._n_points
+            for member_index in range(n_members):
+                member = self._neighbours._get_member(member_index)
+
+                if _consider[member] == 0:
+                    continue
+
+                self._neighbours_getter._get(
+                    member,
+                    input_data,
+                    self._neighbour_neighbours,
+                    cluster_params
+                    )
+
+                weight = self._similarity_checker._get(
+                    self._neighbours,
+                    self._neighbour_neighbours,
+                    cluster_params
+                    )
+
+                self._priority_queue._push(point, member, weight)
+
+            while not self._priority_queue._is_empty():
+                edge = self._priority_queue_tree._pop()
+                a = edge[0]
+                b = edge[1]
+                weight = edge[2]
+
+                if _consider[b] == 0:
+                    continue
+                _consider[b] = 0
+
+                self._priority_queue_tree._push(a, b, weight)
+
+                self._neighbours_getter._get(
+                    b,
+                    input_data,
+                    self._neighbours,
+                    cluster_params
+                    )
+
+                n_members = self._neighbours._n_points
+                for member_index in range(n_members):
+                    member = self._neighbours._get_member(member_index)
+
+                    if _consider[member] == 0:
+                        continue
+
+                    self._neighbours_getter._get(
+                        member,
+                        input_data,
+                        self._neighbour_neighbours,
+                        cluster_params
+                        )
+
+                    weight = self._similarity_checker._get(
+                        self._neighbours,
+                        self._neighbour_neighbours,
+                        cluster_params
+                        )
+
+                    self._priority_queue._push(b, member, weight)
 
     cdef void _make_scipy_hierarchy(self, AINDEX n_points):
         """Build a SciPy-compatible linkage matrix Z from MST edges"""
