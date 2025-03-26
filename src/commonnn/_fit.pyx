@@ -42,15 +42,15 @@ class Fitter(ABC):
     """Defines the fitter interface"""
 
     @abstractmethod
-    def fit(self, Bundle bundle, *, **kwargs):
+    def fit(self, Bundle bundle, *, **kwargs) -> (float, Type["ClusterParameters"]):
         """Generic clustering outer function"""
 
     @abstractmethod
     def _fit(
             self,
-            input_data: Type['InputData'],
-            labels: Type['Labels'],
-            cluster_params: Type['ClusterParameters']):
+            object input_data,
+            Labels labels,
+            ClusterParameters cluster_params) -> None:
         """Generic clustering inner function"""
 
     @abstractmethod
@@ -171,7 +171,7 @@ class HierarchicalFitter(ABC):
     """Defines the hierarchical fitter interface"""
 
     @abstractmethod
-    def fit(self, Bundle bundle, *args, **kwargs):
+    def fit(self, Bundle bundle, *, **kwargs) -> None:
         """Generic clustering"""
 
     def __repr__(self):
@@ -179,13 +179,13 @@ class HierarchicalFitter(ABC):
 
 
 cdef class FitterExtInterface:
-    def fit(self, Bundle bundle, *, **kwargs): ...
+    def fit(self, Bundle bundle, *, **kwargs) -> (float, Type["ClusterParameters"]): ...
 
     def _fit(
             self,
-            input_data: Type['InputData'],
-            labels: Type['Labels'],
-            cluster_params: Type['ClusterParameters']):
+            object input_data,
+            Labels labels,
+            ClusterParameters cluster_params) -> None:
 
         self._fit_inner(input_data, labels, cluster_params)
 
@@ -197,14 +197,6 @@ cdef class FitterExtInterface:
 
     def make_parameters(
             self, **kwargs) -> Type["ClusterParameters"]: ...
-
-    def __repr__(self):
-        return f"{type(self).__name__}"
-
-
-class HierarchicalFitterExtInterface:
-
-    def fit(self, Bundle bundle, *args, **kwargs): ...
 
     def __repr__(self):
         return f"{type(self).__name__}"
@@ -362,7 +354,7 @@ class FitterCommonNNBFS(FitterCommonNN):
             self,
             object input_data,
             Labels labels,
-            ClusterParameters cluster_params):
+            ClusterParameters cluster_params) -> None:
         """Generic common-nearest-neighbour clustering
 
         Uses a breadth-first-search (BFS) approach to grow clusters.
@@ -880,8 +872,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             ("priority_queue_tree", "priority_queue")
             ]
 
-    def make_parameters(
-            self, **kwargs) -> Type["ClusterParameters"]:
+    def make_parameters(self, **kwargs) -> Type["ClusterParameters"]:
         cluster_params = self._parameter_type.from_mapping(kwargs)
 
         try:
@@ -897,10 +888,12 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             self,
             Bundle bundle, *,
             info=True,
-            **kwargs) -> (float, Type["ClusterParameters"]):
+            member_cutoff=10,
+            bundle_hierarchy=True,
+            **kwargs) -> None:
 
         bundle._labels = Labels(
-            np.ones(n_points, order="C", dtype=P_AINDEX)
+            np.ones(bundle._input_data.n_points, order="C", dtype=P_AINDEX)
             )
 
         cluster_params = self.make_parameters(**kwargs)
@@ -908,6 +901,12 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
         _, execution_time = report.timed(self._fit)(
             bundle._input_data, bundle._labels, cluster_params
             )
+
+        if bundle_hierarchy:
+            self.scipy_to_bundle_hierarchy(
+                self._artifacts["Z"],
+                member_cutoff=member_cutoff
+                )
 
         if info:
             meta = {
@@ -917,279 +916,31 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             }
             bundle._labels._meta = meta
 
-        return execution_time, original_params
+        return execution_time, cluster_params
 
     def _fit(
             self,
-            input_data: Type['InputData'],
-            labels: Type['Labels'],
-            cluster_params: Type['ClusterParameters']):
-
-        if not NX_FOUND:
-            raise ModuleNotFoundError("No module named 'networkx'")
-
-        cdef AVALUE INFTY = np.inf
-
-        self._priority_queue.reset()
-        self._priority_queue_tree.reset()
-
-        cdef object input_data = bundle._input_data
-        cdef AINDEX n_points = input_data._n_points
-
-        cdef ABOOL* _consider = &labels._consider[0]
-
-        cdef AINDEX m, member_index, a, b, i, j, ra, rb
-        cdef AVALUE weight
-        cdef AINDEX bundle_index, point, member, _member_cutoff, label
-
-        cluster_params = self.make_parameters(**kwargs)
-
-        # NOTE: Temporary workaround for missing default values
-        member_cutoff = None
-        if member_cutoff is None:
-            member_cutoff = 10
-        _member_cutoff = member_cutoff
-
-        for point in range(n_points):
-            if _consider[point] == 0:
-                continue
-            _consider[point] = 0
-
-            self._neighbours_getter.get(
-                point,
-                input_data,
-                self._neighbours,
-                cluster_params
-                )
-
-            m = self._neighbours._n_points
-            for member_index in range(m):
-                member = self._neighbours.get_member(member_index)
-
-                if _consider[member] == 0:
-                    continue
-
-                self._neighbours_getter.get(
-                    member,
-                    input_data,
-                    self._neighbour_neighbours,
-                    cluster_params
-                    )
-
-                weight = self._similarity_checker.get(
-                    self._neighbours,
-                    self._neighbour_neighbours,
-                    cluster_params
-                    )
-
-                self._priority_queue.push(point, member, weight)
-
-            while not self._priority_queue.is_empty():
-                a, b, weight = self._priority_queue.pop()
-
-                if _consider[b] == 0:
-                    continue
-                _consider[b] = 0
-
-                self._priority_queue_tree.push(a, b, weight)
-
-                self._neighbours_getter.get(
-                    b,
-                    input_data,
-                    self._neighbours,
-                    cluster_params
-                    )
-
-                m = self._neighbours._n_points
-                for member_index in range(m):
-                    member = self._neighbours.get_member(member_index)
-
-                    if _consider[member] == 0:
-                        continue
-
-                    self._neighbours_getter.get(
-                        member,
-                        input_data,
-                        self._neighbour_neighbours,
-                        cluster_params
-                        )
-
-                    weight = self._similarity_checker.get(
-                        self._neighbours,
-                        self._neighbour_neighbours,
-                        cluster_params
-                        )
-
-                    self._priority_queue.push(b, member, weight)
-
-        print("Finished building MST")
-
-        # Build hierarchy from MST
-        cdef AINDEX[::1] parent_indicator = np.arange(n_points)
-        cdef AINDEX[::1] root_clabel_indicator = np.arange(n_points)
-        cdef dict top_bundles = {}
-        cdef ABOOL[::1] checked = np.zeros(n_points - 1, dtype=bool)
-        cdef Bundle top, left, right
-        cdef AVALUE current_weight = INFTY
-        cdef bint needs_folding = False
-
-        i = -1
-        for i in range(self._priority_queue_tree.size()):
-            a, b, weight = self._priority_queue_tree.pop()
-
-            ra = get_root(a, parent_indicator)
-            rb = get_root(b, parent_indicator)
-            la = root_clabel_indicator[ra]
-            lb = root_clabel_indicator[rb]
-
-            if (weight < current_weight):
-                for bundle_index, top in top_bundles.items():
-                    if checked[bundle_index]:
-                        continue
-                    check_children(top, member_cutoff, needs_folding)
-                    checked[bundle_index] = True
-                needs_folding = False
-            else:
-                needs_folding = True
-
-            top = top_bundles[i] = Bundle(
-                graph=nx.Graph([(a, b, {"weight": weight})]),
-            )
-            top._lambda = weight
-
-            label = 1
-            if (la >= n_points):
-                left = top_bundles[la - n_points]
-                top._graph.add_edges_from(left._graph.edges(data=True))
-                children = top.children
-                children[label] = left
-                top._children = children
-                del top_bundles[la - n_points]
-                label += 1
-
-            if (lb >= n_points):
-                right = top_bundles[lb - n_points]
-                top._graph.add_edges_from(right._graph.edges(data=True))
-                children = top.children
-                children[label] = right
-                top._children = children
-                del top_bundles[lb - n_points]
-
-            parent_indicator[ra] = rb
-            root_clabel_indicator[rb] = i + n_points
-            current_weight = weight
-
-        for bundle_index, top in top_bundles.items():
-            if checked[bundle_index]:
-                continue
-            check_children(top, _member_cutoff, needs_folding)
-
-        if i < (n_points - 2):
-
-            bundle._lambda = -INFTY
-            bundle._graph = nx.Graph()
-
-            count = 1
-            for top in top_bundles.values():
-                if len(top._graph) >= member_cutoff:
-                    bundle._graph.add_edges_from(bundle._graph.edges(data=True))
-                    children = bundle.children
-                    children[count] = top
-                    bundle._children =  children
-                    count += 1
-
-            for child in bundle._children.values():
-                child._parent = weakref.proxy(bundle)
-
-        else:
-            top = top_bundles[n_points - 2]
-            bundle._graph = top._graph
-            bundle._lambda = top._lambda
-
-        print("Finished building hierarchy")
-
-
-cdef class HierarchicalFitterExtCommonNNMSTPrim(HierarchicalFitterExtInterface):
-
-    _parameter_type = RadiusParameters
-
-    def __cinit__(
-            self,
-            NeighboursGetterExtInterface neighbours_getter,
-            NeighboursExtInterface neighbours,
-            NeighboursExtInterface neighbour_neighbours,
-            SimilarityCheckerExtInterface similarity_checker,
-            PriorityQueueExtInterface priority_queue,
-            PriorityQueueExtInterface priority_queue_tree):
-        self._neighbours_getter = neighbours_getter
-        self._neighbours = neighbours
-        self._neighbour_neighbours = neighbour_neighbours
-        self._similarity_checker = similarity_checker
-        self._priority_queue = priority_queue
-        self._priority_queue_tree = priority_queue_tree
-
-    def __str__(self):
-
-        attr_str = ", ".join([
-            f"ngetter={self._neighbours_getter}",
-            f"na={self._neighbours}",
-            f"nb={self._neighbour_neighbours}",
-            f"checker={self._similarity_checker}",
-            f"prioq={self._priority_queue}",
-            f"prioq_tree={self._priority_queue_tree}"
-        ])
-
-    @classmethod
-    def get_builder_kwargs(cls):
-        return [
-            ("neighbours_getter", None),
-            ("neighbours", None),
-            ("neighbour_neighbours","neighbours"),
-            ("similarity_checker", None),
-            ("priority_queue", None),
-            ("priority_queue_tree", "priority_queue")
-            ]
-
-    def make_parameters(
-            self, **kwargs) -> Type["ClusterParameters"]:
-        cluster_params = self._parameter_type.from_mapping(kwargs)
-
-        try:
-            used_metric = self._neighbours_getter._distance_getter._metric
-        except AttributeError:
-            pass
-        else:
-            cluster_params.radius_cutoff = used_metric.adjust_radius(cluster_params.radius_cutoff)
-
-        return cluster_params
-
-    def fit(self, bundle, *, purge=True, info=True, **kwargs):
-        HierarchicalFitterCommonNNMSTPrim.fit(self, bundle, purge=purge, info=info, **kwargs)
-
-    def _fit(
-            self,
-            input_data: Type['InputData'],
-            labels: Type['Labels'],
-            cluster_params: Type['ClusterParameters']):
+            object input_data,
+            Labels labels,
+            ClusterParameters cluster_params) -> None:
 
         self._make_mst(input_data, labels, cluster_params)
         self._make_scipy_hierarchy(input_data._n_points)
-
-    cdef void _make_mst(
+        
+    def _make_mst(
             self,
-            InputDataExtInterface input_data,
+            object input_data,
             Labels labels,
-            ClusterParameters cluster_params) nogil:
+            ClusterParameters cluster_params) -> None:
 
         cdef AINDEX n_points, point, n_members, member, member_index, a, b
         cdef AVALUE weight
-        cdef AINDEX* _labels = &labels._labels[0]
         cdef ABOOL* _consider = &labels._consider[0]
 
         self._priority_queue.reset()
         self._priority_queue_tree.reset()
 
-        n_points = input_data._n_points
+        n_points = input_data.n_points
         for point in range(n_points):
             if _consider[point] == 0:
                 continue
@@ -1262,57 +1013,135 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim(HierarchicalFitterExtInterface):
 
                     self._priority_queue.push(b, member, weight)
 
-    cdef void _make_cluster_hierarchy(AINDEX n_points):
-        
+    def _make_scipy_hierarchy(self, AINDEX n_points) -> None:
+        """Build a SciPy-compatible linkage matrix Z from MST edges"""
+
         cdef AVALUE[:, ::1] Z = np.zeros((n_points - 1, 4), dtype=P_AVALUE)
         cdef AINDEX[::1] parents_indicator = np.arange(n_points * 2 - 1, dtype=P_AINDEX)
-
-        self._make_scipy_hierarchy_inner(Z, parent_indicator)
-        
-        self._artifcats = {
-            "Z": np.array(Z),
-        }
-
-    cdef void _make_scipy_hierarchy_inner(AVALUE[:, ::1] Z, AINDEX[::1] parents_indicator) nogil:
-        """Build a SciPy-compatible linkage matrix Z from MST edges""""
-
-        cdef AVALUE* _Z = &Z[0, 0]
-        cdef AINDEX* _parents_indicator = &parents_indicator[0]
-        cdef AINDEX i, _i, n_points, a, b, root_a, root_b, size_a, size_b
-        cdef AVALUE weight
+        cdef AINDEX i, a, b, root_a, root_b, index
+        cdef AVALUE weight, size_a, size_b
 
         i = 0
         while not self._priority_queue_tree.is_empty():
-            _i = i * 4
 
             a, b, weight = self._priority_queue_tree.pop()
-
             root_a = get_root(a, parents_indicator)
             root_b = get_root(b, parents_indicator)
             
             if root_a >= n_points:
-                size_a = _Z[(root_a - n_points) * 4 + 3]
+                size_a = Z[root_a - n_points, 3]
             else:
                 size_a = 1
                 
             if root_b >= n_points:
-                size_b = _Z[(root_b - n_points) * 4 + 3]
+                size_b = Z[root_b  - n_points, 3]
             else:
                 size_b = 1
 
             # Record the merge in Z
-            _Z[_i] = min(root_a, root_b)
-            _Z[_i + 1] = max(root_a, root_b)
-            _Z[_i + 2] = weight
-            _Z[_i + 3] = size_a + size_b
+            Z[i, 0] = min(root_a, root_b)
+            Z[i, 1] = max(root_a, root_b)
+            Z[i, 2] = weight
+            Z[i, 3] = size_a + size_b
 
-            _parents_indicator[root_a] = n_points + i
-            _parents_indicator[root_b] = n_points + i
+            parents_indicator[root_a] = n_points + i
+            parents_indicator[root_b] = n_points + i
 
             i += 1
 
+        self._artifacts = {
+            "Z": np.array(Z),
+        }
 
-HierarchicalFitter.register(HierarchicalFitterExtCommonNNMSTPrim)
+    def scipy_to_bundle_hierarchy(self, Z, *, AINDEX member_cutoff=10) -> None:
+        if not NX_FOUND:
+            raise ModuleNotFoundError("No module named 'networkx'")
+
+        cdef AVALUE INFTY = np.inf
+
+        # Build hierarchy from MST
+        #cdef AINDEX[::1] parent_indicator = np.arange(n_points)
+        #cdef AINDEX[::1] root_clabel_indicator = np.arange(n_points)
+        #cdef dict top_bundles = {}
+        #cdef ABOOL[::1] checked = np.zeros(n_points - 1, dtype=bool)
+        #cdef Bundle top, left, right
+        #cdef AVALUE current_weight = INFTY
+        #cdef bint needs_folding = False
+
+        #i = -1
+        #for i in range(self._priority_queue_tree.size()):
+        #    a, b, weight = self._priority_queue_tree.pop()
+
+        #    ra = get_root(a, parent_indicator)
+        #    rb = get_root(b, parent_indicator)
+        #    la = root_clabel_indicator[ra]
+        #    lb = root_clabel_indicator[rb]
+
+        #    if (weight < current_weight):
+        #        for bundle_index, top in top_bundles.items():
+        #            if checked[bundle_index]:
+        #                continue
+        #            check_children(top, member_cutoff, needs_folding)
+        #            checked[bundle_index] = True
+        #        needs_folding = False
+        #    else:
+        #        needs_folding = True
+
+        #    top = top_bundles[i] = Bundle(
+        #        graph=nx.Graph([(a, b, {"weight": weight})]),
+        #    )
+        #    top._lambda = weight
+
+        #    label = 1
+        #    if (la >= n_points):
+        #        left = top_bundles[la - n_points]
+        #        top._graph.add_edges_from(left._graph.edges(data=True))
+        #        children = top.children
+        #        children[label] = left
+        #        top._children = children
+        #        del top_bundles[la - n_points]
+        #        label += 1
+
+        #    if (lb >= n_points):
+        #        right = top_bundles[lb - n_points]
+        #        top._graph.add_edges_from(right._graph.edges(data=True))
+        #        children = top.children
+        #        children[label] = right
+        #        top._children = children
+        #        del top_bundles[lb - n_points]
+
+        #    parent_indicator[ra] = rb
+        #    root_clabel_indicator[rb] = i + n_points
+        #    current_weight = weight
+
+        #for bundle_index, top in top_bundles.items():
+        #    if checked[bundle_index]:
+        #        continue
+        #    check_children(top, member_cutoff, needs_folding)
+
+        #if i < (n_points - 2):
+
+        #    bundle._lambda = -INFTY
+        #    bundle._graph = nx.Graph()
+
+        #    count = 1
+        #    for top in top_bundles.values():
+        #        if len(top._graph) >= member_cutoff:
+        #            bundle._graph.add_edges_from(bundle._graph.edges(data=True))
+        #            children = bundle.children
+        #            children[count] = top
+        #            bundle._children =  children
+        #            count += 1
+
+        #    for child in bundle._children.values():
+        #        child._parent = weakref.proxy(bundle)
+
+        #else:
+        #    top = top_bundles[n_points - 2]
+        #    bundle._graph = top._graph
+        #    bundle._lambda = top._lambda
+
+        #print("Finished building hierarchy")
 
 
 cdef class HierarchicalFitterExtCommonNNMSTPrim:
@@ -1335,48 +1164,23 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
         self._priority_queue_tree = priority_queue_tree
 
     def __str__(self):
-
-        attr_str = ", ".join([
-            f"ngetter={self._neighbours_getter}",
-            f"na={self._neighbours}",
-            f"nb={self._neighbour_neighbours}",
-            f"checker={self._similarity_checker}",
-            f"prioq={self._priority_queue}",
-            f"prioq_tree={self._priority_queue_tree}"
-        ])
+        return HierarchicalFitterCommonNNMSTPrim.__str__(self)
 
     @classmethod
     def get_builder_kwargs(cls):
-        return [
-            ("neighbours_getter", None),
-            ("neighbours", None),
-            ("neighbour_neighbours","neighbours"),
-            ("similarity_checker", None),
-            ("priority_queue", None),
-            ("priority_queue_tree", "priority_queue")
-            ]
+        return HierarchicalFitterCommonNNMSTPrim.get_builder_kwargs()
 
-    def make_parameters(
-            self, **kwargs) -> Type["ClusterParameters"]:
-        cluster_params = self._parameter_type.from_mapping(kwargs)
+    def make_parameters(self, **kwargs) -> Type["ClusterParameters"]:
+        return HierarchicalFitterCommonNNMSTPrim.make_parameters(self, **kwargs)
 
-        try:
-            used_metric = self._neighbours_getter._distance_getter._metric
-        except AttributeError:
-            pass
-        else:
-            cluster_params.radius_cutoff = used_metric.adjust_radius(cluster_params.radius_cutoff)
-
-        return cluster_params
-
-    def fit(self, bundle, *, purge=True, info=True, **kwargs):
+    def fit(self, bundle, *, purge=True, info=True, member_cutoff=10, **kwargs) -> (float, Type["ClusterParameters"]):
         HierarchicalFitterCommonNNMSTPrim.fit(self, bundle, purge=purge, info=info, **kwargs)
 
     def _fit(
             self,
-            input_data: Type['InputData'],
-            labels: Type['Labels'],
-            cluster_params: Type['ClusterParameters']):
+            object input_data,
+            Labels labels,
+            ClusterParameters cluster_params) -> None:
 
         self._make_mst(input_data, labels, cluster_params)
         self._make_scipy_hierarchy(input_data._n_points)
@@ -1389,7 +1193,6 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
 
         cdef AINDEX n_points, point, n_members, member, member_index, a, b
         cdef AVALUE weight
-        cdef AINDEX* _labels = &labels._labels[0]
         cdef ABOOL* _consider = &labels._consider[0]
         cdef (AINDEX, AINDEX, AVALUE) edge
 
@@ -1480,7 +1283,7 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
 
         self._make_scipy_hierarchy_inner(Z, parents_indicator)
         
-        self._artifcats = {
+        self._artifacts = {
             "Z": np.array(Z),
         }
 
@@ -1529,6 +1332,12 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
 
             i += 1
 
+    def scipy_to_bundle_hierarchy(self, AINDEX member_cutoff=10) -> None:
+        HierarchicalFitterCommonNNMSTPrim.scipy_to_bundle_hierarchy(self, member_cutoff=member_cutoff)
+
+HierarchicalFitter.register(HierarchicalFitterExtCommonNNMSTPrim)
+
+
 class HierarchicalFitterRepeat(HierarchicalFitter):
 
     def __init__(
@@ -1551,16 +1360,17 @@ class HierarchicalFitterRepeat(HierarchicalFitter):
             ]
 
     def fit(
-            self, Bundle bundle,
+            self,
+            Bundle bundle,
+            *
             radius_cutoffs,
             similarity_cutoffs,
-            *,
             sort_by_size=True,
             member_cutoff=None,
             max_clusters=None,
             info=True,
             v=False,
-            **kwargs):
+            **kwargs) -> None:
 
         if not isinstance(radius_cutoffs, Iterable):
             radius_cutoffs = [radius_cutoffs]

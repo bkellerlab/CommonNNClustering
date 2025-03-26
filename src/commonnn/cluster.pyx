@@ -304,9 +304,8 @@ class Clustering:
 
     def fit_hierarchical(
             self,
-            *args,
+            bundle=None, *,
             purge=True,
-            bundle=None,
             **kwargs):
         """Execute hierarchical clustering procedure
 
@@ -315,7 +314,7 @@ class Clustering:
             bundle: Root bundle
 
         Note:
-            Used arguments and further keyword arguments depend on the
+            Other keyword arguments depend on the
             used hierarchical fitter.
         """
 
@@ -325,7 +324,7 @@ class Clustering:
         if purge or (bundle._children is None):
             bundle._children = {}
 
-        self._hierarchical_fitter.fit(bundle, *args, **kwargs)
+        self._hierarchical_fitter.fit(bundle, **kwargs)
 
     def predict(
             self, other, *, bundle=None, **kwargs):
