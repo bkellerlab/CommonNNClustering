@@ -15,6 +15,7 @@ except ModuleNotFoundError as error:
     NX_FOUND = False  # pragma: no cover
 
 import numpy as np
+from loguru import logger
 
 from commonnn import report
 from commonnn._primitive_types import P_AINDEX, P_AVALUE, P_ABOOL
@@ -892,6 +893,8 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             bundle_hierarchy=True,
             **kwargs) -> None:
 
+        logger.info(f"Started hierarchical CommonNN clustering - {type(self).__name__}")
+
         bundle._labels = Labels(
             np.ones(bundle._input_data.n_points, order="C", dtype=P_AINDEX)
             )
@@ -903,6 +906,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             )
 
         if bundle_hierarchy:
+            logger.info(f"Translating Scipy Z matrix into bundle hierarchy")
             self.scipy_to_bundle_hierarchy(
                 self._artifacts["Z"],
                 member_cutoff=member_cutoff
@@ -925,7 +929,9 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             ClusterParameters cluster_params) -> None:
 
         self._make_mst(input_data, labels, cluster_params)
+        logger.info(f"Built MST")
         self._make_scipy_hierarchy(input_data._n_points)
+        logger.info(f"Computed Scipy Z matrix")
         
     def _make_mst(
             self,
@@ -954,6 +960,9 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
                 )
 
             n_members = self._neighbours._n_points
+            if (n_members - self._neighbours_getter.is_selfcounting) == 0:
+                logger.warning(f"Point {point} has no neighbours")
+
             for member_index in range(n_members):
                 member = self._neighbours.get_member(member_index)
 
@@ -1016,17 +1025,27 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
     def _make_scipy_hierarchy(self, AINDEX n_points) -> None:
         """Build a SciPy-compatible linkage matrix Z from MST edges"""
 
+        cdef stdvector[AINDEX] top_roots = []
+        cdef AINDEX n_edges = self._priority_queue_tree.size()
         cdef AVALUE[:, ::1] Z = np.zeros((n_points - 1, 4), dtype=P_AVALUE)
         cdef AINDEX[::1] parents_indicator = np.arange(n_points * 2 - 1, dtype=P_AINDEX)
-        cdef AINDEX i, a, b, root_a, root_b, index
+        cdef AINDEX[::1] seen_indicator = np.zeros(n_points, dtype=P_AINDEX)
+        cdef AINDEX i, a, b, new_id, root_a, root_b, index
         cdef AVALUE weight, size_a, size_b
+
+        logger.debug(f"{n_edges} edges in MST")
 
         i = 0
         while not self._priority_queue_tree.is_empty():
 
             a, b, weight = self._priority_queue_tree.pop()
+            seen_indicator[a] = 1
+            seen_indicator[b] = 1
+
             root_a = get_root(a, parents_indicator)
             root_b = get_root(b, parents_indicator)
+
+            logger.debug(f"Iteration {i}: Points {a} (cluster {root_a}) and {b} (cluster {root_b}) connect at weight={weight}")
             
             if root_a >= n_points:
                 size_a = Z[root_a - n_points, 3]
@@ -1044,10 +1063,46 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             Z[i, 2] = weight
             Z[i, 3] = size_a + size_b
 
-            parents_indicator[root_a] = n_points + i
-            parents_indicator[root_b] = n_points + i
+            new_id = n_points + i
+            parents_indicator[root_a] = new_id
+            parents_indicator[root_b] = new_id
 
             i += 1
+
+        # Merge disjoint components
+        for index in range(n_points + i):
+            if parents_indicator[index] == index:
+                top_roots.push_back(index)
+
+        if len(top_roots) > 1:
+            logger.info(f"Found {len(top_roots)} disjoint components")
+            root_a = top_roots.back()
+            top_roots.pop_back()
+            while len(top_roots) > 0:
+                root_b =  top_roots.back()
+                top_roots.pop_back()
+
+                if root_a >= n_points:
+                    size_a = Z[root_a - n_points, 3]
+                else:
+                    size_a = 1
+                    
+                if root_b >= n_points:
+                    size_b = Z[root_b - n_points, 3]
+                else:
+                    size_b = 1
+
+                Z[i, 0] = min(root_a, root_b)
+                Z[i, 1] = max(root_a, root_b)
+                Z[i, 2] = 0
+                Z[i, 3] = size_a + size_b
+                
+                new_id = n_points + i
+                parents_indicator[root_a] = new_id
+                parents_indicator[root_b] = n_points + i
+                root_a = new_id
+
+                i += 1
 
         self._artifacts = {
             "Z": np.array(Z),
