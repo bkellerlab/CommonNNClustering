@@ -568,7 +568,7 @@ class Clustering:
 
         Args:
             ax: The `Axes` instance to which to add the plot.  If
-            `None`, a new `Figure` with `Axes` will be created.
+                `None`, a new `Figure` with `Axes` will be created.
             clusters:
                 Cluster numbers to include in the plot.  If `None`,
                 consider all.
