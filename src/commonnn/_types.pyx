@@ -291,10 +291,12 @@ cdef class Labels:
         Optionally, does only
         keep the `max_clusters` largest clusters.
 
-        Args:
+        Keyword args:
            member_cutoff: Valid clusters need to have at least this
               many members.
            max_clusters: Only keep this many clusters.
+           bundle: A bundle object to update the children dictionary
+              with the new cluster lables.
         """
 
         cdef AINDEX _max_clusters, _member_cutoff, cluster_count

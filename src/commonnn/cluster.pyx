@@ -247,7 +247,8 @@ class Clustering:
         self._fitter._fit(bundle._input_data, bundle._labels, cluster_params)
 
     def fit(
-            self, bundle=None, *,
+            self,
+            bundle=None, *,
             sort_by_size=True,
             member_cutoff=None,
             max_clusters=None,

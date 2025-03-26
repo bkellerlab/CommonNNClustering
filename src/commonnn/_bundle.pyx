@@ -428,11 +428,30 @@ cpdef void check_children(
         Bundle bundle,
         AINDEX member_cutoff,
         bint needs_folding: bool = False):
+    """Modify a bundles children mapping
+    
+    Note:
+        These actions will be available through a number of
+        hierarchy processing functions in the future
+
+    Note:
+        Always removed lone children
+
+    Args:
+        bundle: Bundle whose children to check
+        member_cutoff: Children with less than this many members
+            will be removed
+
+    Keyword args:
+        needs_folding: If `True`, will replace children with grand children and so
+            forth if their lambda value is the same as that of the parent bundle
+    """
 
     cdef list leafs
     cdef Bundle child, grandchild, candidate
     cdef AINDEX count, label
 
+    # Replace children with descendants if lambda value does not change
     if needs_folding:
         leafs = []
         queue = deque()
@@ -456,12 +475,14 @@ cpdef void check_children(
             bundle._children[count] = child
             count += 1
 
+    # Remove children with not enough members
     bundle._children = {
         k: v
         for k, v in enumerate(bundle.children.values(), 1)
         if len(v._graph) >= member_cutoff
         }
 
+    # Replace lone children with grandchildren
     if len(bundle._children) == 1:
         child = bundle._children.popitem()[1]
         for label, grandchild in enumerate(child.children.values(), 1):

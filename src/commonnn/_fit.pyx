@@ -63,7 +63,7 @@ class Fitter(ABC):
 
 
 class FitterCommonNN(Fitter):
-    """Defines the fitter interface"""
+    """Further differentiates the fitter interface for CommonNN clusterings"""
 
     _parameter_type = CommonNNParameters
     _record_type = report.CommonNNRecord
@@ -202,12 +202,20 @@ cdef class FitterExtInterface:
         return f"{type(self).__name__}"
 
 
+class HierarchicalFitterExtInterface:
+
+    def fit(self, Bundle bundle, *args, **kwargs): ...
+
+    def __repr__(self):
+        return f"{type(self).__name__}"
+
+
 cdef class FitterExtCommonNNInterface(FitterExtInterface):
 
     _parameter_type = CommonNNParameters
     _record_type = report.CommonNNRecord
 
-    def fit(self, Bundle bundle, *, **kwargs) -> float:
+    def fit(self, Bundle bundle, *, **kwargs) -> (float, Type["ClusterParameters"]):
         return FitterCommonNN.fit(self, bundle, **kwargs)
 
     def make_parameters(
@@ -886,13 +894,36 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
         return cluster_params
 
     def fit(
-            self, Bundle bundle, *,
-            sort_by_size: bool = True,
-            member_cutoff: int = None,
-            max_clusters: int = None,
-            info: bool = True,
-            v: bool = True,
-            **kwargs):
+            self,
+            Bundle bundle, *,
+            info=True,
+            **kwargs) -> (float, Type["ClusterParameters"]):
+
+        bundle._labels = Labels(
+            np.ones(n_points, order="C", dtype=P_AINDEX)
+            )
+
+        cluster_params = self.make_parameters(**kwargs)
+
+        _, execution_time = report.timed(self._fit)(
+            bundle._input_data, bundle._labels, cluster_params
+            )
+
+        if info:
+            meta = {
+                "params": cluster_params.radius_cutoff,
+                "reference": weakref.proxy(bundle),
+                "origin": "fit_hierarchical"
+            }
+            bundle._labels._meta = meta
+
+        return execution_time, original_params
+
+    def _fit(
+            self,
+            input_data: Type['InputData'],
+            labels: Type['Labels'],
+            cluster_params: Type['ClusterParameters']):
 
         if not NX_FOUND:
             raise ModuleNotFoundError("No module named 'networkx'")
@@ -905,11 +936,6 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
         cdef object input_data = bundle._input_data
         cdef AINDEX n_points = input_data._n_points
 
-        # TODO: Allow freeze etc.
-        cdef Labels labels = Labels(
-            np.ones(n_points, order="C", dtype=P_AINDEX)
-            )
-        bundle._labels = labels
         cdef ABOOL* _consider = &labels._consider[0]
 
         cdef AINDEX m, member_index, a, b, i, j, ra, rb
@@ -918,6 +944,8 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
 
         cluster_params = self.make_parameters(**kwargs)
 
+        # NOTE: Temporary workaround for missing default values
+        member_cutoff = None
         if member_cutoff is None:
             member_cutoff = 10
         _member_cutoff = member_cutoff
@@ -994,8 +1022,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
 
                     self._priority_queue.push(b, member, weight)
 
-        if v:
-            print("Finished building MST")
+        print("Finished building MST")
 
         # Build hierarchy from MST
         cdef AINDEX[::1] parent_indicator = np.arange(n_points)
@@ -1079,8 +1106,213 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             bundle._graph = top._graph
             bundle._lambda = top._lambda
 
-        if v:
-            print("Finished building hierarchy")
+        print("Finished building hierarchy")
+
+
+cdef class HierarchicalFitterExtCommonNNMSTPrim(HierarchicalFitterExtInterface):
+
+    _parameter_type = RadiusParameters
+
+    def __cinit__(
+            self,
+            NeighboursGetterExtInterface neighbours_getter,
+            NeighboursExtInterface neighbours,
+            NeighboursExtInterface neighbour_neighbours,
+            SimilarityCheckerExtInterface similarity_checker,
+            PriorityQueueExtInterface priority_queue,
+            PriorityQueueExtInterface priority_queue_tree):
+        self._neighbours_getter = neighbours_getter
+        self._neighbours = neighbours
+        self._neighbour_neighbours = neighbour_neighbours
+        self._similarity_checker = similarity_checker
+        self._priority_queue = priority_queue
+        self._priority_queue_tree = priority_queue_tree
+
+    def __str__(self):
+
+        attr_str = ", ".join([
+            f"ngetter={self._neighbours_getter}",
+            f"na={self._neighbours}",
+            f"nb={self._neighbour_neighbours}",
+            f"checker={self._similarity_checker}",
+            f"prioq={self._priority_queue}",
+            f"prioq_tree={self._priority_queue_tree}"
+        ])
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return [
+            ("neighbours_getter", None),
+            ("neighbours", None),
+            ("neighbour_neighbours","neighbours"),
+            ("similarity_checker", None),
+            ("priority_queue", None),
+            ("priority_queue_tree", "priority_queue")
+            ]
+
+    def make_parameters(
+            self, **kwargs) -> Type["ClusterParameters"]:
+        cluster_params = self._parameter_type.from_mapping(kwargs)
+
+        try:
+            used_metric = self._neighbours_getter._distance_getter._metric
+        except AttributeError:
+            pass
+        else:
+            cluster_params.radius_cutoff = used_metric.adjust_radius(cluster_params.radius_cutoff)
+
+        return cluster_params
+
+    def fit(self, bundle, *, purge=True, info=True, **kwargs):
+        HierarchicalFitterCommonNNMSTPrim.fit(self, bundle, purge=purge, info=info, **kwargs)
+
+    def _fit(
+            self,
+            input_data: Type['InputData'],
+            labels: Type['Labels'],
+            cluster_params: Type['ClusterParameters']):
+
+        self._make_mst(input_data, labels, cluster_params)
+        self._make_scipy_hierarchy(input_data._n_points)
+
+    cdef void _make_mst(
+            self,
+            InputDataExtInterface input_data,
+            Labels labels,
+            ClusterParameters cluster_params) nogil:
+
+        cdef AINDEX n_points, point, n_members, member, member_index, a, b
+        cdef AVALUE weight
+        cdef AINDEX* _labels = &labels._labels[0]
+        cdef ABOOL* _consider = &labels._consider[0]
+
+        self._priority_queue.reset()
+        self._priority_queue_tree.reset()
+
+        n_points = input_data._n_points
+        for point in range(n_points):
+            if _consider[point] == 0:
+                continue
+            _consider[point] = 0
+
+            self._neighbours_getter.get(
+                point,
+                input_data,
+                self._neighbours,
+                cluster_params
+                )
+
+            n_members = self._neighbours._n_points
+            for member_index in range(n_members):
+                member = self._neighbours.get_member(member_index)
+
+                if _consider[member] == 0:
+                    continue
+
+                self._neighbours_getter.get(
+                    member,
+                    input_data,
+                    self._neighbour_neighbours,
+                    cluster_params
+                    )
+
+                weight = self._similarity_checker.get(
+                    self._neighbours,
+                    self._neighbour_neighbours,
+                    cluster_params
+                    )
+
+                self._priority_queue.push(point, member, weight)
+
+            while not self._priority_queue.is_empty():
+                a, b, weight = self._priority_queue.pop()
+
+                if _consider[b] == 0:
+                    continue
+                _consider[b] = 0
+
+                self._priority_queue_tree.push(a, b, weight)
+
+                self._neighbours_getter.get(
+                    b,
+                    input_data,
+                    self._neighbours,
+                    cluster_params
+                    )
+
+                n_members = self._neighbours._n_points
+                for member_index in range(n_members):
+                    member = self._neighbours.get_member(member_index)
+
+                    if _consider[member] == 0:
+                        continue
+
+                    self._neighbours_getter.get(
+                        member,
+                        input_data,
+                        self._neighbour_neighbours,
+                        cluster_params
+                        )
+
+                    weight = self._similarity_checker.get(
+                        self._neighbours,
+                        self._neighbour_neighbours,
+                        cluster_params
+                        )
+
+                    self._priority_queue.push(b, member, weight)
+
+    cdef void _make_cluster_hierarchy(AINDEX n_points):
+        
+        cdef AVALUE[:, ::1] Z = np.zeros((n_points - 1, 4), dtype=P_AVALUE)
+        cdef AINDEX[::1] parents_indicator = np.arange(n_points * 2 - 1, dtype=P_AINDEX)
+
+        self._make_scipy_hierarchy_inner(Z, parent_indicator)
+        
+        self._artifcats = {
+            "Z": np.array(Z),
+        }
+
+    cdef void _make_scipy_hierarchy_inner(AVALUE[:, ::1] Z, AINDEX[::1] parents_indicator) nogil:
+        """Build a SciPy-compatible linkage matrix Z from MST edges""""
+
+        cdef AVALUE* _Z = &Z[0, 0]
+        cdef AINDEX* _parents_indicator = &parents_indicator[0]
+        cdef AINDEX i, _i, n_points, a, b, root_a, root_b, size_a, size_b
+        cdef AVALUE weight
+
+        i = 0
+        while not self._priority_queue_tree.is_empty():
+            _i = i * 4
+
+            a, b, weight = self._priority_queue_tree.pop()
+
+            root_a = get_root(a, parents_indicator)
+            root_b = get_root(b, parents_indicator)
+            
+            if root_a >= n_points:
+                size_a = _Z[(root_a - n_points) * 4 + 3]
+            else:
+                size_a = 1
+                
+            if root_b >= n_points:
+                size_b = _Z[(root_b - n_points) * 4 + 3]
+            else:
+                size_b = 1
+
+            # Record the merge in Z
+            _Z[_i] = min(root_a, root_b)
+            _Z[_i + 1] = max(root_a, root_b)
+            _Z[_i + 2] = weight
+            _Z[_i + 3] = size_a + size_b
+
+            _parents_indicator[root_a] = n_points + i
+            _parents_indicator[root_b] = n_points + i
+
+            i += 1
+
+
+HierarchicalFitter.register(HierarchicalFitterExtCommonNNMSTPrim)
 
 
 class HierarchicalFitterRepeat(HierarchicalFitter):
