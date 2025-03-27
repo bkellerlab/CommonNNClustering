@@ -481,8 +481,8 @@ COMPONENT_NAME_TYPE_MAP = {
 }
 
 
-def sorted_neighbourhoods_from_points(points: np.ndarray, *, r: float, sort_by: str = "count"):
-    """Compute sorted neighbourhoods from points
+def sorted_neighbourhoods_from_coordinates(points: np.ndarray, *, r: float, sort_by: str = "count"):
+    """Compute sorted neighbourhoods from point coordinates
     
     Uses :class:`sklearn.neighbors.KDTree` to compute the neighbourhoods
     of each point in `points` and sorts the neighbourhoods by member count
@@ -520,7 +520,6 @@ def sorted_neighbourhoods_from_points(points: np.ndarray, *, r: float, sort_by: 
         points, r=r, return_distance=False
     )
 
-    
     if sort_by_counts:
         # Sort by neighbour count (and remember sort-order)
         n_members = np.array([n.shape[0] for n in neighbourhoods])
