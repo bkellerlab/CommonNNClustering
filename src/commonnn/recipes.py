@@ -5,6 +5,13 @@ import numpy as np
 from commonnn._primitive_types import P_AINDEX, P_AVALUE
 from commonnn import _types, _fit
 
+try:
+    from sklearn.neighbors import KDTree
+    SKLEARN_FOUND = True
+except ModuleNotFoundError as error:
+    print("Optional dependency module not found: ", error)
+    SKLEARN_FOUND = False
+
 
 def prepare_pass(data):
     """Dummy preparation hook
@@ -472,3 +479,61 @@ COMPONENT_NAME_TYPE_MAP = {
         "firstmatch": _fit.PredictorCommonNNFirstmatch
     }
 }
+
+
+def sorted_neighbourhoods_from_points(points: np.ndarray, *, r: float, sort_by: str = "count"):
+    """Compute sorted neighbourhoods from points
+    
+    Uses :class:`sklearn.neighbors.KDTree` to compute the neighbourhoods
+    of each point in `points` and sorts the neighbourhoods by member count
+    and or member indices.
+    
+    Args:
+        points: Input points
+        r: Radius for neighbourhood search
+        
+    Keyword args:
+        sort_by: Sort by either `"count"` or `"indices"` (or `"both"`)
+        
+    Returns:
+        Sorted neighbourhoods as list of NumPy arrays. If `sort_by="count"`,
+        also returns the sort order and reversed order as arrays to
+        sort other data in accordance with the neighbourhoods or revert
+        labels back to the original order.
+    """
+
+    if not SKLEARN_FOUND:
+        raise ModuleNotFoundError("No module named 'sklearn'")
+
+    if sort_by == "both":
+        sort_by_counts = True
+        sort_by_indices = True
+    elif sort_by == "count":
+        sort_by_counts = True
+        sort_by_indices = False
+    elif sort_by == "indices":
+        sort_by_counts = False
+        sort_by_indices = True
+
+    tree = KDTree(points)
+    neighbourhoods = tree.query_radius(
+        points, r=r, return_distance=False
+    )
+
+    
+    if sort_by_counts:
+        # Sort by neighbour count (and remember sort-order)
+        n_members = np.array([n.shape[0] for n in neighbourhoods])
+        sort_order = np.argsort(n_members)[::-1]
+        revert_sort = np.argsort(sort_order)
+        neighbourhoods = neighbourhoods[sort_order]
+        neighbourhoods = [revert_sort[n] for n in neighbourhoods]
+
+    if sort_by_indices:
+        # Sort each neighbourhood by member indices
+        for n in neighbourhoods:
+            n.sort()
+    
+    if sort_by_counts:
+        return neighbourhoods, sort_order, revert_sort
+    return neighbourhoods
