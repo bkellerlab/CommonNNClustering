@@ -184,7 +184,7 @@ cdef class FitterExtInterface:
 
     def _fit(
             self,
-            object input_data,
+            InputDataExtInterface input_data,
             Labels labels,
             ClusterParameters cluster_params) -> None:
 
@@ -1237,7 +1237,7 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
 
     def _fit(
             self,
-            object input_data,
+            InputDataExtInterface input_data,
             Labels labels,
             ClusterParameters cluster_params) -> None:
 
@@ -1686,7 +1686,7 @@ class PredictorCommonNNFirstmatch(PredictorCommonNN):
         return
 
 # TODO: Create union find and/or graph type
-cdef inline AINDEX get_root(AINDEX p, AINDEX[::1] parent_indicator) nogil:
+cdef inline AINDEX get_root(AINDEX p, AINDEX[::1] parent_indicator) except -1 nogil:
     cdef AINDEX parent
     parent = parent_indicator[p]
     while parent != p:
