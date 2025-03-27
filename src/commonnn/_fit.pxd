@@ -53,6 +53,6 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
         ClusterParameters cluster_params) nogil
 
     cdef void _make_scipy_hierarchy(self, AINDEX n_points)
-    cdef void _make_scipy_hierarchy_inner(self, AVALUE[:, ::1] Z, AINDEX[::1] parents_indicator) nogil
+    cdef void _make_scipy_hierarchy_inner(self, AVALUE[:, ::1] Z, AINDEX[::1] parents_indicator, stdvector[AINDEX] top_roots) nogil
 
 cdef AINDEX get_root(AINDEX p, AINDEX[::1] parent_indicator) nogil

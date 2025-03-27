@@ -348,6 +348,35 @@ REGISTERED_RECIPES = {
         "hfitter.ngetter.dgetter": "metric",
         "hfitter.ngetter.dgetter.metric": "euclidean_r",
     },
+    "coordinates_mst_debug": {
+        "input_data": "components_mview",
+        "preparation_hook": "components_array_from_parts",
+        "hfitter": "mst_debug",
+        "hfitter.ngetter": "brute_force",
+        "hfitter.na": "vuset",
+        "hfitter.checker": "switch",
+        "hfitter.prioq": "maxheap",
+        "hfitter.ngetter.dgetter": "metric",
+        "hfitter.ngetter.dgetter.metric": "euclidean_r",
+    },
+    "sorted_neighbourhoods_mst": {
+        "input_data": "neighbourhoods_mview",
+        "preparation_hook": "padded_neighbourhoods_array",
+        "hfitter": "mst",
+        "hfitter.ngetter": ("lookup", (), {"is_sorted": True}),
+        "hfitter.na": "vector",
+        "hfitter.checker": "screen",
+        "hfitter.prioq": "maxheap",
+    },
+    "sorted_neighbourhoods_mst_debug": {
+        "input_data": "neighbourhoods_mview",
+        "preparation_hook": "padded_neighbourhoods_array",
+        "hfitter": "mst_debug",
+        "hfitter.ngetter": ("lookup", (), {"is_sorted": True}),
+        "hfitter.na": "vector",
+        "hfitter.checker": "screen",
+        "hfitter.prioq": "maxheap",
+    },
 }
 
 
@@ -436,7 +465,8 @@ COMPONENT_NAME_TYPE_MAP = {
     },
     "hierarchical_fitter": {
         "repeat": _fit.HierarchicalFitterRepeat,
-        "mst": _fit.HierarchicalFitterCommonNNMSTPrim,
+        "mst_debug": _fit.HierarchicalFitterCommonNNMSTPrim,
+        "mst": _fit.HierarchicalFitterExtCommonNNMSTPrim
     },
     "predictor": {
         "firstmatch": _fit.PredictorCommonNNFirstmatch

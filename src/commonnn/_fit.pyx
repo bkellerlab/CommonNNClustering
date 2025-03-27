@@ -848,6 +848,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
         self._similarity_checker = similarity_checker
         self._priority_queue = priority_queue
         self._priority_queue_tree = priority_queue_tree
+        self._artifacts = {}
 
     def __str__(self):
 
@@ -906,11 +907,15 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             )
 
         if bundle_hierarchy:
-            logger.info(f"Translating Scipy Z matrix into bundle hierarchy")
-            self.scipy_to_bundle_hierarchy(
-                self._artifacts["Z"],
-                member_cutoff=member_cutoff
-                )
+            Z = self._artifacts.get("Z")
+            if Z is None:
+                logger.warning("No Z matrix found")
+            else:
+                logger.info(f"Translating Scipy Z matrix into bundle hierarchy")
+                self.scipy_to_bundle_hierarchy(
+                    Z,
+                    member_cutoff=member_cutoff
+                    )
 
         if info:
             meta = {
@@ -1074,11 +1079,11 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             if parents_indicator[index] == index:
                 top_roots.push_back(index)
 
-        if len(top_roots) > 1:
-            logger.info(f"Found {len(top_roots)} disjoint components")
+        if top_roots.size() > 1:
+            logger.info(f"Found {top_roots.size()} disjoint components")
             root_a = top_roots.back()
             top_roots.pop_back()
-            while len(top_roots) > 0:
+            while top_roots.size() > 0:
                 root_b =  top_roots.back()
                 top_roots.pop_back()
 
@@ -1099,14 +1104,12 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
                 
                 new_id = n_points + i
                 parents_indicator[root_a] = new_id
-                parents_indicator[root_b] = n_points + i
+                parents_indicator[root_b] = new_id
                 root_a = new_id
 
                 i += 1
 
-        self._artifacts = {
-            "Z": np.array(Z),
-        }
+        self._artifacts["Z"] = np.array(Z)
 
     def scipy_to_bundle_hierarchy(self, Z, *, AINDEX member_cutoff=10) -> None:
         if not NX_FOUND:
@@ -1217,6 +1220,7 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
         self._similarity_checker = similarity_checker
         self._priority_queue = priority_queue
         self._priority_queue_tree = priority_queue_tree
+        self._artifacts = {}
 
     def __str__(self):
         return HierarchicalFitterCommonNNMSTPrim.__str__(self)
@@ -1238,7 +1242,9 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
             ClusterParameters cluster_params) -> None:
 
         self._make_mst(input_data, labels, cluster_params)
+        logger.info(f"Built MST")
         self._make_scipy_hierarchy(input_data._n_points)
+        logger.info(f"Computed Scipy Z matrix")
 
     cdef void _make_mst(
             self,
@@ -1290,7 +1296,7 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
                 self._priority_queue._push(point, member, weight)
 
             while not self._priority_queue._is_empty():
-                edge = self._priority_queue_tree._pop()
+                edge = self._priority_queue._pop()
                 a = edge[0]
                 b = edge[1]
                 weight = edge[2]
@@ -1333,28 +1339,26 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
     cdef void _make_scipy_hierarchy(self, AINDEX n_points):
         """Build a SciPy-compatible linkage matrix Z from MST edges"""
 
+        cdef stdvector[AINDEX] top_roots = []
         cdef AVALUE[:, ::1] Z = np.zeros((n_points - 1, 4), dtype=P_AVALUE)
         cdef AINDEX[::1] parents_indicator = np.arange(n_points * 2 - 1, dtype=P_AINDEX)
 
-        self._make_scipy_hierarchy_inner(Z, parents_indicator)
-        
-        self._artifacts = {
-            "Z": np.array(Z),
-        }
+        self._make_scipy_hierarchy_inner(Z, parents_indicator, top_roots)
+        self._artifacts["Z"] = np.array(Z)
 
-    cdef void _make_scipy_hierarchy_inner(self, AVALUE[:, ::1] Z, AINDEX[::1] parents_indicator) nogil:
+    cdef void _make_scipy_hierarchy_inner(self, AVALUE[:, ::1] Z, AINDEX[::1] parents_indicator, stdvector[AINDEX] top_roots) nogil:
         """Build a SciPy-compatible linkage matrix Z from MST edges"""
 
         cdef AVALUE* _Z = &Z[0, 0]
         cdef AINDEX* _parents_indicator = &parents_indicator[0]
-        cdef AINDEX i, _i, n_points, a, b, root_a, root_b, index
+        cdef AINDEX i, _i, index, new_id, n_points, a, b, root_a, root_b
         cdef AVALUE weight, size_a, size_b
         cdef (AINDEX, AINDEX, AVALUE) edge
 
         n_points = Z.shape[0] + 1
         i = 0
+        _i = 0
         while not self._priority_queue_tree._is_empty():
-            _i = i * 4
 
             edge = self._priority_queue_tree._pop()
             a = edge[0]
@@ -1369,7 +1373,7 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
                 size_a = _Z[index]
             else:
                 size_a = 1
-                
+
             if root_b >= n_points:
                 index = (root_b - n_points) * 4 + 3
                 size_b = _Z[index]
@@ -1382,13 +1386,53 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
             _Z[_i + 2] = weight
             _Z[_i + 3] = size_a + size_b
 
-            _parents_indicator[root_a] = n_points + i
-            _parents_indicator[root_b] = n_points + i
+            new_id = n_points + i
+            _parents_indicator[root_a] = new_id
+            _parents_indicator[root_b] = new_id
 
             i += 1
+            _i = i * 4
 
-    def scipy_to_bundle_hierarchy(self, AINDEX member_cutoff=10) -> None:
-        HierarchicalFitterCommonNNMSTPrim.scipy_to_bundle_hierarchy(self, member_cutoff=member_cutoff)
+        # Merge disjoint components
+        for index in range(n_points + i):
+            if parents_indicator[index] == index:
+                top_roots.push_back(index)
+
+        if top_roots.size() > 1:
+            root_a = top_roots.back()
+            top_roots.pop_back()
+            while top_roots.size() > 0:
+                root_b =  top_roots.back()
+                top_roots.pop_back()
+
+                if root_a >= n_points:
+                    index = (root_a - n_points) * 4 + 3
+                    size_a = _Z[index]
+                else:
+                    size_a = 1
+                    
+                if root_b >= n_points:
+                    index = (root_b - n_points) * 4 + 3
+                    size_b = _Z[index]
+                else:
+                    size_b = 1
+
+                # Record the merge in Z
+                _Z[_i] = min(root_a, root_b)
+                _Z[_i + 1] = max(root_a, root_b)
+                _Z[_i + 2] = 0
+                _Z[_i + 3] = size_a + size_b
+                
+                new_id = n_points + i
+                parents_indicator[root_a] = new_id
+                parents_indicator[root_b] = new_id
+                root_a = new_id
+
+                i += 1
+                _i = i * 4
+
+    def scipy_to_bundle_hierarchy(self, Z, *, AINDEX member_cutoff=10) -> None:
+        HierarchicalFitterCommonNNMSTPrim.scipy_to_bundle_hierarchy(self, Z, member_cutoff=member_cutoff)
 
 HierarchicalFitter.register(HierarchicalFitterExtCommonNNMSTPrim)
 
