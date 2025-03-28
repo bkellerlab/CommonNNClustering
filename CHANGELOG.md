@@ -4,6 +4,7 @@ Summary of changes
 v0.0.4
 ------
 
+  * Annotation option in `cluster.Clustering.tree`
   * General performance improvements by declaring `cdef` functions `noexcept`
   * Added convenience function `recipes.sorted_neighbourhoods_from_coordinates`
   * Improved "automatic" hierarchical clustering (PR:)

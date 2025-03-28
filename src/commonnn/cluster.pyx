@@ -498,8 +498,28 @@ class Clustering:
             ignore=None,
             pos_props=None,
             draw_props=None,
-            bundle=None):
-        """Make a layer plot of the cluster hierarchy"""
+            bundle=None,
+            annotate=False,
+            annotate_props=None,
+            annotate_format="{alias}: (λ={lambda}, s={size})"):
+        """Make a layer plot of the cluster hierarchy
+        
+        Keyword args:
+            ax: The Matplotlib `Axes` instance to which to add the plot.  If
+                `None`, a new `Figure` with `Axes` will be created.
+            ignore: A set of labels not to include into the graph.  Use
+                for example to exclude noise (label 0).
+            pos_props: Dictionary of keyword arguments passed to
+                :func:`networkx.spring_layout`.
+            draw_props: Dictionary of keyword arguments passed to
+                :func:`networkx.draw`.
+            bundle: The bundle to start with. If `None`, uses the root bundle.
+            annotate: Whether to annotate the plotted nodes with aliases, size, and lambda values.
+            annotate_props: Dictionary of keyword arguments passed to
+                :func:`ax.annotate`.
+            annotate_format: Format string for the annotation.  Can use
+                `{alias}`, `{lambda}`, and `{size}` as placeholders.
+        """
 
         if not MPL_FOUND:
             raise ModuleNotFoundError("No module named 'matplotlib'")
@@ -536,11 +556,34 @@ class Clustering:
         if draw_props is not None:
             draw_props_defaults.update(draw_props)
 
-        plot.plot_graph_sugiyama_straight(
+        positions = plot.plot_graph_sugiyama_straight(
             graph, ax=ax,
             pos_props=pos_props_defaults,
             draw_props=draw_props_defaults,
         )
+
+        if annotate:
+            annotate_props_defaults = {
+                "textcoords": "offset points",
+                "xytext": (0, 12),
+                "ha": 'center',
+                "fontsize": 8,
+                "color": "k"
+            }
+            
+            if annotate_props is not None:
+                annotate_props_defaults.update(annotate_props)
+
+            for node, (x, y) in positions.items():
+                try:
+                    b = graph.nodes[node]["object"]
+                    ax.annotate(
+                        annotate_format.format(**{"alias": b.alias, "lambda": b._lambda, "size": b._size}),
+                        (x, y),
+                        **annotate_props_defaults
+                    )
+                except:
+                    continue
 
         return
 
