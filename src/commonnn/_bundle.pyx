@@ -46,6 +46,8 @@ cdef class Bundle:
         self.meta = meta
         self.summary = summary
         self._lambda = -np.inf
+        self._size = 0
+        self._checked = False
 
     @property
     def input_data(self):
@@ -424,6 +426,61 @@ cdef inline void _reel(Bundle parent, AINDEX depth):
             parent_labels.meta["params"][old_label + n_clusters] = p
 
 
+cpdef int fold_same_lambda(Bundle bundle) except 1:
+
+    cdef list leafs = []
+    cdef object queue = deque()
+    cdef Bundle child, grandchild, candidate
+    cdef AINDEX count
+
+    for child in bundle.children.values():
+        if child._lambda == bundle._lambda:
+            queue.append(child)
+        else:
+            leafs.append(child)
+
+    while queue:
+        candidate = queue.popleft()
+        for child in candidate.children.values():
+            if child._lambda == bundle._lambda:
+                queue.append(child)
+            else:
+                leafs.append(child)
+
+    count = 1
+    bundle._children = {}
+    for child in leafs:
+        bundle._children[count] = child
+        count += 1
+
+    return 0
+    
+
+cdef inline int _trim_small_children(Bundle bundle, AINDEX member_cutoff) except 1:
+    cdef AINDEX label, count
+    cdef dict children = bundle.children
+    cdef dict new_children = {}
+
+    for label, child in children.items():
+        if len(child._graph) >= member_cutoff:
+            new_children[label] = child
+
+    bundle._children = new_children 
+
+    return 0
+
+
+cdef inline int _trim_lone_child(Bundle bundle) except 1:
+    cdef AINDEX label, count
+    cdef dict children = bundle.children
+
+    if len(children) == 1:
+        for child in children.values():
+            bundle.children = child.children
+
+    return 0
+
+
 cpdef void check_children(
         Bundle bundle,
         AINDEX member_cutoff,
@@ -435,7 +492,7 @@ cpdef void check_children(
         hierarchy processing functions in the future
 
     Note:
-        Always removed lone children
+        Always removes lone children
 
     Args:
         bundle: Bundle whose children to check
