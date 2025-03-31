@@ -946,7 +946,7 @@ class Clustering:
         return graph
 
     def to_dtrajs(self, bundle=None):
-        """Convert cluster label assignments to discrete state  trajectory"""
+        """Convert cluster label assignments to discrete state trajectory"""
 
         if bundle is None:
             bundle = self._bundle
