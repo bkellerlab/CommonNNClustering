@@ -914,7 +914,7 @@ class Clustering:
 
         edges = None
         if bundle._input_data is not None:
-            edges = self._input_data.meta.get("edges")
+            edges = bundle._input_data.meta.get("edges")
 
         if edges is None:
             return [labels_array]
