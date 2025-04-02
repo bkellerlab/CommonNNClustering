@@ -891,6 +891,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             Bundle bundle, *,
             info=True,
             member_cutoff=10,
+            scipy_hierarchy=True,
             bundle_hierarchy=True,
             **kwargs) -> None:
 
@@ -906,12 +907,28 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             bundle._input_data, bundle._labels, cluster_params
             )
 
-        if bundle_hierarchy:
-            self._make_bundle_hierarchy(bundle, bundle._input_data.n_points, member_cutoff=member_cutoff)
-            logger.info(f"Built bundle hierarchy")
-        else:
+        if scipy_hierarchy:
             self._make_scipy_hierarchy(bundle._input_data.n_points)
             logger.info(f"Computed Scipy Z matrix")
+
+        if bundle_hierarchy:
+            if scipy_hierarchy:
+                Z = self._artifacts.get("Z")
+                if Z is not None:
+                    self.scipy_to_bundle_hierarchy(
+                        bundle,
+                        Z=Z,
+                        member_cutoff=member_cutoff
+                        )
+                    logger.info(f"Built bundle hierarchy from Scipy Z matrix")
+                else:
+                    raise LookupError(
+                        "Scipy Z matrix not found. "
+                        )
+            else:
+                self._make_bundle_hierarchy(bundle, bundle._input_data.n_points, member_cutoff=member_cutoff)
+                logger.info(f"Built bundle hierarchy")
+
 
         if info:
             meta = {
@@ -1318,8 +1335,8 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
     def make_parameters(self, **kwargs) -> Type["ClusterParameters"]:
         return HierarchicalFitterCommonNNMSTPrim.make_parameters(self, **kwargs)
 
-    def fit(self, bundle, *, info=True, member_cutoff=10, bundle_hierarchy=True, **kwargs) -> (float, Type["ClusterParameters"]):
-        HierarchicalFitterCommonNNMSTPrim.fit(self, bundle, info=info, member_cutoff=member_cutoff, bundle_hierarchy=bundle_hierarchy, **kwargs)
+    def fit(self, bundle, *, info=True, member_cutoff=10, scipy_hierarchy=True, bundle_hierarchy=True, **kwargs) -> (float, Type["ClusterParameters"]):
+        HierarchicalFitterCommonNNMSTPrim.fit(self, bundle, info=info, member_cutoff=member_cutoff, scipy_hierarchy=scipy_hierarchy, bundle_hierarchy=bundle_hierarchy, **kwargs)
 
     def _fit(
             self,
