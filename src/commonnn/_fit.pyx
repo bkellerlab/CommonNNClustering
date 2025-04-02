@@ -1125,8 +1125,15 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
     def scipy_to_bundle_hierarchy(self, Bundle bundle, *, AVALUE[:, ::1] Z, AINDEX member_cutoff=10) -> None:
         """Build a hierarchy of bundles from a SciPy-compatible linkage matrix Z
         
-        Note:
-            This function is not working properly at the moment. Refer to `_make_bundle_hierarchy` instead.
+        Args:
+            bundle: Root bundle
+            Z: SciPy-compatible linkage matrix
+        
+        Keyword args:
+            member_cutoff: Minimum number of members in a bundle to
+                consider it as independent cluster. Clusters with fewer
+                members are merged into their parent cluster or respectively
+                split off as noise.
         """
 
         cdef Bundle parent_bundle, bundle_a, bundle_b, bundle_x
@@ -1202,6 +1209,11 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
         """Build a hierarchy of bundles from MST edges
         
         Note:
+            This function should not be used in production at the moment
+            and will undergo changes in the future. Use :meth:`scipy_to_bundle_hierarchy`
+            after :meth:`_make_scipy_hierarchy` instead.
+        
+        Note:
             This function consumes MST edges from the priority queue
             (:attr:`_priority_queue_tree`) filled by :meth:`_make_mst`
             and can only be called once before the MST needs to be rebuilt.
@@ -1216,6 +1228,13 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
                 members are merged into their parent cluster or respectively
                 split off as noise.
         """
+
+        warnings.warn(
+            "This function is deprecated and will be removed/changed in the future. "
+            "Use `scipy_to_bundle_hierarchy` after `_make_scipy_hierarchy` instead "
+            "for consistency and performance.",
+            DeprecationWarning
+            )
 
         if not NX_FOUND:
             raise ModuleNotFoundError("No module named 'networkx'")
