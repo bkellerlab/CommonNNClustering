@@ -5,6 +5,7 @@ from types import GeneratorType
 from typing import Any, Optional, Type, Union
 from typing import Container, Iterable, List, Tuple, Sequence
 import heapq
+import warnings
 import weakref
 
 try:
@@ -19,7 +20,8 @@ from loguru import logger
 
 from commonnn import report
 from commonnn._primitive_types import P_AINDEX, P_AVALUE, P_ABOOL
-from commonnn._bundle cimport check_children, Bundle, fold_same_lambda, _trim_small_children, _trim_lone_child
+from commonnn._bundle import reset_hierarchy_levels, leafs_to_labels
+from commonnn._bundle cimport check_children, Bundle
 from commonnn._types import (
     InputData,
     InputDataComponents,
@@ -893,12 +895,32 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             member_cutoff=10,
             scipy_hierarchy=True,
             bundle_hierarchy=True,
+            make_labels=True,
             **kwargs) -> None:
+        """Orchestrates hierarchical clustering
+        
+        Args:
+            bundle: Bundle object containing the input data and labels.
+            info: If True, store the parameters in the labels meta dictionary.
+            member_cutoff: Minimum number of members for clusters to be
+                considered valid. Only considered for hierarchy building
+                if `bundle_hierarchy=True`.
+            scipy_hierarchy: If `True`, build a SciPy-compatible linkage hierarchy
+                Z-matrix from MST edges that will be put into `_artifacts["Z"]`.
+            bundle_hierarchy: If `True`, build a bundle hierarchy from the
+                MST edges or (if present) a previously computed Scipy Z-matrix.
+                Note that currently, we only recommend the latter option for
+                which `scipy_hierarchy=True` is required.
+            make_labels: If `True`, create root labels from all leaf nodes
+                after a bundle hierarchy has been built (`bundle_hierarchy=True`).
+        """
+
+        cdef AINDEX n_points = bundle._input_data.n_points
 
         logger.info(f"Started hierarchical CommonNN clustering - {type(self).__name__}")
 
         bundle._labels = Labels(
-            np.ones(bundle._input_data.n_points, order="C", dtype=P_AINDEX)
+            np.ones(n_points, order="C", dtype=P_AINDEX)
             )
 
         cluster_params = self.make_parameters(**kwargs)
@@ -908,7 +930,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             )
 
         if scipy_hierarchy:
-            self._make_scipy_hierarchy(bundle._input_data.n_points)
+            self._make_scipy_hierarchy(n_points)
             logger.info(f"Computed Scipy Z matrix")
 
         if bundle_hierarchy:
@@ -926,13 +948,17 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
                         "Scipy Z matrix not found. "
                         )
             else:
-                self._make_bundle_hierarchy(bundle, bundle._input_data.n_points, member_cutoff=member_cutoff)
+                self._make_bundle_hierarchy(bundle, n_points, member_cutoff=member_cutoff)
                 logger.info(f"Built bundle hierarchy")
 
+            reset_hierarchy_levels(bundle)
+            if make_labels:
+                leafs_to_labels(bundle, n_points=n_points)
+                logger.info(f"Converted all leafs to root labels")
 
         if info:
             meta = {
-                "params": cluster_params.radius_cutoff,
+                "params": {},
                 "reference": weakref.proxy(bundle),
                 "origin": "fit_hierarchical"
             }
@@ -1584,14 +1610,13 @@ class HierarchicalFitterRepeat(HierarchicalFitter):
     def fit(
             self,
             Bundle bundle,
-            *
+            *,
             radius_cutoffs,
             similarity_cutoffs,
             sort_by_size=True,
             member_cutoff=None,
             max_clusters=None,
             info=True,
-            v=False,
             **kwargs) -> None:
 
         if not isinstance(radius_cutoffs, Iterable):
@@ -1630,13 +1655,11 @@ class HierarchicalFitterRepeat(HierarchicalFitter):
         cdef dict new_terminal_bundles
 
         for step in range(n_steps):
-
-            if v:
-                print(
-                    f"Running step {step:<5} "
-                    f"(r = {radius_cutoffs[step]}, "
-                    f"c = {similarity_cutoffs[step]})"
-                    )
+            logger.info(
+                f"Running step {step:<5} "
+                f"(r = {radius_cutoffs[step]}, "
+                f"c = {similarity_cutoffs[step]})"
+            )
 
             new_terminal_bundles = {}
 

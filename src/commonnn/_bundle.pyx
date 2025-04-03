@@ -549,6 +549,47 @@ cpdef void check_children(
     for child in bundle.children.values():
         child._parent = weakref.proxy(bundle)
 
+def reset_hierarchy_levels(Bundle bundle, AINDEX hierarchy_level=0) -> None:
+    """Recursively reset the hierarchy levels of a bundle and its children
+
+    Args:
+        bundle: Root bundle
+
+    Keyword args:
+        hierarchy_level: The level to start from
+    """
+
+    cdef Bundle child
+
+    bundle._hierarchy_level = hierarchy_level
+    for child in bundle.children.values():
+        reset_hierarchy_levels(child, hierarchy_level=hierarchy_level + 1)
+
+def leafs_to_labels(Bundle root, n_points=None) -> None:
+
+    cdef AINDEX label, p
+    cdef Bundle b
+
+    if n_points is None:
+        try:
+            n_points = root._input_data.n_points
+        except AttributeError:
+            try:
+                n_points = root._labels.n_points
+            except AttributeError:
+                raise LookupError(
+                    "Bundle has no input data or labels. "
+                    "Please provide `n_points` explicitly."
+                    )
+
+    bundles = bfs_leafs(root)
+    root.labels = Labels(
+        np.zeros(n_points, order="C", dtype=P_AINDEX)
+        )
+
+    for label, b in enumerate(bundles, 1):
+        for p in b.graph:
+            root._labels.labels[p] = label
 
 def bfs(Bundle root):
     cdef Bundle bundle, child
