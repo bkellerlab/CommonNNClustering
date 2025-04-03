@@ -1,0 +1,30 @@
+name: commonnn-dev
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.10
+  - pip
+  - numpy
+  - matplotlib
+  - networkx
+  - pandas
+  - scikit-learn
+  - scipy
+  - coverage
+  - coveralls
+  - flake8
+  - pytest
+  - pytest-mock
+  - pytest-raises
+  - pytest-regressions
+  - ipython
+  - nbsphinx
+  - rstcheck
+  - sphinx
+  - sphinxcontrib-napoleon
+  - cython>=0.29
+  - bump2version
+  - anybadge
+  - pip:
+    - "-e ."
