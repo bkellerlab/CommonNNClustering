@@ -41,7 +41,7 @@ Developement installation
 
 Clone the source repository `https://github.com/bkellerlab/CommonNNClustering
 <https://github.com/bkellerlab/CommonNNClustering>`_ and use the package
-:mod:`commonnn` as you prefer it, e.g. install it via pip in editable mode.
+:mod:`commonnn` as you prefer it, e.g. install it via `pip` in editable mode.
 
 .. code-block:: bash
 
@@ -54,6 +54,14 @@ To recompile the Cython-extensions (requires :mod:`cython` installed) use:
 .. code-block:: bash
 
    $ python setup.py build_ext --inplace
+
+We provide a `env_dev.yml` file to create a conda environment with all development dependencies
+before installing the package itself with `pip`:
+
+.. code-block:: bash
+
+   $ conda env create -f env_dev.yml
+   $ conda activate commonnn-dev
 
 Testing and documentation
 -------------------------
