@@ -11,7 +11,7 @@ The commonnn package
 
 The package provides a main module:
 
-  - `cluster`: User interface to (hierarchical) CommoNN clustering
+  - `cluster`: User interface to (hierarchical) CommonNN clustering
 
 Further, it contains among others the modules:
 
@@ -27,15 +27,17 @@ Features:
 
 Please refer to the following papers for the scientific background (and consider citing if you find the method useful):
 
-  - B. Keller, X. Daura, W. F. van Gunsteren *J. Chem. Phys.*, __2010__, *132*, 074110.
-  - O. Lemke, B.G. Keller *J. Chem. Phys.*, __2016__, *145*, 164104.
+  - J.-O. Kapp-Joswig, B. G. Keller *J. Chem. Inf. Model.*, __2023__, *63(4)*, 1093 (doi: 10.1021/acs.jcim.2c01493).
   - O. Lemke, B.G. Keller *Algorithms*, __2018__, *11*, 19.
+  - O. Lemke, B.G. Keller *J. Chem. Phys.*, __2016__, *145*, 164104.
+  - B. Keller, X. Daura, W. F. van Gunsteren *J. Chem. Phys.*, __2010__, *132*, 074110.
+  
 
 Documentation
 -------------
 
 The package documentation is available [here](https://bkellerlab.github.io/CommonNNClustering/) online or under `docs/index.html`.
-The sources for the documentation can be found under `docsrc/` and can be build using Sphinx.
+The sources for the documentation can be found under `docsrc/` and can be built using Sphinx.
 
 Install
 -------

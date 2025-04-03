@@ -8,6 +8,7 @@ The :mod:`commonnn` package is developed and tested in Python >=3.6.
 At runtime the package has a few mandatory third party dependencies.
 We recommend to install the latest version of:
 
+   * :mod:`loguru`
    * :mod:`numpy`
 
 Optionally, additional functionality is available when the following

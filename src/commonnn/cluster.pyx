@@ -304,9 +304,8 @@ class Clustering:
 
     def fit_hierarchical(
             self,
-            *args,
+            bundle=None, *,
             purge=True,
-            bundle=None,
             **kwargs):
         """Execute hierarchical clustering procedure
 
@@ -315,7 +314,7 @@ class Clustering:
             bundle: Root bundle
 
         Note:
-            Used arguments and further keyword arguments depend on the
+            Other keyword arguments depend on the
             used hierarchical fitter.
         """
 
@@ -325,7 +324,7 @@ class Clustering:
         if purge or (bundle._children is None):
             bundle._children = {}
 
-        self._hierarchical_fitter.fit(bundle, *args, **kwargs)
+        self._hierarchical_fitter.fit(bundle, **kwargs)
 
     def predict(
             self, other, *, bundle=None, **kwargs):
@@ -499,8 +498,28 @@ class Clustering:
             ignore=None,
             pos_props=None,
             draw_props=None,
-            bundle=None):
-        """Make a layer plot of the cluster hierarchy"""
+            bundle=None,
+            annotate=False,
+            annotate_props=None,
+            annotate_format="{alias}: (λ={lambda}, s={size})"):
+        """Make a layer plot of the cluster hierarchy
+        
+        Keyword args:
+            ax: The Matplotlib `Axes` instance to which to add the plot.  If
+                `None`, a new `Figure` with `Axes` will be created.
+            ignore: A set of labels not to include into the graph.  Use
+                for example to exclude noise (label 0).
+            pos_props: Dictionary of keyword arguments passed to
+                :func:`networkx.spring_layout`.
+            draw_props: Dictionary of keyword arguments passed to
+                :func:`networkx.draw`.
+            bundle: The bundle to start with. If `None`, uses the root bundle.
+            annotate: Whether to annotate the plotted nodes with aliases, size, and lambda values.
+            annotate_props: Dictionary of keyword arguments passed to
+                :func:`ax.annotate`.
+            annotate_format: Format string for the annotation.  Can use
+                `{alias}`, `{lambda}`, and `{size}` as placeholders.
+        """
 
         if not MPL_FOUND:
             raise ModuleNotFoundError("No module named 'matplotlib'")
@@ -537,11 +556,34 @@ class Clustering:
         if draw_props is not None:
             draw_props_defaults.update(draw_props)
 
-        plot.plot_graph_sugiyama_straight(
+        positions = plot.plot_graph_sugiyama_straight(
             graph, ax=ax,
             pos_props=pos_props_defaults,
             draw_props=draw_props_defaults,
         )
+
+        if annotate:
+            annotate_props_defaults = {
+                "textcoords": "offset points",
+                "xytext": (0, 12),
+                "ha": 'center',
+                "fontsize": 8,
+                "color": "k"
+            }
+            
+            if annotate_props is not None:
+                annotate_props_defaults.update(annotate_props)
+
+            for node, (x, y) in positions.items():
+                try:
+                    b = graph.nodes[node]["object"]
+                    ax.annotate(
+                        annotate_format.format(**{"alias": b.alias, "lambda": b._lambda, "size": b._size}),
+                        (x, y),
+                        **annotate_props_defaults
+                    )
+                except:
+                    continue
 
         return
 
@@ -904,7 +946,7 @@ class Clustering:
         return graph
 
     def to_dtrajs(self, bundle=None):
-        """Convert cluster label assignments to discrete state  trajectory"""
+        """Convert cluster label assignments to discrete state trajectory"""
 
         if bundle is None:
             bundle = self._bundle
@@ -915,7 +957,7 @@ class Clustering:
 
         edges = None
         if bundle._input_data is not None:
-            edges = self._input_data.meta.get("edges")
+            edges = bundle._input_data.meta.get("edges")
 
         if edges is None:
             return [labels_array]

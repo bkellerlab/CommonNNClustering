@@ -139,14 +139,15 @@ def plot_graph_sugiyama_straight(graph, ax, pos_props=None, draw_props=None):
     if draw_props is None:
         draw_props = {}
 
+    positions = find_node_positions_sugiyama_straight(graph, **pos_props)
     nx.draw(
         graph,
-        pos=find_node_positions_sugiyama_straight(graph, **pos_props),
+        pos=positions,
         ax=ax,
         **draw_props
     )
 
-    return
+    return positions
 
 
 def get_pieces(bundle):
