@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Clustering of scikit-learn toy data sets (hierarchically) &#8212; CommonNN Clustering  documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a5519fdd" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=77a3bc79" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=d18eccf6" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <style>
+    .nbinput .prompt,
+    .nboutput .prompt {
+        display: none;
+    }
+</style><section id="Clustering-of-scikit-learn-toy-data-sets-(hierarchically)">
+<h1>Clustering of scikit-learn toy data sets (hierarchically)<a class="headerlink" href="#Clustering-of-scikit-learn-toy-data-sets-(hierarchically)" title="Link to this heading">¶</a></h1>
+<p>Go to:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#Notebook-configuration"><span class="std std-ref">Notebook configuration</span></a></p></li>
+<li><p><a class="reference internal" href="#Data-set-generation"><span class="std std-ref">Data set generation</span></a></p></li>
+<li><p>CommonNN clustering using …</p>
+<ul>
+<li><p><a class="reference internal" href="#CommonNN-clustering-using-data-point-coordinates-as-input"><span class="std std-ref">… point coordinates</span></a></p></li>
+<li><p><a class="reference internal" href="#CommonNN-clustering-with-pre-computed-neighbourhoods-(sorted-by-member-index)"><span class="std std-ref">… pre-computed sorted neighbourhoods</span></a></p></li>
+<li><p><a class="reference internal" href="#CommonNN-clustering-with-pre-computed-neighbourhoods-(sorted-by-member-index-and-neighbour-count)"><span class="std std-ref">… pre-computed doubly sorted neighbourhoods</span></a></p></li>
+<li><p><a class="reference internal" href="#CommonNN-clustering-with-pre-computed-neighbourhoods-(sorted-by-member-index-and-neighbour-count)"><span class="std std-ref">… pre-computed doubly sorted neighbourhoods (debug)</span></a></p></li>
+</ul>
+</li>
+</ul>
+<section id="Notebook-configuration">
+<h2>Notebook configuration<a class="headerlink" href="#Notebook-configuration" title="Link to this heading">¶</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mpl</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sklearn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn</span><span class="w"> </span><span class="kn">import</span> <span class="n">datasets</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.metrics</span><span class="w"> </span><span class="kn">import</span> <span class="n">pairwise_distances</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.neighbors</span><span class="w"> </span><span class="kn">import</span> <span class="n">KDTree</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">sklearn.preprocessing</span><span class="w"> </span><span class="kn">import</span> <span class="n">StandardScaler</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">commonnn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">commonnn</span><span class="w"> </span><span class="kn">import</span> <span class="n">cluster</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">commonnn</span><span class="w"> </span><span class="kn">import</span> <span class="n">_types</span><span class="p">,</span> <span class="n">_fit</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Helper function definitions</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">indent_at_parens</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Take a string and introduce indention at parentheses&quot;&quot;&quot;</span>
+
+    <span class="n">o</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="n">level</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">saw_comma</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">saw_comma</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s2">&quot; &quot;</span><span class="p">:</span>
+                <span class="n">o</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;    &#39;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">level</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">o</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;    &#39;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="p">(</span><span class="n">level</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="mi">1</span><span class="p">)</span><span class="si">}{</span><span class="n">c</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">saw_comma</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s2">&quot;(&quot;</span><span class="p">:</span>
+            <span class="n">o</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;(</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;    &#39;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">level</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">level</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s2">&quot;)&quot;</span><span class="p">:</span>
+            <span class="n">level</span> <span class="o">-=</span> <span class="mi">1</span>
+            <span class="n">o</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="s1">&#39;    &#39;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">level</span><span class="si">}</span><span class="s2">)&quot;</span>
+            <span class="k">continue</span>
+
+        <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s2">&quot;,&quot;</span><span class="p">:</span>
+            <span class="n">saw_comma</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">o</span> <span class="o">+=</span> <span class="s2">&quot;,&quot;</span>
+            <span class="k">continue</span>
+
+        <span class="n">o</span> <span class="o">+=</span> <span class="n">c</span>
+
+    <span class="k">return</span> <span class="n">o</span>
+</pre></div>
+</div>
+</div>
+<p>Print Python and package version information:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Version information</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Python: &quot;</span><span class="p">,</span> <span class="o">*</span><span class="n">sys</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Packages:&quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="p">[</span><span class="n">mpl</span><span class="p">,</span> <span class="n">np</span><span class="p">,</span> <span class="n">sklearn</span><span class="p">,</span> <span class="n">commonnn</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    </span><span class="si">{</span><span class="n">package</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">package</span><span class="o">.</span><span class="n">__version__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Python:  3.9.0 | packaged by conda-forge | (default, Nov 26 2020, 07:57:39)  [GCC 9.3.0]
+Packages:
+    matplotlib: 3.9.4
+    numpy: 1.26.4
+    sklearn: 1.6.1
+    commonnn: 0.0.3
+</pre></div></div>
+</div>
+<p>We use <a class="reference external" href="https://matplotlib.org/">Matplotlib</a> to create plots. The <code class="docutils literal notranslate"><span class="pre">matplotlibrc</span></code> file in the root directory of the <code class="docutils literal notranslate"><span class="pre">CommonNNClustering</span></code> repository is used to customize the appearance of the plots.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Matplotlib configuration</span>
+<span class="n">mpl</span><span class="o">.</span><span class="n">rc_file</span><span class="p">(</span>
+    <span class="s2">&quot;../../matplotlibrc&quot;</span><span class="p">,</span>
+    <span class="n">use_default_template</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Axis property defaults for the plots</span>
+<span class="n">ax_props</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;xlabel&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s2">&quot;ylabel&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s2">&quot;xlim&quot;</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mf">2.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">),</span>
+    <span class="s2">&quot;ylim&quot;</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mf">2.5</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">),</span>
+    <span class="s2">&quot;xticks&quot;</span><span class="p">:</span> <span class="p">(),</span>
+    <span class="s2">&quot;yticks&quot;</span><span class="p">:</span> <span class="p">(),</span>
+    <span class="s2">&quot;aspect&quot;</span><span class="p">:</span> <span class="s2">&quot;equal&quot;</span>
+<span class="p">}</span>
+
+<span class="c1"># Line plot property defaults</span>
+<span class="n">line_props</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;linewidth&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">&quot;marker&quot;</span><span class="p">:</span> <span class="s1">&#39;.&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Data-set-generation">
+<h2>Data set generation<a class="headerlink" href="#Data-set-generation" title="Link to this heading">¶</a></h2>
+<p>To see the common-nearest-neighbours (CommonNN) clustering in action, let’s have a look at a handful of basic 2D data sets from scikit-learn (like here in the <a class="reference external" href="https://scikit-learn.org/stable/auto_examples/cluster/plot_cluster_comparison.html">scikit-learn documentation</a>). We will cluster the data sets starting from different input data formats using the provided defaults. For more details see also the <a class="reference internal" href="advanced_usage.html"><span class="doc">Advanced usage</span></a> tutorial.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Data set generation parameters</span>
+<span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">n_samples</span> <span class="o">=</span> <span class="mi">2000</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Data set generation</span>
+<span class="c1"># Fit all datasets to the same value range</span>
+<span class="c1">#    using `data = StandardScaler().fit_transform(data)`</span>
+
+<span class="c1"># circles</span>
+<span class="n">noisy_circles</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">make_circles</span><span class="p">(</span>
+    <span class="n">n_samples</span><span class="o">=</span><span class="n">n_samples</span><span class="p">,</span>
+    <span class="n">factor</span><span class="o">=</span><span class="mf">.5</span><span class="p">,</span>
+    <span class="n">noise</span><span class="o">=</span><span class="mf">.05</span>
+    <span class="p">)</span>
+<span class="n">noisy_circles</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">noisy_circles</span><span class="p">)</span>
+
+<span class="c1"># moons</span>
+<span class="n">noisy_moons</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">make_moons</span><span class="p">(</span>
+    <span class="n">n_samples</span><span class="o">=</span><span class="n">n_samples</span><span class="p">,</span>
+    <span class="n">noise</span><span class="o">=</span><span class="mf">.05</span>
+    <span class="p">)</span>
+<span class="n">noisy_moons</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">noisy_moons</span><span class="p">)</span>
+
+<span class="c1"># blobs</span>
+<span class="n">blobs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">make_blobs</span><span class="p">(</span>
+    <span class="n">n_samples</span><span class="o">=</span><span class="n">n_samples</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="mi">8</span>
+    <span class="p">)</span>
+<span class="n">blobs</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">blobs</span><span class="p">)</span>
+
+<span class="c1"># None</span>
+<span class="n">no_structure</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span>
+    <span class="n">n_samples</span><span class="p">,</span> <span class="mi">2</span>
+    <span class="p">)</span>
+<span class="n">no_structure</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">no_structure</span><span class="p">)</span>
+
+<span class="c1"># aniso</span>
+<span class="n">random_state</span> <span class="o">=</span> <span class="mi">170</span>
+<span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">make_blobs</span><span class="p">(</span>
+    <span class="n">n_samples</span><span class="o">=</span><span class="n">n_samples</span><span class="p">,</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span>
+    <span class="p">)</span>
+
+<span class="n">transformation</span> <span class="o">=</span> <span class="p">[[</span><span class="mf">0.6</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.6</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">]]</span>
+<span class="n">aniso</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">transformation</span><span class="p">)</span>
+<span class="n">aniso</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">aniso</span><span class="p">)</span>
+
+<span class="c1"># varied</span>
+<span class="n">varied</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">make_blobs</span><span class="p">(</span>
+    <span class="n">n_samples</span><span class="o">=</span><span class="n">n_samples</span><span class="p">,</span>
+    <span class="n">cluster_std</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">],</span>
+    <span class="n">random_state</span><span class="o">=</span><span class="n">random_state</span>
+    <span class="p">)</span>
+<span class="n">varied</span> <span class="o">=</span> <span class="n">StandardScaler</span><span class="p">()</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">varied</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Define cluster parameters</span>
+<span class="n">dsets</span> <span class="o">=</span> <span class="p">[</span> <span class="c1"># &quot;name&quot;, set, **parameters</span>
+    <span class="p">(</span><span class="s1">&#39;circles&#39;</span><span class="p">,</span> <span class="n">noisy_circles</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;radius_cutoff&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="s1">&#39;member_cutoff&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+        <span class="p">}),</span>
+    <span class="p">(</span><span class="s1">&#39;moons&#39;</span><span class="p">,</span> <span class="n">noisy_moons</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;radius_cutoff&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="s1">&#39;member_cutoff&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="p">}),</span>
+    <span class="p">(</span><span class="s1">&#39;varied&#39;</span><span class="p">,</span> <span class="n">varied</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;radius_cutoff&#39;</span><span class="p">:</span> <span class="mf">0.28</span><span class="p">,</span>
+        <span class="s1">&#39;member_cutoff&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+        <span class="p">}),</span>
+    <span class="p">(</span><span class="s1">&#39;aniso&#39;</span><span class="p">,</span> <span class="n">aniso</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;radius_cutoff&#39;</span><span class="p">:</span> <span class="mf">0.29</span><span class="p">,</span>
+        <span class="s1">&#39;member_cutoff&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+         <span class="p">}),</span>
+    <span class="p">(</span><span class="s1">&#39;blobs&#39;</span><span class="p">,</span> <span class="n">blobs</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;radius_cutoff&#39;</span><span class="p">:</span> <span class="mf">0.4</span><span class="p">,</span>
+        <span class="s1">&#39;member_cutoff&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="p">}),</span>
+    <span class="p">(</span><span class="s1">&#39;None&#39;</span><span class="p">,</span> <span class="n">no_structure</span><span class="p">,</span> <span class="p">{</span>
+        <span class="s1">&#39;radius_cutoff&#39;</span><span class="p">:</span> <span class="mf">0.5</span><span class="p">,</span>
+        <span class="s1">&#39;member_cutoff&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="p">}),</span>
+    <span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Plot the original data sets</span>
+<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">Ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">count</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dsets</span><span class="p">):</span>
+    <span class="n">Ax</span><span class="p">[</span><span class="n">count</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="n">line_props</span><span class="p">)</span>
+    <span class="n">Ax</span><span class="p">[</span><span class="n">count</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="n">ax_props</span><span class="p">)</span>
+    <span class="n">Ax</span><span class="p">[</span><span class="n">count</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span>
+    <span class="n">left</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.3</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_scikit_learn_datasets_hierarchical_15_0.png" src="../_images/tutorial_scikit_learn_datasets_hierarchical_15_0.png" />
+</div>
+</div>
+</section>
+<section id="CommonNN-clustering-using-data-point-coordinates-as-input">
+<h2>CommonNN clustering using data point coordinates as input<a class="headerlink" href="#CommonNN-clustering-using-data-point-coordinates-as-input" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">Ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">count</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dsets</span><span class="p">):</span>
+
+    <span class="c1"># Default clustering initialisation</span>
+    <span class="n">clustering</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">recipe</span><span class="o">=</span><span class="s2">&quot;coordinates_mst&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Calculate neighbours brute force</span>
+    <span class="n">clustering</span><span class="o">.</span><span class="n">fit_hierarchical</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+
+    <span class="n">clustering</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">Ax</span><span class="p">[</span><span class="n">count</span><span class="p">],</span> <span class="n">annotate_pos</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>
+    <span class="n">Ax</span><span class="p">[</span><span class="n">count</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="n">ax_props</span><span class="p">)</span>
+    <span class="n">Ax</span><span class="p">[</span><span class="n">count</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="k">break</span>
+
+<span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span>
+    <span class="n">left</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.3</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+<span class="ansi-green-fg">2025-03-28 11:37:31.558</span> | <span class="ansi-bold">INFO    </span> | <span class="ansi-cyan-fg">__main__</span>:<span class="ansi-cyan-fg">&lt;module&gt;</span>:<span class="ansi-cyan-fg">10</span> - <span class="ansi-bold">Started hierarchical CommonNN clustering - HierarchicalFitterExtCommonNNMSTPrim</span>
+<span class="ansi-green-fg">2025-03-28 11:37:34.566</span> | <span class="ansi-bold">INFO    </span> | <span class="ansi-cyan-fg">commonnn.report</span>:<span class="ansi-cyan-fg">wrapper</span>:<span class="ansi-cyan-fg">248</span> - <span class="ansi-bold">Built MST</span>
+<span class="ansi-green-fg">2025-03-28 11:37:35.622</span> | <span class="ansi-bold">INFO    </span> | <span class="ansi-cyan-fg">__main__</span>:<span class="ansi-cyan-fg">&lt;module&gt;</span>:<span class="ansi-cyan-fg">10</span> - <span class="ansi-bold">Built bundle hierarchy</span>
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_scikit_learn_datasets_hierarchical_17_2.png" src="../_images/tutorial_scikit_learn_datasets_hierarchical_17_2.png" />
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[21]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">clustering</span><span class="o">.</span><span class="n">tree</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_scikit_learn_datasets_hierarchical_18_0.png" src="../_images/tutorial_scikit_learn_datasets_hierarchical_18_0.png" />
+</div>
+</div>
+<p>When <em>raw</em> input data is presented to a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> on creation without specifying anything else, the obtained <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> object aggregates the needed clustering components, assuming that it got point coordinates as a sequence of sequences. The neighbourhood of a specific point will be collected brute-force by computing the (Euclidean) distances to all other points and comparing them to the radius cutoff. This will be the slowest possible approach but it has fairly conservative memory
+usage.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clustering components used by default (&quot;coordinates&quot; recipe)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">indent_at_parens</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">clustering</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Clustering(
+    input_data=InputDataExtComponentsMemoryview(
+        components of 2000 points in 2 dimensions
+        ),
+    fitter=FitterExtCommonNNBFS(
+        ngetter=NeighboursGetterExtBruteForce(
+            dgetter=DistanceGetterExtMetric(
+                metric=MetricExtEuclideanReduced
+                ),
+            sorted=False,
+            selfcounting=True
+            ),
+        na=NeighboursExtVectorUnorderedSet,
+        nb=NeighboursExtVectorUnorderedSet,
+        checker=SimilarityCheckerExtSwitchContains,
+        queue=QueueExtFIFOQueue
+        ),
+    hierarchical_fitter=None,
+    predictor=None
+    )
+</pre></div></div>
+</div>
+</section>
+<section id="CommonNN-clustering-with-pre-computed-distances">
+<h2>CommonNN clustering with pre-computed distances<a class="headerlink" href="#CommonNN-clustering-with-pre-computed-distances" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">Ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">count</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dsets</span><span class="p">):</span>
+
+    <span class="c1"># Default clustering initialisation</span>
+    <span class="n">clustering</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="c1"># Pre-compute distances and choose the corresponding recipe</span>
+    <span class="n">distances</span> <span class="o">=</span> <span class="n">pairwise_distances</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">clustering_dist</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span>
+        <span class="n">distances</span><span class="p">,</span>
+        <span class="n">recipe</span><span class="o">=</span><span class="s2">&quot;distances&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Use pre-computed distances</span>
+    <span class="n">clustering_dist</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">clustering</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">clustering_dist</span><span class="o">.</span><span class="n">labels</span>
+    <span class="nb">print</span><span class="p">()</span>
+
+    <span class="n">clustering</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">Ax</span><span class="p">[</span><span class="n">count</span><span class="p">],</span> <span class="n">annotate_pos</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>
+    <span class="n">Ax</span><span class="p">[</span><span class="n">count</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="n">ax_props</span><span class="p">)</span>
+    <span class="n">Ax</span><span class="p">[</span><span class="n">count</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span>
+    <span class="n">left</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.3</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        100       None      2         0.500     0.000     00:00:0.116
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        2         None      2         0.500     0.000     00:00:0.105
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.280     20        20        None      3         0.338     0.114     00:00:0.128
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.290     30        5         None      3         0.319     0.050     00:00:0.136
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.400     20        2         None      3         0.334     0.001     00:00:0.166
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        1         None      1         1.000     0.000     00:00:0.101
+-----------------------------------------------------------------------------------------------
+
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_scikit_learn_datasets_hierarchical_22_1.png" src="../_images/tutorial_scikit_learn_datasets_hierarchical_22_1.png" />
+</div>
+</div>
+<p>When <em>raw</em> input data is presented to a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> on creation in terms of a dense distance matrix, the “distances” recipe can be chosen to make the obtained <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> object aggregate the needed clustering components. The neighbourhood of a specific point will be collected brute-force by looking up distances from the input data. This will be somewhat faster as no distances need to be calculated during the clustering but it has a high memory demand. It also allows to leverage smart
+external methods for the task of the distance calculation.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clustering components used by the &quot;distance&quot; recipe</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">indent_at_parens</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">clustering_dist</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Clustering(
+    input_data=InputDataExtComponentsMemoryview(
+        components of 2000 points in 2000 dimensions
+        ),
+    fitter=FitterExtCommonNNBFS(
+        ngetter=NeighboursGetterExtBruteForce(
+            dgetter=DistanceGetterExtMetric(
+                metric=MetricExtPrecomputed
+                ),
+            sorted=False,
+            selfcounting=True
+            ),
+        na=NeighboursExtVectorUnorderedSet,
+        nb=NeighboursExtVectorUnorderedSet,
+        checker=SimilarityCheckerExtSwitchContains,
+        queue=QueueExtFIFOQueue
+        ),
+    hierarchical_fitter=None,
+    predictor=None
+    )
+</pre></div></div>
+</div>
+</section>
+<section id="CommonNN-clustering-with-pre-computed-neighbourhoods">
+<h2>CommonNN clustering with pre-computed neighbourhoods<a class="headerlink" href="#CommonNN-clustering-with-pre-computed-neighbourhoods" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">Ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">count</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dsets</span><span class="p">):</span>
+
+    <span class="n">clustering</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="c1"># Pre-compute neighbourhoods and choose the corresponding recipe</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">KDTree</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">neighbourhoods</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">query_radius</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;radius_cutoff&quot;</span><span class="p">],</span> <span class="n">return_distance</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+
+    <span class="n">clustering_neighbourhoods</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span>
+        <span class="n">neighbourhoods</span><span class="p">,</span>
+        <span class="n">recipe</span><span class="o">=</span><span class="s2">&quot;neighbourhoods&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Use pre-computed neighbourhoods</span>
+    <span class="n">clustering_neighbourhoods</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">clustering</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">clustering_neighbourhoods</span><span class="o">.</span><span class="n">labels</span>
+    <span class="nb">print</span><span class="p">()</span>
+
+    <span class="n">clustering</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">Ax</span><span class="p">[</span><span class="n">count</span><span class="p">],</span> <span class="n">annotate_pos</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>
+    <span class="n">Ax</span><span class="p">[</span><span class="n">count</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="n">ax_props</span><span class="p">)</span>
+    <span class="n">Ax</span><span class="p">[</span><span class="n">count</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span>
+    <span class="n">left</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.3</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        100       None      2         0.500     0.000     00:00:0.015
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        2         None      2         0.500     0.000     00:00:0.021
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.280     20        20        None      3         0.338     0.114     00:00:0.026
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.290     30        5         None      3         0.319     0.050     00:00:0.018
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.400     20        2         None      3         0.334     0.001     00:00:0.064
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        1         None      1         1.000     0.000     00:00:0.014
+-----------------------------------------------------------------------------------------------
+
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_scikit_learn_datasets_hierarchical_26_1.png" src="../_images/tutorial_scikit_learn_datasets_hierarchical_26_1.png" />
+</div>
+</div>
+<p>When <em>raw</em> input data is presented to a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> on creation in terms of pre-computed neighbourhoods, the “neighbourhoods” recipe can be chosen to make the obtained <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> object aggregate the needed clustering components. The neighbourhood of a specific point will looked up from the input data. This will be considerably faster and it has a lower memory demand compared to the “distances” case. It also allows to leverage smart external methods for the task of the neighbourhood
+calculation.</p>
+<p>Note, that the “neighbourhoods” recipe requires the <em>raw</em> neighbourhoods in the concrete format of a matrix in which the neighbourhoods of individual points are padded to the length of the largest neighbourhood. If neighbourhoods are presented in terms of a sequence of sequences (with varying length) as one would get from a tree query to <code class="docutils literal notranslate"><span class="pre">sklearn.neighbors.KDTree</span></code>, this can be transformed into the suitable format using the preparation hook <code class="docutils literal notranslate"><span class="pre">hooks.prepare_neighbourhoods</span></code>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clustering components used by the &quot;distance&quot; recipe</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">indent_at_parens</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">clustering_neighbourhoods</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Clustering(
+    input_data=InputDataExtNeighbourhoodsMemoryview(
+        neighbourhoods of 2000 points
+        ),
+    fitter=FitterExtCommonNNBFS(
+        ngetter=NeighboursGetterExtLookup(
+            sorted=False,
+            selfcounting=True
+            ),
+        na=NeighboursExtVectorUnorderedSet,
+        nb=NeighboursExtVectorUnorderedSet,
+        checker=SimilarityCheckerExtSwitchContains,
+        queue=QueueExtFIFOQueue
+        ),
+    hierarchical_fitter=None,
+    predictor=None
+    )
+</pre></div></div>
+</div>
+</section>
+<section id="CommonNN-clustering-with-pre-computed-neighbourhoods-(sorted-by-member-index)">
+<h2>CommonNN clustering with pre-computed neighbourhoods (sorted by member index)<a class="headerlink" href="#CommonNN-clustering-with-pre-computed-neighbourhoods-(sorted-by-member-index)" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">Ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">count</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dsets</span><span class="p">):</span>
+
+    <span class="n">clustering</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="c1"># Pre-compute and sort neighbourhoods and choose the corresponding recipe</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">KDTree</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">neighbourhoods</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">query_radius</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;radius_cutoff&quot;</span><span class="p">],</span> <span class="n">return_distance</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">neighbourhoods</span><span class="p">:</span>
+        <span class="n">n</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+    <span class="c1"># Custom initialisation using a clustering builder</span>
+    <span class="n">clustering_neighbourhoods_sorted</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span>
+        <span class="n">neighbourhoods</span><span class="p">,</span>
+        <span class="n">recipe</span><span class="o">=</span><span class="s2">&quot;sorted_neighbourhoods&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Use pre-computed neighbourhoods</span>
+    <span class="n">clustering_neighbourhoods_sorted</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">clustering</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">clustering_neighbourhoods_sorted</span><span class="o">.</span><span class="n">labels</span>
+    <span class="nb">print</span><span class="p">()</span>
+
+    <span class="n">clustering</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">Ax</span><span class="p">[</span><span class="n">count</span><span class="p">],</span> <span class="n">annotate_pos</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>
+    <span class="n">Ax</span><span class="p">[</span><span class="n">count</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="n">ax_props</span><span class="p">)</span>
+    <span class="n">Ax</span><span class="p">[</span><span class="n">count</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span>
+    <span class="n">left</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.3</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        100       None      2         0.500     0.000     00:00:0.003
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        2         None      2         0.500     0.000     00:00:0.003
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.280     20        20        None      3         0.338     0.114     00:00:0.005
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.290     30        5         None      3         0.319     0.050     00:00:0.003
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.400     20        2         None      3         0.334     0.001     00:00:0.009
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        1         None      1         1.000     0.000     00:00:0.003
+-----------------------------------------------------------------------------------------------
+
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_scikit_learn_datasets_hierarchical_30_1.png" src="../_images/tutorial_scikit_learn_datasets_hierarchical_30_1.png" />
+</div>
+</div>
+<p>Pre-computed neighbourhood information can be additionally sorted in terms of the indices of the members (i.e. so that within each neighbourhood the members are stored in increasing order of there index in the data set). While this has the same memory demand as using unsorted neighbourhoods, it offers the fastest clustering.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clustering components used by the &quot;distance&quot; recipe</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">indent_at_parens</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">clustering_neighbourhoods_sorted</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Clustering(
+    input_data=InputDataExtNeighbourhoodsMemoryview(
+        neighbourhoods of 2000 points
+        ),
+    fitter=FitterExtCommonNNBFS(
+        ngetter=NeighboursGetterExtLookup(
+            sorted=True,
+            selfcounting=True
+            ),
+        na=NeighboursExtVector,
+        nb=NeighboursExtVector,
+        checker=SimilarityCheckerExtScreensorted,
+        queue=QueueExtFIFOQueue
+        ),
+    hierarchical_fitter=None,
+    predictor=None
+    )
+</pre></div></div>
+</div>
+</section>
+<section id="CommonNN-clustering-with-pre-computed-neighbourhoods-(sorted-by-member-index-and-neighbour-count)">
+<h2>CommonNN clustering with pre-computed neighbourhoods (sorted by member index and neighbour count)<a class="headerlink" href="#CommonNN-clustering-with-pre-computed-neighbourhoods-(sorted-by-member-index-and-neighbour-count)" title="Link to this heading">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[19]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">Ax</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">count</span><span class="p">,</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dsets</span><span class="p">):</span>
+
+    <span class="n">clustering</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="c1"># Pre-compute and sort neighbourhoods and choose the corresponding recipe</span>
+    <span class="n">tree</span> <span class="o">=</span> <span class="n">KDTree</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">neighbourhoods</span> <span class="o">=</span> <span class="n">tree</span><span class="o">.</span><span class="n">query_radius</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="n">params</span><span class="p">[</span><span class="s2">&quot;radius_cutoff&quot;</span><span class="p">],</span> <span class="n">return_distance</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span>
+
+    <span class="n">n_members</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+        <span class="n">n</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">neighbourhoods</span>
+    <span class="p">])</span>
+    <span class="n">sorted_by_member_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">n_members</span><span class="p">)[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">revert_sort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">sorted_by_member_count</span><span class="p">)</span>
+    <span class="n">neighbourhoods</span> <span class="o">=</span> <span class="n">neighbourhoods</span><span class="p">[</span><span class="n">sorted_by_member_count</span><span class="p">]</span>
+    <span class="n">neighbourhoods</span> <span class="o">=</span> <span class="p">[</span><span class="n">revert_sort</span><span class="p">[</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">neighbourhoods</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">neighbourhoods</span><span class="p">:</span>
+        <span class="n">n</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+    <span class="c1"># Custom initialisation using a clustering builder</span>
+    <span class="n">clustering_neighbourhoods_sorted</span> <span class="o">=</span> <span class="n">cluster</span><span class="o">.</span><span class="n">Clustering</span><span class="p">(</span>
+        <span class="n">neighbourhoods</span><span class="p">,</span>
+        <span class="n">recipe</span><span class="o">=</span><span class="s2">&quot;sorted_neighbourhoods&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Use pre-computed neighbourhoods</span>
+    <span class="n">clustering_neighbourhoods_sorted</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">clustering</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">clustering_neighbourhoods_sorted</span><span class="o">.</span><span class="n">labels</span><span class="p">[</span><span class="n">revert_sort</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">()</span>
+
+    <span class="n">clustering</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">Ax</span><span class="p">[</span><span class="n">count</span><span class="p">],</span> <span class="n">annotate_pos</span><span class="o">=</span><span class="s2">&quot;random&quot;</span><span class="p">)</span>
+    <span class="n">Ax</span><span class="p">[</span><span class="n">count</span><span class="p">]</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="o">**</span><span class="n">ax_props</span><span class="p">)</span>
+    <span class="n">Ax</span><span class="p">[</span><span class="n">count</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pad</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+<span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span>
+    <span class="n">left</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">right</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bottom</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">top</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.3</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        100       None      2         0.500     0.000     00:00:0.002
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        2         None      2         0.500     0.000     00:00:0.003
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.280     20        20        None      3         0.338     0.114     00:00:0.004
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.290     30        5         None      3         0.319     0.050     00:00:0.003
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.400     20        2         None      3         0.334     0.001     00:00:0.009
+-----------------------------------------------------------------------------------------------
+
+
+-----------------------------------------------------------------------------------------------
+#points   r         nc        min       max       #clusters %largest  %noise    time
+2000      0.500     20        1         None      1         1.000     0.000     00:00:0.003
+-----------------------------------------------------------------------------------------------
+
+
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/tutorial_scikit_learn_datasets_hierarchical_34_1.png" src="../_images/tutorial_scikit_learn_datasets_hierarchical_34_1.png" />
+</div>
+</div>
+<p>As a further addition to the sorting of each neighbourhood by member indices, it is possible to sort all neighbourhoods according to their member count (i.e. so that the point with the highest neighbour count becomes the first point in the data set). It is not guaranteed but this additional sorting can make the clustering even more efficient.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[20]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Clustering components used by the &quot;distance&quot; recipe</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">indent_at_parens</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">clustering_neighbourhoods_sorted</span><span class="p">)))</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Clustering(
+    input_data=InputDataExtNeighbourhoodsMemoryview(
+        neighbourhoods of 2000 points
+        ),
+    fitter=FitterExtCommonNNBFS(
+        ngetter=NeighboursGetterExtLookup(
+            sorted=True,
+            selfcounting=True
+            ),
+        na=NeighboursExtVector,
+        nb=NeighboursExtVector,
+        checker=SimilarityCheckerExtScreensorted,
+        queue=QueueExtFIFOQueue
+        ),
+    hierarchical_fitter=None,
+    predictor=None
+    )
+</pre></div></div>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">CommonNN Clustering</a></h1>
+
+
+
+<p class="blurb">A Python package for common-nearest-neighbour clustering</p>
+
+
+
+
+<p>
+<iframe src="https://ghbtns.com/github-btn.html?user=bkellerlab&repo=CommonNNClustering&type=watch&count=true&size=large&v=2"
+  allowtransparency="true" frameborder="0" scrolling="0" width="200px" height="35px"></iframe>
+</p>
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../_source/install.html">Installation instructions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../_source/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../_source/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../_source/api_reference.html">API Reference</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2022, Jan-Oliver Kapp-Joswig.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../_sources/tutorial/scikit_learn_datasets_hierarchical.ipynb.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
