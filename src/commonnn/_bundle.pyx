@@ -84,6 +84,8 @@ cdef class Bundle:
 
     @property
     def graph(self):
+        if self._graph is None:
+            return set()
         return self._graph
 
     @property
