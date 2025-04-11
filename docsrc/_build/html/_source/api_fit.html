@@ -1,21 +1,17 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>_fit &#8212; CommonNN Clustering  documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a5519fdd" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=77a3bc79" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=d18eccf6" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -23,8 +19,9 @@
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
+
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  
 
   </head><body>
   
@@ -36,8 +33,8 @@
 
           <div class="body" role="main">
             
-  <span class="target" id="module-commonnn._fit"><span id="sec-api-fit"></span></span><section id="fit">
-<h1>_fit<a class="headerlink" href="#fit" title="Permalink to this heading">¶</a></h1>
+  <section id="fit">
+<span id="module-commonnn._fit"></span><span id="sec-api-fit"></span><h1>_fit<a class="headerlink" href="#fit" title="Link to this heading">¶</a></h1>
 <p>This module provides a set of types that can be used as building blocks
 in the aggregation of a <a class="reference internal" href="api_cluster.html#commonnn.cluster.Clustering" title="commonnn.cluster.Clustering"><code class="xref py py-class docutils literal notranslate"><span class="pre">Clustering</span></code></a> object.</p>
 <p>Go to:</p>
@@ -49,55 +46,55 @@ in the aggregation of a <a class="reference internal" href="api_cluster.html#com
 </ul>
 </div></blockquote>
 <section id="fitter">
-<span id="sec-api-commonnn-fit-fitter"></span><h2>Fitter<a class="headerlink" href="#fitter" title="Permalink to this heading">¶</a></h2>
+<span id="sec-api-commonnn-fit-fitter"></span><h2>Fitter<a class="headerlink" href="#fitter" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="commonnn._fit.FitterExtInterface">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">FitterExtInterface</span></span><a class="headerlink" href="#commonnn._fit.FitterExtInterface" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">FitterExtInterface</span></span><a class="headerlink" href="#commonnn._fit.FitterExtInterface" title="Link to this definition">¶</a></dt>
 <dd><dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.FitterExtInterface.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">bundle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterExtInterface.fit" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self,</span> <span class="pre">Bundle</span> <span class="pre">bundle,</span> <span class="pre">**kwargs)</span> <span class="pre">-&gt;</span> <span class="pre">(float,</span> <span class="pre">Type['ClusterParameters']</span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterExtInterface.fit" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.FitterExtInterface.make_parameters">
-<span class="sig-name descname"><span class="pre">make_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'ClusterParameters'</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#commonnn._fit.FitterExtInterface.make_parameters" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">make_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'ClusterParameters'</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#commonnn._fit.FitterExtInterface.make_parameters" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="commonnn._fit.FitterExtCommonNNInterface">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">FitterExtCommonNNInterface</span></span><a class="headerlink" href="#commonnn._fit.FitterExtCommonNNInterface" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">FitterExtCommonNNInterface</span></span><a class="headerlink" href="#commonnn._fit.FitterExtCommonNNInterface" title="Link to this definition">¶</a></dt>
 <dd><dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.FitterExtCommonNNInterface.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">bundle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="headerlink" href="#commonnn._fit.FitterExtCommonNNInterface.fit" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self,</span> <span class="pre">Bundle</span> <span class="pre">bundle,</span> <span class="pre">**kwargs)</span> <span class="pre">-&gt;</span> <span class="pre">(float,</span> <span class="pre">Type['ClusterParameters']</span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterExtCommonNNInterface.fit" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.FitterExtCommonNNInterface.get_fit_signature">
-<span class="sig-name descname"><span class="pre">get_fit_signature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterExtCommonNNInterface.get_fit_signature" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_fit_signature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterExtCommonNNInterface.get_fit_signature" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.FitterExtCommonNNInterface.make_parameters">
-<span class="sig-name descname"><span class="pre">make_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'ClusterParameters'</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#commonnn._fit.FitterExtCommonNNInterface.make_parameters" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">make_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'ClusterParameters'</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#commonnn._fit.FitterExtCommonNNInterface.make_parameters" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="commonnn._fit.Fitter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">Fitter</span></span><a class="headerlink" href="#commonnn._fit.Fitter" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">Fitter</span></span><a class="headerlink" href="#commonnn._fit.Fitter" title="Link to this definition">¶</a></dt>
 <dd><p>Defines the fitter interface</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.Fitter.fit">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">bundle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.Fitter.fit" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self,</span> <span class="pre">Bundle</span> <span class="pre">bundle,</span> <span class="pre">**kwargs)</span> <span class="pre">-&gt;</span> <span class="pre">(float,</span> <span class="pre">Type['ClusterParameters']</span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.Fitter.fit" title="Link to this definition">¶</a></dt>
 <dd><p>Generic clustering outer function</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.Fitter.make_parameters">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">make_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'ClusterParameters'</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#commonnn._fit.Fitter.make_parameters" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">make_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'ClusterParameters'</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#commonnn._fit.Fitter.make_parameters" title="Link to this definition">¶</a></dt>
 <dd><p>Create fitter specific cluster parameters</p>
 </dd></dl>
 
@@ -105,28 +102,28 @@ in the aggregation of a <a class="reference internal" href="api_cluster.html#com
 
 <dl class="py class">
 <dt class="sig sig-object py" id="commonnn._fit.FitterCommonNN">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">FitterCommonNN</span></span><a class="headerlink" href="#commonnn._fit.FitterCommonNN" title="Permalink to this definition">¶</a></dt>
-<dd><p>Defines the fitter interface</p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">FitterCommonNN</span></span><a class="headerlink" href="#commonnn._fit.FitterCommonNN" title="Link to this definition">¶</a></dt>
+<dd><p>Further differentiates the fitter interface for CommonNN clusterings</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.FitterCommonNN.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self,</span> <span class="pre">Bundle</span> <span class="pre">bundle,</span> <span class="pre">*,</span> <span class="pre">purge=True,</span> <span class="pre">info=True,</span> <span class="pre">**kwargs)</span> <span class="pre">-&gt;</span> <span class="pre">(float,</span> <span class="pre">Type['ClusterParameters']</span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterCommonNN.fit" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self,</span> <span class="pre">Bundle</span> <span class="pre">bundle,</span> <span class="pre">*,</span> <span class="pre">purge=True,</span> <span class="pre">info=True,</span> <span class="pre">**kwargs)</span> <span class="pre">-&gt;</span> <span class="pre">(float,</span> <span class="pre">Type['ClusterParameters']</span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterCommonNN.fit" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.FitterCommonNN.get_fit_signature">
-<span class="sig-name descname"><span class="pre">get_fit_signature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterCommonNN.get_fit_signature" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_fit_signature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterCommonNN.get_fit_signature" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.FitterCommonNN.make_parameters">
-<span class="sig-name descname"><span class="pre">make_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'ClusterParameters'</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#commonnn._fit.FitterCommonNN.make_parameters" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">make_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">original</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'ClusterParameters'</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#commonnn._fit.FitterCommonNN.make_parameters" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="commonnn._fit.FitterExtCommonNNBFS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">FitterExtCommonNNBFS</span></span><a class="headerlink" href="#commonnn._fit.FitterExtCommonNNBFS" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">FitterExtCommonNNBFS</span></span><a class="headerlink" href="#commonnn._fit.FitterExtCommonNNBFS" title="Link to this definition">¶</a></dt>
 <dd><p>Concrete implementation of the fitter interface</p>
 <p>Realises a CommonNN clustering using a breadth-first-search</p>
 <dl class="field-list simple">
@@ -148,14 +145,14 @@ during the clustering procedure.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.FitterExtCommonNNBFS.get_builder_kwargs">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_builder_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span> <span class="pre">cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterExtCommonNNBFS.get_builder_kwargs" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_builder_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterExtCommonNNBFS.get_builder_kwargs" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="commonnn._fit.FitterCommonNNBFS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">FitterCommonNNBFS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neighbours_getter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'NeighboursGetter'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Neighbours'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbour_neighbours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Neighbours'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_checker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'SimilarityChecker'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Queue'</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterCommonNNBFS" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">FitterCommonNNBFS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neighbours_getter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'NeighboursGetter'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Neighbours'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbour_neighbours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Neighbours'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_checker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'SimilarityChecker'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Queue'</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterCommonNNBFS" title="Link to this definition">¶</a></dt>
 <dd><p>Concrete implementation of the fitter interface</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -174,14 +171,14 @@ interface.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.FitterCommonNNBFS.get_builder_kwargs">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_builder_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterCommonNNBFS.get_builder_kwargs" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_builder_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterCommonNNBFS.get_builder_kwargs" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="commonnn._fit.FitterCommonNNBFSDebug">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">FitterCommonNNBFSDebug</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neighbours_getter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'NeighboursGetter'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Neighbours'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbour_neighbours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Neighbours'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_checker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'SimilarityChecker'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Queue'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yielding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterCommonNNBFSDebug" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">FitterCommonNNBFSDebug</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neighbours_getter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'NeighboursGetter'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Neighbours'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbour_neighbours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Neighbours'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_checker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'SimilarityChecker'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Queue'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yielding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterCommonNNBFSDebug" title="Link to this definition">¶</a></dt>
 <dd><p>Concrete implementation of the fitter interface</p>
 <p>Yields/prints information during the clustering.</p>
 <dl class="field-list simple">
@@ -203,21 +200,21 @@ during the clustering procedure.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.FitterCommonNNBFSDebug.get_builder_kwargs">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_builder_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterCommonNNBFSDebug.get_builder_kwargs" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_builder_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.FitterCommonNNBFSDebug.get_builder_kwargs" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 </section>
 <section id="hierarchical-fitter">
-<span id="sec-api-commonnn-fit-hfitter"></span><h2>Hierarchical fitter<a class="headerlink" href="#hierarchical-fitter" title="Permalink to this heading">¶</a></h2>
+<span id="sec-api-commonnn-fit-hfitter"></span><h2>Hierarchical fitter<a class="headerlink" href="#hierarchical-fitter" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="commonnn._fit.HierarchicalFitter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">HierarchicalFitter</span></span><a class="headerlink" href="#commonnn._fit.HierarchicalFitter" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">HierarchicalFitter</span></span><a class="headerlink" href="#commonnn._fit.HierarchicalFitter" title="Link to this definition">¶</a></dt>
 <dd><p>Defines the hierarchical fitter interface</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.HierarchicalFitter.fit">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">bundle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.HierarchicalFitter.fit" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">bundle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#commonnn._fit.HierarchicalFitter.fit" title="Link to this definition">¶</a></dt>
 <dd><p>Generic clustering</p>
 </dd></dl>
 
@@ -225,7 +222,7 @@ during the clustering procedure.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="commonnn._fit.HierarchicalFitterCommonNNMSTPrim">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">HierarchicalFitterCommonNNMSTPrim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neighbours_getter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'NeighboursGetter'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Neighbours'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbour_neighbours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Neighbours'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_checker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'SimilarityChecker'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority_queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'PriorityQueue'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority_queue_tree</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'PriorityQueue'</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.HierarchicalFitterCommonNNMSTPrim" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">HierarchicalFitterCommonNNMSTPrim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neighbours_getter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'NeighboursGetter'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Neighbours'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbour_neighbours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Neighbours'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_checker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'SimilarityChecker'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority_queue</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'PriorityQueue'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">priority_queue_tree</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'PriorityQueue'</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.HierarchicalFitterCommonNNMSTPrim" title="Link to this definition">¶</a></dt>
 <dd><p>Concrete implementation of the hierarchical fitter interface</p>
 <p>Builds a minimum spanning tree on the density estimate
 using Prim’s algorithm and
@@ -236,52 +233,92 @@ creates a cluster hierarchy via single linkage clustering.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.HierarchicalFitterCommonNNMSTPrim.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">bundle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_by_size:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">member_cutoff:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_clusters:</span> <span class="pre">int</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v:</span> <span class="pre">bool</span> <span class="pre">=</span> <span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.HierarchicalFitterCommonNNMSTPrim.fit" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">bundle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">member_cutoff=10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scipy_hierarchy=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bundle_hierarchy=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">make_labels=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#commonnn._fit.HierarchicalFitterCommonNNMSTPrim.fit" title="Link to this definition">¶</a></dt>
+<dd><p>Orchestrates hierarchical clustering</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bundle</strong> – Bundle object containing the input data and labels.</p></li>
+<li><p><strong>info</strong> – If True, store the parameters in the labels meta dictionary.</p></li>
+<li><p><strong>member_cutoff</strong> – Minimum number of members for clusters to be
+considered valid. Only considered for hierarchy building
+if <code class="code docutils literal notranslate"><span class="pre">bundle_hierarchy=True</span></code>.</p></li>
+<li><p><strong>scipy_hierarchy</strong> – If <code class="code docutils literal notranslate"><span class="pre">True</span></code>, build a SciPy-compatible linkage hierarchy
+Z-matrix from MST edges that will be put into <code class="code docutils literal notranslate"><span class="pre">_artifacts[&quot;Z&quot;]</span></code>.</p></li>
+<li><p><strong>bundle_hierarchy</strong> – If <code class="code docutils literal notranslate"><span class="pre">True</span></code>, build a bundle hierarchy from the
+MST edges or (if present) a previously computed Scipy Z-matrix.
+Note that currently, we only recommend the latter option for
+which <code class="code docutils literal notranslate"><span class="pre">scipy_hierarchy=True</span></code> is required.</p></li>
+<li><p><strong>make_labels</strong> – If <code class="code docutils literal notranslate"><span class="pre">True</span></code>, create root labels from all leaf nodes
+after a bundle hierarchy has been built (<code class="code docutils literal notranslate"><span class="pre">bundle_hierarchy=True</span></code>).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.HierarchicalFitterCommonNNMSTPrim.get_builder_kwargs">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_builder_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.HierarchicalFitterCommonNNMSTPrim.get_builder_kwargs" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_builder_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.HierarchicalFitterCommonNNMSTPrim.get_builder_kwargs" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.HierarchicalFitterCommonNNMSTPrim.make_parameters">
-<span class="sig-name descname"><span class="pre">make_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'ClusterParameters'</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#commonnn._fit.HierarchicalFitterCommonNNMSTPrim.make_parameters" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">make_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'ClusterParameters'</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#commonnn._fit.HierarchicalFitterCommonNNMSTPrim.make_parameters" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="commonnn._fit.HierarchicalFitterCommonNNMSTPrim.scipy_to_bundle_hierarchy">
+<span class="sig-name descname"><span class="pre">scipy_to_bundle_hierarchy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">bundle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">AVALUE[:</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">::1]</span> <span class="pre">Z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">AINDEX</span> <span class="pre">member_cutoff=10</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#commonnn._fit.HierarchicalFitterCommonNNMSTPrim.scipy_to_bundle_hierarchy" title="Link to this definition">¶</a></dt>
+<dd><p>Build a hierarchy of bundles from a SciPy-compatible linkage matrix Z</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bundle</strong> – Root bundle</p></li>
+<li><p><strong>Z</strong> – SciPy-compatible linkage matrix</p></li>
+</ul>
+</dd>
+<dt class="field-even">Keyword Arguments<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>member_cutoff</strong> – Minimum number of members in a bundle to
+consider it as independent cluster. Clusters with fewer
+members are merged into their parent cluster or respectively
+split off as noise.</p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="commonnn._fit.HierarchicalFitterRepeat">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">HierarchicalFitterRepeat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fitter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Fitter'</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.HierarchicalFitterRepeat" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">HierarchicalFitterRepeat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fitter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Fitter'</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.HierarchicalFitterRepeat" title="Link to this definition">¶</a></dt>
 <dd><dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.HierarchicalFitterRepeat.fit">
-<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">bundle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius_cutoffs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_cutoffs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_by_size=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">member_cutoff=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_clusters=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.HierarchicalFitterRepeat.fit" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">bundle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">radius_cutoffs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_cutoffs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_by_size=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">member_cutoff=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_clusters=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#commonnn._fit.HierarchicalFitterRepeat.fit" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.HierarchicalFitterRepeat.get_builder_kwargs">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_builder_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.HierarchicalFitterRepeat.get_builder_kwargs" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_builder_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.HierarchicalFitterRepeat.get_builder_kwargs" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 </section>
 <section id="predictor">
-<span id="sec-api-commonnn-fit-predictor"></span><h2>Predictor<a class="headerlink" href="#predictor" title="Permalink to this heading">¶</a></h2>
+<span id="sec-api-commonnn-fit-predictor"></span><h2>Predictor<a class="headerlink" href="#predictor" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="commonnn._fit.Predictor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">Predictor</span></span><a class="headerlink" href="#commonnn._fit.Predictor" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">Predictor</span></span><a class="headerlink" href="#commonnn._fit.Predictor" title="Link to this definition">¶</a></dt>
 <dd><p>Defines the predictor interface</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.Predictor.make_parameters">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">make_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'ClusterParameters'</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#commonnn._fit.Predictor.make_parameters" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">make_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'ClusterParameters'</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#commonnn._fit.Predictor.make_parameters" title="Link to this definition">¶</a></dt>
 <dd><p>Create fitter specific cluster parameters</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.Predictor.predict">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">bundle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">other</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.Predictor.predict" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">bundle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">other</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.Predictor.predict" title="Link to this definition">¶</a></dt>
 <dd><p>Generic prediction</p>
 </dd></dl>
 
@@ -289,30 +326,30 @@ creates a cluster hierarchy via single linkage clustering.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="commonnn._fit.PredictorCommonNN">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">PredictorCommonNN</span></span><a class="headerlink" href="#commonnn._fit.PredictorCommonNN" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">PredictorCommonNN</span></span><a class="headerlink" href="#commonnn._fit.PredictorCommonNN" title="Link to this definition">¶</a></dt>
 <dd><dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.PredictorCommonNN.get_fit_signature">
-<span class="sig-name descname"><span class="pre">get_fit_signature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.PredictorCommonNN.get_fit_signature" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_fit_signature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.PredictorCommonNN.get_fit_signature" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.PredictorCommonNN.make_parameters">
-<span class="sig-name descname"><span class="pre">make_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'ClusterParameters'</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#commonnn._fit.PredictorCommonNN.make_parameters" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">make_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'ClusterParameters'</span></span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#commonnn._fit.PredictorCommonNN.make_parameters" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.PredictorCommonNN.predict">
-<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">bundle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">other</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clusters=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">purge=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.PredictorCommonNN.predict" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">bundle</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Bundle</span> <span class="pre">other</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clusters=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">purge=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">info=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">**kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.PredictorCommonNN.predict" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="commonnn._fit.PredictorCommonNNFirstmatch">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">PredictorCommonNNFirstmatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neighbours_getter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'NeighboursGetter'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbours_getter_other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'NeighboursGetter'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Neighbours'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbour_neighbours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Neighbours'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_checker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'SimilarityChecker'</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.PredictorCommonNNFirstmatch" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">commonnn._fit.</span></span><span class="sig-name descname"><span class="pre">PredictorCommonNNFirstmatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">neighbours_getter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'NeighboursGetter'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbours_getter_other</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'NeighboursGetter'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Neighbours'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neighbour_neighbours</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'Neighbours'</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">similarity_checker</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'SimilarityChecker'</span></span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.PredictorCommonNNFirstmatch" title="Link to this definition">¶</a></dt>
 <dd><dl class="py method">
 <dt class="sig sig-object py" id="commonnn._fit.PredictorCommonNNFirstmatch.get_builder_kwargs">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_builder_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.PredictorCommonNNFirstmatch.get_builder_kwargs" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_builder_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#commonnn._fit.PredictorCommonNNFirstmatch.get_builder_kwargs" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -325,7 +362,7 @@ creates a cluster hierarchy via single linkage clustering.</p>
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../index.html">CommonNN Clustering</a></h1>
 
@@ -373,7 +410,7 @@ creates a cluster hierarchy via single linkage clustering.</p>
   </ul></li>
 </ul>
 </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
@@ -381,7 +418,7 @@ creates a cluster hierarchy via single linkage clustering.</p>
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
 
 
@@ -396,11 +433,11 @@ creates a cluster hierarchy via single linkage clustering.</p>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2022, Jan-Oliver Kapp-Joswig.
+      &#169;2022, Jan-Oliver Kapp-Joswig.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.2.3</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
       |
       <a href="../_sources/_source/api_fit.rst.txt"

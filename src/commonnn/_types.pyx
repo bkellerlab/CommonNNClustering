@@ -291,10 +291,12 @@ cdef class Labels:
         Optionally, does only
         keep the `max_clusters` largest clusters.
 
-        Args:
+        Keyword args:
            member_cutoff: Valid clusters need to have at least this
               many members.
            max_clusters: Only keep this many clusters.
+           bundle: A bundle object to update the children dictionary
+              with the new cluster lables.
         """
 
         cdef AINDEX _max_clusters, _member_cutoff, cluster_count
@@ -472,27 +474,27 @@ cdef class InputDataExtInterface:
     """Defines the input data interface for Cython extension types"""
 
     cdef AVALUE _get_component(
-            self, const AINDEX point, const AINDEX dimension) nogil: ...
+            self, const AINDEX point, const AINDEX dimension) noexcept nogil: ...
 
     def get_component(self, point: int, dimension: int) -> int:
         return self._get_component(point, dimension)
 
-    cdef AINDEX _get_n_neighbours(self, const AINDEX point) nogil: ...
+    cdef AINDEX _get_n_neighbours(self, const AINDEX point) noexcept nogil: ...
 
     def get_n_neighbours(self, point: int) -> int:
         return self._get_n_neighbours(point)
 
-    cdef AINDEX _get_neighbour(self, const AINDEX point, const AINDEX member) nogil: ...
+    cdef AINDEX _get_neighbour(self, const AINDEX point, const AINDEX member) noexcept nogil: ...
 
     def get_neighbour(self, point: int, member: int) -> int:
         return self._get_neighbour(point, member)
 
-    cdef AVALUE _get_distance(self, const AINDEX point_a, const AINDEX point_b) nogil: ...
+    cdef AVALUE _get_distance(self, const AINDEX point_a, const AINDEX point_b) noexcept nogil: ...
 
     def get_distance(self, point_a: int, point_b: int) -> int:
         return self._get_distance(point_a, point_b)
 
-    cdef void _compute_distances(self, InputDataExtInterface input_data) nogil: ...
+    cdef void _compute_distances(self, InputDataExtInterface input_data) noexcept nogil: ...
 
     # TODO: remove no cover pragma once concrete type is available
     def compute_distances(self, InputDataExtInterface input_data):
@@ -501,7 +503,7 @@ cdef class InputDataExtInterface:
     cdef void _compute_neighbourhoods(
             self,
             InputDataExtInterface input_data, AVALUE r,
-            ABOOL is_sorted, ABOOL is_selfcounting) nogil: ...
+            ABOOL is_sorted, ABOOL is_selfcounting) noexcept nogil: ...
 
     # TODO: remove no cover pragma once concrete type is available
     def compute_neighbourhoods(
@@ -607,11 +609,11 @@ class NeighboursGetter(ABC):
 
 cdef class NeighboursExtInterface:
 
-    cdef void _assign(self, const AINDEX member) nogil: ...
-    cdef void _reset(self) nogil: ...
-    cdef bint _enough(self, const AINDEX member_cutoff) nogil: ...
-    cdef AINDEX _get_member(self, const AINDEX index) nogil: ...
-    cdef bint _contains(self, const AINDEX member) nogil: ...
+    cdef void _assign(self, const AINDEX member) noexcept nogil: ...
+    cdef void _reset(self) noexcept nogil: ...
+    cdef bint _enough(self, const AINDEX member_cutoff) noexcept nogil: ...
+    cdef AINDEX _get_member(self, const AINDEX index) noexcept nogil: ...
+    cdef bint _contains(self, const AINDEX member) noexcept nogil: ...
 
     def assign(self, member: int):
         self._assign(member)
@@ -643,7 +645,7 @@ cdef class NeighboursGetterExtInterface:
             const AINDEX index,
             InputDataExtInterface input_data,
             NeighboursExtInterface neighbours,
-            ClusterParameters cluster_params) nogil: ...
+            ClusterParameters cluster_params) noexcept nogil: ...
 
     cdef void _get_other(
             self,
@@ -651,7 +653,7 @@ cdef class NeighboursGetterExtInterface:
             InputDataExtInterface input_data,
             InputDataExtInterface other_input_data,
             NeighboursExtInterface neighbours,
-            ClusterParameters cluster_params) nogil: ...
+            ClusterParameters cluster_params) noexcept nogil: ...
 
     def get(
             self,
@@ -713,14 +715,14 @@ cdef class DistanceGetterExtInterface:
             self,
             const AINDEX point_a,
             const AINDEX point_b,
-            InputDataExtInterface input_data) nogil: ...
+            InputDataExtInterface input_data) noexcept nogil: ...
 
     cdef AVALUE _get_single_other(
             self,
             const AINDEX point_a,
             const AINDEX point_b,
             InputDataExtInterface input_data,
-            InputDataExtInterface other_input_data) nogil: ...
+            InputDataExtInterface other_input_data) noexcept nogil: ...
 
     def get_single(
             self,
@@ -775,15 +777,15 @@ cdef class MetricExtInterface:
     cdef AVALUE _calc_distance(
             self,
             const AINDEX index_a, const AINDEX index_b,
-            InputDataExtInterface input_data) nogil: ...
+            InputDataExtInterface input_data) noexcept nogil: ...
 
     cdef AVALUE _calc_distance_other(
             self,
             const AINDEX index_a, const AINDEX index_b,
             InputDataExtInterface input_data,
-            InputDataExtInterface other_input_data) nogil: ...
+            InputDataExtInterface other_input_data) noexcept nogil: ...
 
-    cdef AVALUE _adjust_radius(self, AVALUE radius_cutoff) nogil: ...
+    cdef AVALUE _adjust_radius(self, AVALUE radius_cutoff) noexcept nogil: ...
 
     def calc_distance(
             self,
@@ -847,7 +849,7 @@ cdef class SimilarityCheckerExtInterface:
             self,
             NeighboursExtInterface neighbours_a,
             NeighboursExtInterface neighbours_b,
-            ClusterParameters cluster_params) nogil: ...
+            ClusterParameters cluster_params) noexcept nogil: ...
 
     def check(
             self,
@@ -861,7 +863,7 @@ cdef class SimilarityCheckerExtInterface:
             self,
             NeighboursExtInterface neighbours_a,
             NeighboursExtInterface neighbours_b,
-            ClusterParameters cluster_params) nogil: ...
+            ClusterParameters cluster_params) noexcept nogil: ...
 
     def get(
             self,
@@ -907,10 +909,10 @@ class Queue(ABC):
 
 cdef class QueueExtInterface:
 
-    cdef void _push(self, const AINDEX value) nogil: ...
-    cdef AINDEX _pop(self) nogil: ...
-    cdef bint _is_empty(self) nogil: ...
-    cdef AINDEX _size(self) nogil: ...
+    cdef void _push(self, const AINDEX value) noexcept nogil: ...
+    cdef AINDEX _pop(self) noexcept nogil: ...
+    cdef bint _is_empty(self) noexcept nogil: ...
+    cdef AINDEX _size(self) noexcept nogil: ...
 
     def push(self, value: int):
         self._push(value)
@@ -965,11 +967,11 @@ class PriorityQueue(ABC):
 
 cdef class PriorityQueueExtInterface:
 
-    cdef void _reset(self) nogil: ...
-    cdef void _push(self, const AINDEX a, const AINDEX b, const AVALUE weight) nogil: ...
-    cdef (AINDEX, AINDEX, AVALUE) _pop(self) nogil: ...
-    cdef bint _is_empty(self) nogil: ...
-    cdef AINDEX _size(self) nogil: ...
+    cdef void _reset(self) noexcept nogil: ...
+    cdef void _push(self, const AINDEX a, const AINDEX b, const AVALUE weight) noexcept nogil: ...
+    cdef (AINDEX, AINDEX, AVALUE) _pop(self) noexcept nogil: ...
+    cdef bint _is_empty(self) noexcept nogil: ...
+    cdef AINDEX _size(self) noexcept nogil: ...
 
     def push(self, a: int, b: int, weight: float):
         self._push(a, b, weight)
@@ -1078,7 +1080,7 @@ cdef class InputDataExtComponentsMemoryview(InputDataExtInterface):
         return np.asarray(self._data)
 
     cdef AVALUE _get_component(
-            self, const AINDEX point, const AINDEX dimension) nogil:
+            self, const AINDEX point, const AINDEX dimension) noexcept nogil:
         return self._data[point, dimension]
 
     def get_subset(
@@ -1245,7 +1247,7 @@ cdef class InputDataExtDistancesMemoryview(InputDataExtInterface):
         return np.asarray(self._data)
 
     cdef AVALUE _get_distance(
-            self, const AINDEX point_a, const AINDEX point_b) nogil:
+            self, const AINDEX point_a, const AINDEX point_b) noexcept nogil:
         return self._data[point_a, point_b]
 
     def get_subset(
@@ -1276,7 +1278,7 @@ cdef class InputDataExtDistancesLinearMemoryview(InputDataExtInterface):
             _meta.update(meta)
         self.meta = _meta
 
-    cdef AVALUE _get_distance(self, const AINDEX point_a, const AINDEX point_b) nogil:
+    cdef AVALUE _get_distance(self, const AINDEX point_a, const AINDEX point_b) noexcept nogil:
 
         cdef AINDEX i, j, a, b
 
@@ -1373,10 +1375,10 @@ cdef class InputDataExtNeighbourhoodsMemoryview(InputDataExtInterface):
     def to_n_neighbours_array(self):
         return np.asarray(self._n_neighbours)
 
-    cdef AINDEX _get_n_neighbours(self, const AINDEX point) nogil:
+    cdef AINDEX _get_n_neighbours(self, const AINDEX point) noexcept nogil:
         return self._n_neighbours[point]
 
-    cdef AINDEX _get_neighbour(self, const AINDEX point, const AINDEX member) nogil:
+    cdef AINDEX _get_neighbour(self, const AINDEX point, const AINDEX member) noexcept nogil:
         """Return a member for point"""
         return self._data[point, member]
 
@@ -1464,13 +1466,13 @@ cdef class InputDataExtNeighbourhoodsVector(InputDataExtInterface):
 
         return np.asarray(as_array)
 
-    cdef AINDEX _get_n_neighbours(self, const AINDEX point) nogil:
+    cdef AINDEX _get_n_neighbours(self, const AINDEX point) noexcept nogil:
         return self._n_neighbours[point]
 
     def get_n_neighbours(self, point: int) -> int:
         return self._get_n_neighbours(point)
 
-    cdef AINDEX _get_neighbour(self, const AINDEX point, const AINDEX member) nogil:
+    cdef AINDEX _get_neighbour(self, const AINDEX point, const AINDEX member) noexcept nogil:
         """Return a member for point"""
         return self._data[point][member]
 
@@ -1680,24 +1682,24 @@ cdef class NeighboursExtVector(NeighboursExtInterface):
         else:
             self._reset()
 
-    cdef void _assign(self, const AINDEX member) nogil:
+    cdef void _assign(self, const AINDEX member) noexcept nogil:
         self._neighbours.push_back(member)
         self._n_points += 1
 
-    cdef void _reset(self) nogil:
+    cdef void _reset(self) noexcept nogil:
         self._neighbours.resize(0)
         self._neighbours.reserve(self._initial_size)
         self._n_points = 0
 
-    cdef bint _enough(self, const AINDEX member_cutoff) nogil:
+    cdef bint _enough(self, const AINDEX member_cutoff) noexcept nogil:
         if self._n_points > member_cutoff:
             return True
         return False
 
-    cdef AINDEX _get_member(self, const AINDEX index) nogil:
+    cdef AINDEX _get_member(self, const AINDEX index) noexcept nogil:
         return self._neighbours[index]
 
-    cdef bint _contains(self, const AINDEX member) nogil:
+    cdef bint _contains(self, const AINDEX member) noexcept nogil:
 
         if find(self._neighbours.begin(), self._neighbours.end(), member) == self._neighbours.end():
             return False
@@ -1734,20 +1736,20 @@ cdef class NeighboursExtSet(NeighboursExtInterface):
         else:
             self._reset()
 
-    cdef void _assign(self, const AINDEX member) nogil:
+    cdef void _assign(self, const AINDEX member) noexcept nogil:
         self._neighbours.insert(member)
         self._n_points += 1
 
-    cdef void _reset(self) nogil:
+    cdef void _reset(self) noexcept nogil:
         self._neighbours.clear()
         self._n_points = 0
 
-    cdef bint _enough(self, const AINDEX member_cutoff) nogil:
+    cdef bint _enough(self, const AINDEX member_cutoff) noexcept nogil:
         if self._n_points > member_cutoff:
             return True
         return False
 
-    cdef AINDEX _get_member(self, const AINDEX index) nogil:
+    cdef AINDEX _get_member(self, const AINDEX index) noexcept nogil:
         cdef stdset[AINDEX].iterator it = self._neighbours.begin()
         cdef AINDEX i
 
@@ -1756,7 +1758,7 @@ cdef class NeighboursExtSet(NeighboursExtInterface):
 
         return dereference(it)
 
-    cdef bint _contains(self, const AINDEX member) nogil:
+    cdef bint _contains(self, const AINDEX member) noexcept nogil:
         if self._neighbours.find(member) == self._neighbours.end():
             return False
         return True
@@ -1795,20 +1797,20 @@ cdef class NeighboursExtUnorderedSet(NeighboursExtInterface):
         else:
             self._reset()
 
-    cdef void _assign(self, const AINDEX member) nogil:
+    cdef void _assign(self, const AINDEX member) noexcept nogil:
         self._neighbours.insert(member)
         self._n_points += 1
 
-    cdef void _reset(self) nogil:
+    cdef void _reset(self) noexcept nogil:
         self._neighbours.clear()
         self._n_points = 0
 
-    cdef bint _enough(self, const AINDEX member_cutoff) nogil:
+    cdef bint _enough(self, const AINDEX member_cutoff) noexcept nogil:
         if self._n_points > member_cutoff:
             return True
         return False
 
-    cdef AINDEX _get_member(self, const AINDEX index) nogil:
+    cdef AINDEX _get_member(self, const AINDEX index) noexcept nogil:
         cdef stduset[AINDEX].iterator it = self._neighbours.begin()
         cdef AINDEX i
 
@@ -1817,7 +1819,7 @@ cdef class NeighboursExtUnorderedSet(NeighboursExtInterface):
 
         return dereference(it)
 
-    cdef bint _contains(self, const AINDEX member) nogil:
+    cdef bint _contains(self, const AINDEX member) noexcept nogil:
         if self._neighbours.find(member) == self._neighbours.end():
             return False
         return True
@@ -1863,26 +1865,26 @@ cdef class NeighboursExtVectorUnorderedSet(NeighboursExtInterface):
         else:
             self._reset()
 
-    cdef void _assign(self, const AINDEX member) nogil:
+    cdef void _assign(self, const AINDEX member) noexcept nogil:
         self._neighbours.push_back(member)
         self._neighbours_view.insert(member)
         self._n_points += 1
 
-    cdef void _reset(self) nogil:
+    cdef void _reset(self) noexcept nogil:
         self._neighbours.resize(0)
         self._neighbours.reserve(self._initial_size)
         self._neighbours_view.clear()
         self._n_points = 0
 
-    cdef bint _enough(self, const AINDEX member_cutoff) nogil:
+    cdef bint _enough(self, const AINDEX member_cutoff) noexcept nogil:
         if self._n_points > member_cutoff:
             return True
         return False
 
-    cdef AINDEX _get_member(self, const AINDEX index) nogil:
+    cdef AINDEX _get_member(self, const AINDEX index) noexcept nogil:
         return self._neighbours[index]
 
-    cdef bint _contains(self, const AINDEX member) nogil:
+    cdef bint _contains(self, const AINDEX member) noexcept nogil:
         if self._neighbours_view.find(member) == self._neighbours_view.end():
             return False
         return True
@@ -2018,7 +2020,7 @@ cdef class NeighboursGetterExtBruteForce(NeighboursGetterExtInterface):
             const AINDEX index,
             InputDataExtInterface input_data,
             NeighboursExtInterface neighbours,
-            ClusterParameters cluster_params) nogil:
+            ClusterParameters cluster_params) noexcept nogil:
 
         cdef AINDEX i
         cdef AVALUE distance
@@ -2039,7 +2041,7 @@ cdef class NeighboursGetterExtBruteForce(NeighboursGetterExtInterface):
             InputDataExtInterface input_data,
             InputDataExtInterface other_input_data,
             NeighboursExtInterface neighbours,
-            ClusterParameters cluster_params) nogil:
+            ClusterParameters cluster_params) noexcept nogil:
 
         cdef AINDEX i
         cdef AVALUE distance
@@ -2132,7 +2134,7 @@ cdef class NeighboursGetterExtLookup(NeighboursGetterExtInterface):
             const AINDEX index,
             InputDataExtInterface input_data,
             NeighboursExtInterface neighbours,
-            ClusterParameters cluster_params) nogil:
+            ClusterParameters cluster_params) noexcept nogil:
 
         cdef AINDEX i
         neighbours._reset()
@@ -2146,7 +2148,7 @@ cdef class NeighboursGetterExtLookup(NeighboursGetterExtInterface):
             InputDataExtInterface input_data,
             InputDataExtInterface other_input_data,
             NeighboursExtInterface neighbours,
-            ClusterParameters cluster_params) nogil:
+            ClusterParameters cluster_params) noexcept nogil:
 
         cdef AINDEX i
 
@@ -2304,7 +2306,7 @@ cdef class DistanceGetterExtMetric(DistanceGetterExtInterface):
             self,
             const AINDEX point_a,
             const AINDEX point_b,
-            InputDataExtInterface input_data) nogil:
+            InputDataExtInterface input_data) noexcept nogil:
 
         return self._metric._calc_distance(point_a, point_b, input_data)
 
@@ -2321,7 +2323,7 @@ cdef class DistanceGetterExtMetric(DistanceGetterExtInterface):
             const AINDEX point_a,
             const AINDEX point_b,
             InputDataExtInterface input_data,
-            InputDataExtInterface other_input_data) nogil:
+            InputDataExtInterface other_input_data) noexcept nogil:
 
         return self._metric._calc_distance_other(
             point_a, point_b, input_data, other_input_data
@@ -2348,7 +2350,7 @@ cdef class DistanceGetterExtLookup(DistanceGetterExtInterface):
             self,
             const AINDEX point_a,
             const AINDEX point_b,
-            InputDataExtInterface input_data) nogil:
+            InputDataExtInterface input_data) noexcept nogil:
 
         return input_data._get_distance(point_a, point_b)
 
@@ -2357,7 +2359,7 @@ cdef class DistanceGetterExtLookup(DistanceGetterExtInterface):
             const AINDEX point_a,
             const AINDEX point_b,
             InputDataExtInterface input_data,
-            InputDataExtInterface other_input_data) nogil:
+            InputDataExtInterface other_input_data) noexcept nogil:
 
         return other_input_data._get_distance(point_a, point_b)
 
@@ -2392,7 +2394,7 @@ cdef class MetricExtDummy(MetricExtInterface):
     cdef AVALUE _calc_distance(
             self,
             const AINDEX index_a, const AINDEX index_b,
-            InputDataExtInterface input_data) nogil:
+            InputDataExtInterface input_data) noexcept nogil:
 
         return 0.
 
@@ -2400,11 +2402,11 @@ cdef class MetricExtDummy(MetricExtInterface):
             self,
             const AINDEX index_a, const AINDEX index_b,
             InputDataExtInterface input_data,
-            InputDataExtInterface other_input_data) nogil:
+            InputDataExtInterface other_input_data) noexcept nogil:
 
         return 0.
 
-    cdef AVALUE _adjust_radius(self, AVALUE radius_cutoff) nogil:
+    cdef AVALUE _adjust_radius(self, AVALUE radius_cutoff) noexcept nogil:
         return radius_cutoff
 
 
@@ -2436,7 +2438,7 @@ cdef class MetricExtPrecomputed(MetricExtInterface):
     cdef AVALUE _calc_distance(
             self,
             const AINDEX index_a, const AINDEX index_b,
-            InputDataExtInterface input_data) nogil:
+            InputDataExtInterface input_data) noexcept nogil:
 
         return input_data._get_component(index_a, index_b)
 
@@ -2444,11 +2446,11 @@ cdef class MetricExtPrecomputed(MetricExtInterface):
             self,
             const AINDEX index_a, const AINDEX index_b,
             InputDataExtInterface input_data,
-            InputDataExtInterface other_input_data) nogil:
+            InputDataExtInterface other_input_data) noexcept nogil:
 
         return other_input_data._get_component(index_a, index_b)
 
-    cdef AVALUE _adjust_radius(self, AVALUE radius_cutoff) nogil:
+    cdef AVALUE _adjust_radius(self, AVALUE radius_cutoff) noexcept nogil:
         return radius_cutoff
 
 
@@ -2498,7 +2500,7 @@ cdef class MetricExtEuclidean(MetricExtInterface):
     cdef AVALUE _calc_distance(
             self,
             const AINDEX index_a, const AINDEX index_b,
-            InputDataExtInterface input_data) nogil:
+            InputDataExtInterface input_data) noexcept nogil:
 
         cdef AVALUE total = 0
         cdef AINDEX i, n_dim = input_data._n_dim
@@ -2515,7 +2517,7 @@ cdef class MetricExtEuclidean(MetricExtInterface):
             self,
             const AINDEX index_a, const AINDEX index_b,
             InputDataExtInterface input_data,
-            InputDataExtInterface other_input_data) nogil:
+            InputDataExtInterface other_input_data) noexcept nogil:
 
         cdef AVALUE total = 0
         cdef AINDEX i, n_dim = input_data._n_dim
@@ -2528,7 +2530,7 @@ cdef class MetricExtEuclidean(MetricExtInterface):
 
         return csqrt(total)
 
-    cdef AVALUE _adjust_radius(self, AVALUE radius_cutoff) nogil:
+    cdef AVALUE _adjust_radius(self, AVALUE radius_cutoff) noexcept nogil:
         return radius_cutoff
 
 
@@ -2578,7 +2580,7 @@ cdef class MetricExtEuclideanReduced:
     cdef AVALUE _calc_distance(
             self,
             const AINDEX index_a, const AINDEX index_b,
-            InputDataExtInterface input_data) nogil:
+            InputDataExtInterface input_data) noexcept nogil:
 
         cdef AVALUE total = 0
         cdef AINDEX i, n_dim = input_data._n_dim
@@ -2595,7 +2597,7 @@ cdef class MetricExtEuclideanReduced:
             self,
             const AINDEX index_a, const AINDEX index_b,
             InputDataExtInterface input_data,
-            InputDataExtInterface other_input_data) nogil:
+            InputDataExtInterface other_input_data) noexcept nogil:
 
         cdef AVALUE total = 0
         cdef AINDEX i, n_dim = input_data._n_dim
@@ -2608,7 +2610,7 @@ cdef class MetricExtEuclideanReduced:
 
         return total
 
-    cdef AVALUE _adjust_radius(self, AVALUE radius_cutoff) nogil:
+    cdef AVALUE _adjust_radius(self, AVALUE radius_cutoff) noexcept nogil:
         return cpow(radius_cutoff, 2)
 
 
@@ -2621,7 +2623,7 @@ cdef class MetricExtEuclideanPeriodicReduced:
     cdef AVALUE _calc_distance(
             self,
             const AINDEX index_a, const AINDEX index_b,
-            InputDataExtInterface input_data) nogil:
+            InputDataExtInterface input_data) noexcept nogil:
 
         cdef AVALUE total = 0
         cdef AINDEX i, n_dim = input_data._n_dim
@@ -2647,7 +2649,7 @@ cdef class MetricExtEuclideanPeriodicReduced:
             self,
             const AINDEX index_a, const AINDEX index_b,
             InputDataExtInterface input_data,
-            InputDataExtInterface other_input_data) nogil:
+            InputDataExtInterface other_input_data) noexcept nogil:
 
         cdef AVALUE total = 0
         cdef AINDEX i, n_dim = input_data._n_dim
@@ -2669,7 +2671,7 @@ cdef class MetricExtEuclideanPeriodicReduced:
 
         return total
 
-    cdef AVALUE _adjust_radius(self, AVALUE radius_cutoff) nogil:
+    cdef AVALUE _adjust_radius(self, AVALUE radius_cutoff) noexcept nogil:
         return cpow(radius_cutoff, 2)
 
 
@@ -2843,7 +2845,7 @@ cdef class SimilarityCheckerExtContains(SimilarityCheckerExtInterface):
             self,
             NeighboursExtInterface neighbours_a,
             NeighboursExtInterface neighbours_b,
-            ClusterParameters cluster_params) nogil:
+            ClusterParameters cluster_params) noexcept nogil:
 
         cdef AINDEX c = cluster_params.iparams[0]
 
@@ -2867,7 +2869,7 @@ cdef class SimilarityCheckerExtContains(SimilarityCheckerExtInterface):
             self,
             NeighboursExtInterface neighbours_a,
             NeighboursExtInterface neighbours_b,
-            ClusterParameters cluster_params) nogil:
+            ClusterParameters cluster_params) noexcept nogil:
 
         cdef AINDEX na = neighbours_a._n_points
         cdef AINDEX member_a, member_index_a
@@ -2906,7 +2908,7 @@ cdef class SimilarityCheckerExtSwitchContains(SimilarityCheckerExtInterface):
             self,
             NeighboursExtInterface neighbours_a,
             NeighboursExtInterface neighbours_b,
-            ClusterParameters cluster_params) nogil:
+            ClusterParameters cluster_params) noexcept nogil:
 
 
         cdef AINDEX c = cluster_params.iparams[0]
@@ -2938,7 +2940,7 @@ cdef class SimilarityCheckerExtSwitchContains(SimilarityCheckerExtInterface):
             self,
             NeighboursExtInterface neighbours_a,
             NeighboursExtInterface neighbours_b,
-            ClusterParameters cluster_params) nogil:
+            ClusterParameters cluster_params) noexcept nogil:
 
         cdef AINDEX na = neighbours_a._n_points
         cdef AINDEX nb = neighbours_b._n_points
@@ -2980,7 +2982,7 @@ cdef class SimilarityCheckerExtScreensorted(SimilarityCheckerExtInterface):
             self,
             NeighboursExtInterface neighbours_a,
             NeighboursExtInterface neighbours_b,
-            ClusterParameters cluster_params) nogil:
+            ClusterParameters cluster_params) noexcept nogil:
 
         cdef AINDEX c = cluster_params.iparams[0]
 
@@ -3034,7 +3036,7 @@ cdef class SimilarityCheckerExtScreensorted(SimilarityCheckerExtInterface):
             self,
             NeighboursExtInterface neighbours_a,
             NeighboursExtInterface neighbours_b,
-            ClusterParameters cluster_params) nogil:
+            ClusterParameters cluster_params) noexcept nogil:
 
         cdef AINDEX na = neighbours_a._n_points
         cdef AINDEX nb = neighbours_b._n_points
@@ -3114,11 +3116,11 @@ cdef class QueueExtLIFOVector(QueueExtInterface):
 
         self._queue = values
 
-    cdef inline void _push(self, const AINDEX value) nogil:
+    cdef inline void _push(self, const AINDEX value) noexcept nogil:
         """Append value to back/right end"""
         self._queue.push_back(value)
 
-    cdef inline AINDEX _pop(self) nogil:
+    cdef inline AINDEX _pop(self) noexcept nogil:
         """Retrieve value from back/right end"""
 
         cdef AINDEX value = self._queue.back()
@@ -3126,22 +3128,22 @@ cdef class QueueExtLIFOVector(QueueExtInterface):
 
         return value
 
-    cdef inline bint _is_empty(self) nogil:
+    cdef inline bint _is_empty(self) noexcept nogil:
         """Return True if there are no values in the queue"""
         return self._queue.empty()
 
-    cdef inline AINDEX _size(self) nogil:
+    cdef inline AINDEX _size(self) noexcept nogil:
         return self._queue.size()
 
 
 cdef class QueueExtFIFOQueue(QueueExtInterface):
     """Implements the queue interface"""
 
-    cdef inline void _push(self, const AINDEX value) nogil:
+    cdef inline void _push(self, const AINDEX value) noexcept nogil:
         """Append value to back/right end"""
         self._queue.push(value)
 
-    cdef inline AINDEX _pop(self) nogil:
+    cdef inline AINDEX _pop(self) noexcept nogil:
         """Retrieve value from front/left end"""
 
         cdef AINDEX value = self._queue.front()
@@ -3149,11 +3151,11 @@ cdef class QueueExtFIFOQueue(QueueExtInterface):
 
         return value
 
-    cdef inline bint _is_empty(self) nogil:
+    cdef inline bint _is_empty(self) noexcept nogil:
         """Return True if there are no values in the queue"""
         return self._queue.empty()
 
-    cdef inline AINDEX _size(self) nogil:
+    cdef inline AINDEX _size(self) noexcept nogil:
         return self._queue.size()
 
 
@@ -3193,11 +3195,11 @@ class PriorityQueueMaxHeap(PriorityQueue):
 cdef class PriorityQueueExtMaxHeap(PriorityQueueExtInterface):
     """Implements the priority queue interface"""
 
-    cdef inline void _reset(self) nogil:
+    cdef inline void _reset(self) noexcept nogil:
         while self._queue.size() > 0:
             self._queue.pop()
 
-    cdef inline void _push(self, const AINDEX a, const AINDEX b, const AVALUE weight) nogil:
+    cdef inline void _push(self, const AINDEX a, const AINDEX b, const AVALUE weight) noexcept nogil:
 
         cdef stdpair[AINDEX, AINDEX] edge_pair
         cdef stdpair[AVALUE, stdpair[AINDEX, AINDEX]] full_pair
@@ -3209,7 +3211,7 @@ cdef class PriorityQueueExtMaxHeap(PriorityQueueExtInterface):
 
         self._queue.push(full_pair)
 
-    cdef inline (AINDEX, AINDEX, AVALUE) _pop(self) nogil:
+    cdef inline (AINDEX, AINDEX, AVALUE) _pop(self) noexcept nogil:
         """
 
         Note:
@@ -3225,10 +3227,10 @@ cdef class PriorityQueueExtMaxHeap(PriorityQueueExtInterface):
         self._queue.pop()
         return full_pair.second.first, full_pair.second.second, full_pair.first
 
-    cdef inline bint _is_empty(self) nogil:
+    cdef inline bint _is_empty(self) noexcept nogil:
         return self._queue.empty()
 
-    cdef AINDEX _size(self) nogil:
+    cdef AINDEX _size(self) noexcept nogil:
         return self._queue.size()
 
 

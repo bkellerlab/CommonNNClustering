@@ -111,13 +111,23 @@ def test_init_builder():
         ),
         (
             {
-                "hierarchical_fitter": "mst",
+                "hierarchical_fitter": "mst_debug",
                 "hierarchical_fitter.na": "vector",
                 "hierarchical_fitter.checker": "contains",
                 "hierarchical_fitter.prioq": "maxheap",
                 "hierarchical_fitter.ngetter": "lookup"
             },
             "hierarchical_fitter", _fit.HierarchicalFitterCommonNNMSTPrim
+        ),
+        (
+            {
+                "hierarchical_fitter": "mst",
+                "hierarchical_fitter.na": "vector",
+                "hierarchical_fitter.checker": "contains",
+                "hierarchical_fitter.prioq": "maxheap",
+                "hierarchical_fitter.ngetter": "lookup"
+            },
+            "hierarchical_fitter", _fit.HierarchicalFitterExtCommonNNMSTPrim
         ),
         (
             {
