@@ -1,21 +1,18 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Advanced usage &#8212; CommonNN Clustering  documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a5519fdd" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=77a3bc79" />
+    <link rel="stylesheet" type="text/css" href="../_static/nbsphinx-code-cells.css?v=2aa19091" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=d18eccf6" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -26,8 +23,9 @@
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
+
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  
 
   </head><body>
   
@@ -39,269 +37,13 @@
 
           <div class="body" role="main">
             
-  
-<style>
-/* CSS for nbsphinx extension */
-
-/* remove conflicting styling from Sphinx themes */
-div.nbinput.container div.prompt *,
-div.nboutput.container div.prompt *,
-div.nbinput.container div.input_area pre,
-div.nboutput.container div.output_area pre,
-div.nbinput.container div.input_area .highlight,
-div.nboutput.container div.output_area .highlight {
-    border: none;
-    padding: 0;
-    margin: 0;
-    box-shadow: none;
-}
-
-div.nbinput.container > div[class*=highlight],
-div.nboutput.container > div[class*=highlight] {
-    margin: 0;
-}
-
-div.nbinput.container div.prompt *,
-div.nboutput.container div.prompt * {
-    background: none;
-}
-
-div.nboutput.container div.output_area .highlight,
-div.nboutput.container div.output_area pre {
-    background: unset;
-}
-
-div.nboutput.container div.output_area div.highlight {
-    color: unset;  /* override Pygments text color */
-}
-
-/* avoid gaps between output lines */
-div.nboutput.container div[class*=highlight] pre {
-    line-height: normal;
-}
-
-/* input/output containers */
-div.nbinput.container,
-div.nboutput.container {
-    display: -webkit-flex;
-    display: flex;
-    align-items: flex-start;
-    margin: 0;
-    width: 100%;
-}
-@media (max-width: 540px) {
-    div.nbinput.container,
-    div.nboutput.container {
-        flex-direction: column;
-    }
-}
-
-/* input container */
-div.nbinput.container {
-    padding-top: 5px;
-}
-
-/* last container */
-div.nblast.container {
-    padding-bottom: 5px;
-}
-
-/* input prompt */
-div.nbinput.container div.prompt pre {
-    color: #307FC1;
-}
-
-/* output prompt */
-div.nboutput.container div.prompt pre {
-    color: #BF5B3D;
-}
-
-/* all prompts */
-div.nbinput.container div.prompt,
-div.nboutput.container div.prompt {
-    width: 4.5ex;
-    padding-top: 5px;
-    position: relative;
-    user-select: none;
-}
-
-div.nbinput.container div.prompt > div,
-div.nboutput.container div.prompt > div {
-    position: absolute;
-    right: 0;
-    margin-right: 0.3ex;
-}
-
-@media (max-width: 540px) {
-    div.nbinput.container div.prompt,
-    div.nboutput.container div.prompt {
-        width: unset;
-        text-align: left;
-        padding: 0.4em;
-    }
-    div.nboutput.container div.prompt.empty {
-        padding: 0;
-    }
-
-    div.nbinput.container div.prompt > div,
-    div.nboutput.container div.prompt > div {
-        position: unset;
-    }
-}
-
-/* disable scrollbars on prompts */
-div.nbinput.container div.prompt pre,
-div.nboutput.container div.prompt pre {
-    overflow: hidden;
-}
-
-/* input/output area */
-div.nbinput.container div.input_area,
-div.nboutput.container div.output_area {
-    -webkit-flex: 1;
-    flex: 1;
-    overflow: auto;
-}
-@media (max-width: 540px) {
-    div.nbinput.container div.input_area,
-    div.nboutput.container div.output_area {
-        width: 100%;
-    }
-}
-
-/* input area */
-div.nbinput.container div.input_area {
-    border: 1px solid #e0e0e0;
-    border-radius: 2px;
-    /*background: #f5f5f5;*/
-}
-
-/* override MathJax center alignment in output cells */
-div.nboutput.container div[class*=MathJax] {
-    text-align: left !important;
-}
-
-/* override sphinx.ext.imgmath center alignment in output cells */
-div.nboutput.container div.math p {
-    text-align: left;
-}
-
-/* standard error */
-div.nboutput.container div.output_area.stderr {
-    background: #fdd;
-}
-
-/* ANSI colors */
-.ansi-black-fg { color: #3E424D; }
-.ansi-black-bg { background-color: #3E424D; }
-.ansi-black-intense-fg { color: #282C36; }
-.ansi-black-intense-bg { background-color: #282C36; }
-.ansi-red-fg { color: #E75C58; }
-.ansi-red-bg { background-color: #E75C58; }
-.ansi-red-intense-fg { color: #B22B31; }
-.ansi-red-intense-bg { background-color: #B22B31; }
-.ansi-green-fg { color: #00A250; }
-.ansi-green-bg { background-color: #00A250; }
-.ansi-green-intense-fg { color: #007427; }
-.ansi-green-intense-bg { background-color: #007427; }
-.ansi-yellow-fg { color: #DDB62B; }
-.ansi-yellow-bg { background-color: #DDB62B; }
-.ansi-yellow-intense-fg { color: #B27D12; }
-.ansi-yellow-intense-bg { background-color: #B27D12; }
-.ansi-blue-fg { color: #208FFB; }
-.ansi-blue-bg { background-color: #208FFB; }
-.ansi-blue-intense-fg { color: #0065CA; }
-.ansi-blue-intense-bg { background-color: #0065CA; }
-.ansi-magenta-fg { color: #D160C4; }
-.ansi-magenta-bg { background-color: #D160C4; }
-.ansi-magenta-intense-fg { color: #A03196; }
-.ansi-magenta-intense-bg { background-color: #A03196; }
-.ansi-cyan-fg { color: #60C6C8; }
-.ansi-cyan-bg { background-color: #60C6C8; }
-.ansi-cyan-intense-fg { color: #258F8F; }
-.ansi-cyan-intense-bg { background-color: #258F8F; }
-.ansi-white-fg { color: #C5C1B4; }
-.ansi-white-bg { background-color: #C5C1B4; }
-.ansi-white-intense-fg { color: #A1A6B2; }
-.ansi-white-intense-bg { background-color: #A1A6B2; }
-
-.ansi-default-inverse-fg { color: #FFFFFF; }
-.ansi-default-inverse-bg { background-color: #000000; }
-
-.ansi-bold { font-weight: bold; }
-.ansi-underline { text-decoration: underline; }
-
-
-div.nbinput.container div.input_area div[class*=highlight] > pre,
-div.nboutput.container div.output_area div[class*=highlight] > pre,
-div.nboutput.container div.output_area div[class*=highlight].math,
-div.nboutput.container div.output_area.rendered_html,
-div.nboutput.container div.output_area > div.output_javascript,
-div.nboutput.container div.output_area:not(.rendered_html) > img{
-    padding: 5px;
-    margin: 0;
-}
-
-/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
-div.nbinput.container div.input_area > div[class^='highlight'],
-div.nboutput.container div.output_area > div[class^='highlight']{
-    overflow-y: hidden;
-}
-
-/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
-.prompt .copybtn {
-    display: none;
-}
-
-/* Some additional styling taken form the Jupyter notebook CSS */
-.jp-RenderedHTMLCommon table,
-div.rendered_html table {
-  border: none;
-  border-collapse: collapse;
-  border-spacing: 0;
-  color: black;
-  font-size: 12px;
-  table-layout: fixed;
-}
-.jp-RenderedHTMLCommon thead,
-div.rendered_html thead {
-  border-bottom: 1px solid black;
-  vertical-align: bottom;
-}
-.jp-RenderedHTMLCommon tr,
-.jp-RenderedHTMLCommon th,
-.jp-RenderedHTMLCommon td,
-div.rendered_html tr,
-div.rendered_html th,
-div.rendered_html td {
-  text-align: right;
-  vertical-align: middle;
-  padding: 0.5em 0.5em;
-  line-height: normal;
-  white-space: normal;
-  max-width: none;
-  border: none;
-}
-.jp-RenderedHTMLCommon th,
-div.rendered_html th {
-  font-weight: bold;
-}
-.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
-div.rendered_html tbody tr:nth-child(odd) {
-  background: #f5f5f5;
-}
-.jp-RenderedHTMLCommon tbody tr:hover,
-div.rendered_html tbody tr:hover {
-  background: rgba(66, 165, 245, 0.2);
-}
-</style>
-<style>
+  <style>
     .nbinput .prompt,
     .nboutput .prompt {
         display: none;
     }
 </style><section id="Advanced-usage">
-<h1>Advanced usage<a class="headerlink" href="#Advanced-usage" title="Permalink to this heading">¶</a></h1>
+<h1>Advanced usage<a class="headerlink" href="#Advanced-usage" title="Link to this heading">¶</a></h1>
 <p>Go to:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#Notebook-configuration"><span class="std std-ref">Notebook configuration</span></a></p></li>
@@ -314,18 +56,18 @@ div.rendered_html tbody tr:hover {
 </li>
 </ul>
 <section id="Notebook-configuration">
-<h2>Notebook configuration<a class="headerlink" href="#Notebook-configuration" title="Permalink to this heading">¶</a></h2>
+<h2>Notebook configuration<a class="headerlink" href="#Notebook-configuration" title="Link to this heading">¶</a></h2>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sys</span>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">import</span> <span class="nn">commonnn</span>
-<span class="kn">from</span> <span class="nn">commonnn</span> <span class="kn">import</span> <span class="n">cluster</span><span class="p">,</span> <span class="n">recipes</span>
-<span class="kn">from</span> <span class="nn">commonnn</span> <span class="kn">import</span> <span class="n">_bundle</span><span class="p">,</span> <span class="n">_types</span><span class="p">,</span> <span class="n">_fit</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">commonnn</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">commonnn</span><span class="w"> </span><span class="kn">import</span> <span class="n">cluster</span><span class="p">,</span> <span class="n">recipes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">commonnn</span><span class="w"> </span><span class="kn">import</span> <span class="n">_bundle</span><span class="p">,</span> <span class="n">_types</span><span class="p">,</span> <span class="n">_fit</span>
 </pre></div>
 </div>
 </div>
@@ -356,9 +98,9 @@ Packages:
 </div>
 </section>
 <section id="Clustering-initialisation">
-<h2>Clustering initialisation<a class="headerlink" href="#Clustering-initialisation" title="Permalink to this heading">¶</a></h2>
+<h2>Clustering initialisation<a class="headerlink" href="#Clustering-initialisation" title="Link to this heading">¶</a></h2>
 <section id="Short-initialisation-for-point-coordinates">
-<h3>Short initialisation for point coordinates<a class="headerlink" href="#Short-initialisation-for-point-coordinates" title="Permalink to this heading">¶</a></h3>
+<h3>Short initialisation for point coordinates<a class="headerlink" href="#Short-initialisation-for-point-coordinates" title="Link to this heading">¶</a></h3>
 <p>In the <a class="reference internal" href="basic_usage.html"><span class="doc">Basic usage</span></a> tutorial, we saw how to create a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> object from a list of point coordinates.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
@@ -418,7 +160,7 @@ Clustering(input_data=InputDataExtComponentsMemoryview(components of 10 points i
 <p>To understand the setup steps and the different kinds of partaking objects better, lets have a closer look at the default recipe for the <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> class in the next section.</p>
 </section>
 <section id="Manual-custom-initialisation">
-<h3>Manual custom initialisation<a class="headerlink" href="#Manual-custom-initialisation" title="Permalink to this heading">¶</a></h3>
+<h3>Manual custom initialisation<a class="headerlink" href="#Manual-custom-initialisation" title="Link to this heading">¶</a></h3>
 <p>There are multiple ways to initialise a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code>:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
@@ -660,7 +402,7 @@ structure will be a C++ queue.</p>
 <p>The described manual way to initialise a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> instance is very flexible as the user can cherry pick exactly the desired types to modify the different contributing pieces. On the other hand, this approach can be fairly tedious and error prone. In the next section we will see how we solved this problem by facilitating the aggregation of a clustering according to pre-defined schemes.</p>
 </section>
 <section id="Initialisation-via-a-builder">
-<h3>Initialisation via a builder<a class="headerlink" href="#Initialisation-via-a-builder" title="Permalink to this heading">¶</a></h3>
+<h3>Initialisation via a builder<a class="headerlink" href="#Initialisation-via-a-builder" title="Link to this heading">¶</a></h3>
 <p>We did see so far how to assemble a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> instance from scratch by selecting the individual clustering components manually. In the beginning we did also see that we could create a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> seemingly automatically if we just pass <em>raw</em> data to the constructor. To fill the gap, let’s now have a look at how a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> can be created via a <code class="docutils literal notranslate"><span class="pre">Builder</span></code>. A builder is a helper object that serves the purpose of correctly creating a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> based on some preset requirements, a
 so called <em>recipe</em>. When we try to initialise a <code class="docutils literal notranslate"><span class="pre">Clustering</span></code> with <em>raw</em> input data (that is not wrapped in a valid generic input data type), a <code class="docutils literal notranslate"><span class="pre">recipes.Builder</span></code> instance actually tries to take over behind the scenes. By default, a builder is associated with a certain recipe.</p>
 <div class="nbinput docutils container">
@@ -680,7 +422,7 @@ so called <em>recipe</em>. When we try to initialise a <code class="docutils lit
 coordinates
 </pre></div></div>
 </div>
-<p>We should look into what is actually meant by a clustering recipe. A recipe is basically a nested mapping of clustering component strings (matching the corresponding keyword arguments used on clustering/component initialisation, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;input_data&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;neighbours&quot;</span></code>) to the generic types (classes not instances) that should be used in the corresponding place. A recipe could for example look like this:</p>
+<p>We should look into what is actually meant by a clustering recipe. A recipe is basically a nested mapping of clustering component strings (matching the corresponding keyword arguments used on clustering/component initialisation, e.g. <code class="docutils literal notranslate"><span class="pre">&quot;input_data&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;neighbours&quot;</span></code>) to the generic types (classes not instances) that should be used in the corresponding place. A recipe could for example look like this:</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
@@ -698,7 +440,7 @@ coordinates
 </pre></div>
 </div>
 </div>
-<p>In this recipe, the generic type supposed to wrap the input data is specified explicitly as the class object. Alternatively, strings can be used to specify a type in shorthand notation. Which abbreviations are understood is defined in the <code class="docutils literal notranslate"><span class="pre">recipes.COMPONENT_NAME_TYPE_MAP</span></code>. In the fitter case, <code class="docutils literal notranslate"><span class="pre">bfs</span></code> is translated into <code class="docutils literal notranslate"><span class="pre">_fit.FitterExtCommonNNBFS</span></code>. Dot notation is used to indicate nested dependencies, e.g. to define components needed to create other components. Similarly, shorthand notation
+<p>In this recipe, the generic type supposed to wrap the input data is specified explicitly as the class object. Alternatively, strings can be used to specify a type in shorthand notation. Which abbreviations are understood is defined in the <code class="docutils literal notranslate"><span class="pre">recipes.COMPONENT_NAME_TYPE_MAP</span></code>. In the fitter case, <code class="docutils literal notranslate"><span class="pre">bfs</span></code> is translated into <code class="docutils literal notranslate"><span class="pre">_fit.FitterExtCommonNNBFS</span></code>. Dot notation is used to indicate nested dependencies, e.g. to define components needed to create other components. Similarly, shorthand notation
 is supported for the component key, as shown with <code class="docutils literal notranslate"><span class="pre">fitter.getter</span></code> which stands in for the neighbours getter required by the fitter. Abbreviations on the key side are defined in <code class="docutils literal notranslate"><span class="pre">recipes.COMPONENT_ALT_KW_MAP</span></code>. For the <code class="docutils literal notranslate"><span class="pre">&quot;fitter.na&quot;</span></code> component (one of the neighbours container type needed that the fitter needs), we have a tuple as the value in the mapping. This is interpreted as a component string identifier, followed by an arguments tuple, and a keyword arguments dictionary used in the
 initialisation of the corresponding component. Note also, that the recipe defines only <code class="docutils literal notranslate"><span class="pre">&quot;fitter.na&quot;</span></code> (<code class="docutils literal notranslate"><span class="pre">neighbours</span></code>) and not <code class="docutils literal notranslate"><span class="pre">&quot;fitter.nb&quot;</span></code> (<code class="docutils literal notranslate"><span class="pre">neighbour_neighbours</span></code>) in which case the same type will be used for both components. Those fallback relation ships are defined in <code class="docutils literal notranslate"><span class="pre">recipes.COMPONENT_KW_TYPE_ALIAS_MAP</span></code>. The above mentioned default recipes looks like the following:</p>
 <div class="nbinput docutils container">
@@ -800,7 +542,7 @@ InputDataExtComponentsMemoryview(components of 3 points in 3 dimensions)
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../index.html">CommonNN Clustering</a></h1>
 
@@ -848,7 +590,7 @@ InputDataExtComponentsMemoryview(components of 3 points in 3 dimensions)
   </ul></li>
 </ul>
 </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
@@ -856,7 +598,7 @@ InputDataExtComponentsMemoryview(components of 3 points in 3 dimensions)
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
 
 
@@ -871,11 +613,11 @@ InputDataExtComponentsMemoryview(components of 3 points in 3 dimensions)
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2022, Jan-Oliver Kapp-Joswig.
+      &#169;2022, Jan-Oliver Kapp-Joswig.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.2.3</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
       |
       <a href="../_sources/tutorial/advanced_usage.ipynb.txt"

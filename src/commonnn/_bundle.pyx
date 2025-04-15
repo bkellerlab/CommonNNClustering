@@ -46,6 +46,8 @@ cdef class Bundle:
         self.meta = meta
         self.summary = summary
         self._lambda = -np.inf
+        self._size = 0
+        self._checked = False
 
     @property
     def input_data(self):
@@ -82,6 +84,8 @@ cdef class Bundle:
 
     @property
     def graph(self):
+        if self._graph is None:
+            return set()
         return self._graph
 
     @property
@@ -424,15 +428,89 @@ cdef inline void _reel(Bundle parent, AINDEX depth):
             parent_labels.meta["params"][old_label + n_clusters] = p
 
 
+cpdef int fold_same_lambda(Bundle bundle) except 1:
+
+    cdef list leafs = []
+    cdef object queue = deque()
+    cdef Bundle child, grandchild, candidate
+    cdef AINDEX count
+
+    for child in bundle.children.values():
+        if child._lambda == bundle._lambda:
+            queue.append(child)
+        else:
+            leafs.append(child)
+
+    while queue:
+        candidate = queue.popleft()
+        for child in candidate.children.values():
+            if child._lambda == bundle._lambda:
+                queue.append(child)
+            else:
+                leafs.append(child)
+
+    count = 1
+    bundle._children = {}
+    for child in leafs:
+        bundle._children[count] = child
+        count += 1
+
+    return 0
+    
+
+cdef inline int _trim_small_children(Bundle bundle, AINDEX member_cutoff) except 1:
+    cdef AINDEX label, count
+    cdef dict children = bundle.children
+    cdef dict new_children = {}
+
+    for label, child in children.items():
+        if len(child._graph) >= member_cutoff:
+            new_children[label] = child
+
+    bundle._children = new_children 
+
+    return 0
+
+
+cdef inline int _trim_lone_child(Bundle bundle) except 1:
+    cdef AINDEX label, count
+    cdef dict children = bundle.children
+
+    if len(children) == 1:
+        for child in children.values():
+            bundle.children = child.children
+
+    return 0
+
+
 cpdef void check_children(
         Bundle bundle,
         AINDEX member_cutoff,
         bint needs_folding: bool = False):
+    """Modify a bundles children mapping
+    
+    Note:
+        These actions will be available through a number of
+        hierarchy processing functions in the future
+
+    Note:
+        Always removes lone children
+
+    Args:
+        bundle: Bundle whose children to check
+        member_cutoff: Children with less than this many members
+            will be removed
+
+    Keyword args:
+        needs_folding: If `True`, will replace children with grand children and so
+            forth if their lambda value is the same as that of the parent bundle
+    """
 
     cdef list leafs
     cdef Bundle child, grandchild, candidate
     cdef AINDEX count, label
 
+    # Replace children with descendants if lambda value does not change
     if needs_folding:
         leafs = []
         queue = deque()
@@ -456,12 +534,14 @@ cpdef void check_children(
             bundle._children[count] = child
             count += 1
 
+    # Remove children with not enough members
     bundle._children = {
         k: v
         for k, v in enumerate(bundle.children.values(), 1)
         if len(v._graph) >= member_cutoff
         }
 
+    # Replace lone children with grandchildren
     if len(bundle._children) == 1:
         child = bundle._children.popitem()[1]
         for label, grandchild in enumerate(child.children.values(), 1):
@@ -471,6 +551,47 @@ cpdef void check_children(
     for child in bundle.children.values():
         child._parent = weakref.proxy(bundle)
 
+def reset_hierarchy_levels(Bundle bundle, AINDEX hierarchy_level=0) -> None:
+    """Recursively reset the hierarchy levels of a bundle and its children
+
+    Args:
+        bundle: Root bundle
+
+    Keyword args:
+        hierarchy_level: The level to start from
+    """
+
+    cdef Bundle child
+
+    bundle._hierarchy_level = hierarchy_level
+    for child in bundle.children.values():
+        reset_hierarchy_levels(child, hierarchy_level=hierarchy_level + 1)
+
+def leafs_to_labels(Bundle root, n_points=None) -> None:
+
+    cdef AINDEX label, p
+    cdef Bundle b
+
+    if n_points is None:
+        try:
+            n_points = root._input_data.n_points
+        except AttributeError:
+            try:
+                n_points = root._labels.n_points
+            except AttributeError:
+                raise LookupError(
+                    "Bundle has no input data or labels. "
+                    "Please provide `n_points` explicitly."
+                    )
+
+    bundles = bfs_leafs(root)
+    root.labels = Labels(
+        np.zeros(n_points, order="C", dtype=P_AINDEX)
+        )
+
+    for label, b in enumerate(bundles, 1):
+        for p in b.graph:
+            root._labels.labels[p] = label
 
 def bfs(Bundle root):
     cdef Bundle bundle, child

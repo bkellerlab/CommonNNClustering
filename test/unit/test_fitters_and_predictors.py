@@ -219,11 +219,7 @@ def test_predict_via_clustering(basic_components):
 def test_fit_hierarchical_prim_via_clustering(basic_components):
     data = np.array(basic_components, order="c", dtype=P_AVALUE)
     clustering = cluster.Clustering(data, recipe="coordinates_mst")
-    clustering.fit_hierarchical(radius_cutoff=1.5, member_cutoff=1)
-    labels = _types.Labels.from_length(data.shape[0])
-    for i, b in enumerate(_bundle.bfs(clustering.root)):
-        for n in b.graph.nodes:
-            labels.labels[n] = i
-    labels.sort_by_size()
+    clustering.fit_hierarchical(radius_cutoff=1.5, member_cutoff=2)
+    clustering.root._labels.sort_by_size()
     expected = np.array([1, 1, 1, 1, 1, 1, 0, 3, 3, 2, 2, 2])
-    np.testing.assert_array_equal(labels.labels, expected)
+    np.testing.assert_array_equal(clustering.root.labels, expected)
