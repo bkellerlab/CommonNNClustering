@@ -5,6 +5,7 @@ from types import GeneratorType
 from typing import Any, Optional, Type, Union
 from typing import Container, Iterable, List, Tuple, Sequence
 import heapq
+import warnings
 import weakref
 
 try:
@@ -15,9 +16,11 @@ except ModuleNotFoundError as error:
     NX_FOUND = False  # pragma: no cover
 
 import numpy as np
+from loguru import logger
 
 from commonnn import report
 from commonnn._primitive_types import P_AINDEX, P_AVALUE, P_ABOOL
+from commonnn._bundle import reset_hierarchy_levels, leafs_to_labels
 from commonnn._bundle cimport check_children, Bundle
 from commonnn._types import (
     InputData,
@@ -42,15 +45,15 @@ class Fitter(ABC):
     """Defines the fitter interface"""
 
     @abstractmethod
-    def fit(self, Bundle bundle, *, **kwargs):
+    def fit(self, Bundle bundle, *, **kwargs) -> (float, Type["ClusterParameters"]):
         """Generic clustering outer function"""
 
     @abstractmethod
     def _fit(
             self,
-            input_data: Type['InputData'],
-            labels: Type['Labels'],
-            cluster_params: Type['ClusterParameters']):
+            object input_data,
+            Labels labels,
+            ClusterParameters cluster_params) -> None:
         """Generic clustering inner function"""
 
     @abstractmethod
@@ -63,7 +66,7 @@ class Fitter(ABC):
 
 
 class FitterCommonNN(Fitter):
-    """Defines the fitter interface"""
+    """Further differentiates the fitter interface for CommonNN clusterings"""
 
     _parameter_type = CommonNNParameters
     _record_type = report.CommonNNRecord
@@ -171,7 +174,7 @@ class HierarchicalFitter(ABC):
     """Defines the hierarchical fitter interface"""
 
     @abstractmethod
-    def fit(self, Bundle bundle, *args, **kwargs):
+    def fit(self, Bundle bundle, *, **kwargs) -> None:
         """Generic clustering"""
 
     def __repr__(self):
@@ -179,13 +182,13 @@ class HierarchicalFitter(ABC):
 
 
 cdef class FitterExtInterface:
-    def fit(self, Bundle bundle, *, **kwargs): ...
+    def fit(self, Bundle bundle, *, **kwargs) -> (float, Type["ClusterParameters"]): ...
 
     def _fit(
             self,
-            input_data: Type['InputData'],
-            labels: Type['Labels'],
-            cluster_params: Type['ClusterParameters']):
+            InputDataExtInterface input_data,
+            Labels labels,
+            ClusterParameters cluster_params) -> None:
 
         self._fit_inner(input_data, labels, cluster_params)
 
@@ -207,7 +210,7 @@ cdef class FitterExtCommonNNInterface(FitterExtInterface):
     _parameter_type = CommonNNParameters
     _record_type = report.CommonNNRecord
 
-    def fit(self, Bundle bundle, *, **kwargs) -> float:
+    def fit(self, Bundle bundle, *, **kwargs) -> (float, Type["ClusterParameters"]):
         return FitterCommonNN.fit(self, bundle, **kwargs)
 
     def make_parameters(
@@ -354,7 +357,7 @@ class FitterCommonNNBFS(FitterCommonNN):
             self,
             object input_data,
             Labels labels,
-            ClusterParameters cluster_params):
+            ClusterParameters cluster_params) -> None:
         """Generic common-nearest-neighbour clustering
 
         Uses a breadth-first-search (BFS) approach to grow clusters.
@@ -847,6 +850,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
         self._similarity_checker = similarity_checker
         self._priority_queue = priority_queue
         self._priority_queue_tree = priority_queue_tree
+        self._artifacts = {}
 
     def __str__(self):
 
@@ -872,8 +876,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             ("priority_queue_tree", "priority_queue")
             ]
 
-    def make_parameters(
-            self, **kwargs) -> Type["ClusterParameters"]:
+    def make_parameters(self, **kwargs) -> Type["ClusterParameters"]:
         cluster_params = self._parameter_type.from_mapping(kwargs)
 
         try:
@@ -886,42 +889,106 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
         return cluster_params
 
     def fit(
-            self, Bundle bundle, *,
-            sort_by_size: bool = True,
-            member_cutoff: int = None,
-            max_clusters: int = None,
-            info: bool = True,
-            v: bool = True,
-            **kwargs):
+            self,
+            Bundle bundle, *,
+            info=True,
+            member_cutoff=10,
+            scipy_hierarchy=True,
+            bundle_hierarchy=True,
+            make_labels=True,
+            **kwargs) -> None:
+        """Orchestrates hierarchical clustering
+        
+        Args:
+            bundle: Bundle object containing the input data and labels.
+            info: If True, store the parameters in the labels meta dictionary.
+            member_cutoff: Minimum number of members for clusters to be
+                considered valid. Only considered for hierarchy building
+                if `bundle_hierarchy=True`.
+            scipy_hierarchy: If `True`, build a SciPy-compatible linkage hierarchy
+                Z-matrix from MST edges that will be put into `_artifacts["Z"]`.
+            bundle_hierarchy: If `True`, build a bundle hierarchy from the
+                MST edges or (if present) a previously computed Scipy Z-matrix.
+                Note that currently, we only recommend the latter option for
+                which `scipy_hierarchy=True` is required.
+            make_labels: If `True`, create root labels from all leaf nodes
+                after a bundle hierarchy has been built (`bundle_hierarchy=True`).
+        """
 
-        if not NX_FOUND:
-            raise ModuleNotFoundError("No module named 'networkx'")
+        cdef AINDEX n_points = bundle._input_data.n_points
 
-        cdef AVALUE INFTY = np.inf
+        logger.info(f"Started hierarchical CommonNN clustering - {type(self).__name__}")
+
+        bundle._labels = Labels(
+            np.ones(n_points, order="C", dtype=P_AINDEX)
+            )
+
+        cluster_params = self.make_parameters(**kwargs)
+
+        _, execution_time = report.timed(self._fit)(
+            bundle._input_data, bundle._labels, cluster_params
+            )
+
+        if scipy_hierarchy:
+            self._make_scipy_hierarchy(n_points)
+            logger.info(f"Computed Scipy Z matrix")
+
+        if bundle_hierarchy:
+            if scipy_hierarchy:
+                Z = self._artifacts.get("Z")
+                if Z is not None:
+                    self.scipy_to_bundle_hierarchy(
+                        bundle,
+                        Z=Z,
+                        member_cutoff=member_cutoff
+                        )
+                    logger.info(f"Built bundle hierarchy from Scipy Z matrix")
+                else:
+                    raise LookupError(
+                        "Scipy Z matrix not found. "
+                        )
+            else:
+                self._make_bundle_hierarchy(bundle, n_points, member_cutoff=member_cutoff)
+                logger.info(f"Built bundle hierarchy")
+
+            reset_hierarchy_levels(bundle)
+            if make_labels:
+                leafs_to_labels(bundle, n_points=n_points)
+                logger.info(f"Converted all leafs to root labels")
+
+        if info:
+            meta = {
+                "params": {},
+                "reference": weakref.proxy(bundle),
+                "origin": "fit_hierarchical"
+            }
+            bundle._labels._meta = meta
+
+        return execution_time, cluster_params
+
+    def _fit(
+            self,
+            object input_data,
+            Labels labels,
+            ClusterParameters cluster_params) -> None:
+
+        self._make_mst(input_data, labels, cluster_params)
+        logger.info(f"Built MST")
+
+    def _make_mst(
+            self,
+            object input_data,
+            Labels labels,
+            ClusterParameters cluster_params) -> None:
+
+        cdef AINDEX n_points, point, n_members, member, member_index, a, b
+        cdef AVALUE weight
+        cdef ABOOL* _consider = &labels._consider[0]
 
         self._priority_queue.reset()
         self._priority_queue_tree.reset()
 
-        cdef object input_data = bundle._input_data
-        cdef AINDEX n_points = input_data._n_points
-
-        # TODO: Allow freeze etc.
-        cdef Labels labels = Labels(
-            np.ones(n_points, order="C", dtype=P_AINDEX)
-            )
-        bundle._labels = labels
-        cdef ABOOL* _consider = &labels._consider[0]
-
-        cdef AINDEX m, member_index, a, b, i, j, ra, rb
-        cdef AVALUE weight
-        cdef AINDEX bundle_index, point, member, _member_cutoff, label
-
-        cluster_params = self.make_parameters(**kwargs)
-
-        if member_cutoff is None:
-            member_cutoff = 10
-        _member_cutoff = member_cutoff
-
+        n_points = input_data.n_points
         for point in range(n_points):
             if _consider[point] == 0:
                 continue
@@ -934,8 +1001,11 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
                 cluster_params
                 )
 
-            m = self._neighbours._n_points
-            for member_index in range(m):
+            n_members = self._neighbours._n_points
+            if (n_members - self._neighbours_getter.is_selfcounting) == 0:
+                logger.warning(f"Point {point} has no neighbours")
+
+            for member_index in range(n_members):
                 member = self._neighbours.get_member(member_index)
 
                 if _consider[member] == 0:
@@ -972,8 +1042,8 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
                     cluster_params
                     )
 
-                m = self._neighbours._n_points
-                for member_index in range(m):
+                n_members = self._neighbours._n_points
+                for member_index in range(n_members):
                     member = self._neighbours.get_member(member_index)
 
                     if _consider[member] == 0:
@@ -994,17 +1064,216 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
 
                     self._priority_queue.push(b, member, weight)
 
-        if v:
-            print("Finished building MST")
+    def _make_scipy_hierarchy(self, AINDEX n_points) -> None:
+        """Build a SciPy-compatible linkage matrix Z from MST edges"""
 
-        # Build hierarchy from MST
+        cdef stdvector[AINDEX] top_roots = []
+        cdef AINDEX n_edges = self._priority_queue_tree.size()
+        cdef AVALUE[:, ::1] Z = np.zeros((n_points - 1, 4), dtype=P_AVALUE)
+        cdef AINDEX[::1] parents_indicator = np.arange(n_points * 2 - 1, dtype=P_AINDEX)
+        cdef AINDEX[::1] seen_indicator = np.zeros(n_points, dtype=P_AINDEX)
+        cdef AINDEX i, a, b, new_id, root_a, root_b, index
+        cdef AVALUE weight, size_a, size_b
+
+        logger.debug(f"{n_edges} edges in MST")
+
+        i = 0
+        while not self._priority_queue_tree.is_empty():
+
+            a, b, weight = self._priority_queue_tree.pop()
+            seen_indicator[a] = 1
+            seen_indicator[b] = 1
+
+            root_a = get_root(a, parents_indicator)
+            root_b = get_root(b, parents_indicator)
+
+            logger.debug(f"Iteration {i}: Points {a} (cluster {root_a}) and {b} (cluster {root_b}) connect at weight={weight}")
+            
+            if root_a >= n_points:
+                size_a = Z[root_a - n_points, 3]
+            else:
+                size_a = 1
+                
+            if root_b >= n_points:
+                size_b = Z[root_b  - n_points, 3]
+            else:
+                size_b = 1
+
+            # Record the merge in Z
+            Z[i, 0] = min(root_a, root_b)
+            Z[i, 1] = max(root_a, root_b)
+            Z[i, 2] = weight
+            Z[i, 3] = size_a + size_b
+
+            new_id = n_points + i
+            parents_indicator[root_a] = new_id
+            parents_indicator[root_b] = new_id
+
+            i += 1
+
+        # Merge disjoint components
+        for index in range(n_points + i):
+            if parents_indicator[index] == index:
+                top_roots.push_back(index)
+
+        if top_roots.size() > 1:
+            logger.info(f"Found {top_roots.size()} disjoint components")
+            root_a = top_roots.back()
+            top_roots.pop_back()
+            while top_roots.size() > 0:
+                root_b =  top_roots.back()
+                top_roots.pop_back()
+
+                if root_a >= n_points:
+                    size_a = Z[root_a - n_points, 3]
+                else:
+                    size_a = 1
+                    
+                if root_b >= n_points:
+                    size_b = Z[root_b - n_points, 3]
+                else:
+                    size_b = 1
+
+                Z[i, 0] = min(root_a, root_b)
+                Z[i, 1] = max(root_a, root_b)
+                Z[i, 2] = 0
+                Z[i, 3] = size_a + size_b
+                
+                new_id = n_points + i
+                parents_indicator[root_a] = new_id
+                parents_indicator[root_b] = new_id
+                root_a = new_id
+
+                i += 1
+
+        self._artifacts["Z"] = np.array(Z)
+
+    def scipy_to_bundle_hierarchy(self, Bundle bundle, *, AVALUE[:, ::1] Z, AINDEX member_cutoff=10) -> None:
+        """Build a hierarchy of bundles from a SciPy-compatible linkage matrix Z
+        
+        Args:
+            bundle: Root bundle
+            Z: SciPy-compatible linkage matrix
+        
+        Keyword args:
+            member_cutoff: Minimum number of members in a bundle to
+                consider it as independent cluster. Clusters with fewer
+                members are merged into their parent cluster or respectively
+                split off as noise.
+        """
+
+        cdef Bundle parent_bundle, bundle_a, bundle_b, bundle_x
+        cdef dict top_bundles = {}
+        cdef AINDEX n_points = Z.shape[0] + 1
+        cdef AINDEX i, new_id
+        cdef AVALUE INFTY = np.inf
+        cdef AVALUE w, prev_weight = INFTY
+        cdef bint needs_folding = False
+
+        for i in range(Z.shape[0]):
+            new_id = i + n_points
+
+            a = <AINDEX>Z[i, 0]
+            b = <AINDEX>Z[i, 1]
+            w = Z[i, 2]
+
+            if w < prev_weight:
+                # Check top bundles only if weight has decreased
+                # Fold only if weight has been the same during previous iterations
+                for bundle_x in top_bundles.values():
+                    if not bundle_x._checked:
+                        check_children(bundle_x, member_cutoff, needs_folding=needs_folding)
+                        bundle_x._checked = True
+                needs_folding = False
+            else:
+                needs_folding = True
+
+            # Get top bundles or make singleton bundles on-the-fly
+            if a < n_points:
+                bundle_a = Bundle(alias=f"{a}", graph={a})
+                bundle_a._size = 1
+                bundle_a._lambda = INFTY
+            else:
+                bundle_a = top_bundles[a]
+
+            if b < n_points:
+                bundle_b = Bundle(alias=f"{b}", graph={b})
+                bundle_b._size = 1
+                bundle_b._lambda = INFTY
+            else:
+                bundle_b = top_bundles[b]
+
+            # logger.debug(f"Iteration {i}: {bundle_a.alias} (size={bundle_a._size}) and {bundle_b.alias} (size={bundle_b._size}) connect at weight={w}")
+
+            # Make parent bundle and update top bundles
+            parent_bundle = Bundle(alias=f"{new_id}", graph=bundle_a.graph | bundle_b.graph, children={1: bundle_a, 2: bundle_b})
+            parent_bundle._lambda = w
+            parent_bundle._size = bundle_a._size + bundle_b._size
+            top_bundles[new_id] = parent_bundle
+
+            if a >= n_points:
+                del top_bundles[a]
+            if b >= n_points:
+                del top_bundles[b]
+                
+            prev_weight = w
+
+        # Check remaining top bundles (should only be root if Z is complete)
+        for bundle_x in top_bundles.values():
+            if not bundle_x._checked:
+                check_children(bundle_x, member_cutoff, needs_folding=needs_folding)
+                bundle_x._checked = True
+
+        bundle._children = parent_bundle._children
+        bundle._lambda = parent_bundle._lambda
+        bundle._size = parent_bundle._size
+        for child in bundle._children.values():
+            child._parent = weakref.proxy(bundle)
+
+
+    def _make_bundle_hierarchy(self, Bundle bundle, AINDEX n_points, AINDEX member_cutoff=10) -> None:
+        """Build a hierarchy of bundles from MST edges
+        
+        Note:
+            This function should not be used in production at the moment
+            and will undergo changes in the future. Use :meth:`scipy_to_bundle_hierarchy`
+            after :meth:`_make_scipy_hierarchy` instead.
+        
+        Note:
+            This function consumes MST edges from the priority queue
+            (:attr:`_priority_queue_tree`) filled by :meth:`_make_mst`
+            and can only be called once before the MST needs to be rebuilt.
+            
+        Args:
+            bundle: Root bundle
+            n_points: Number of points in the dataset
+
+        Keyword args:
+            member_cutoff: Minimum number of members in a bundle to
+                consider it as independent cluster. Clusters with fewer
+                members are merged into their parent cluster or respectively
+                split off as noise.
+        """
+
+        warnings.warn(
+            "This function is deprecated and will be removed/changed in the future. "
+            "Use `scipy_to_bundle_hierarchy` after `_make_scipy_hierarchy` instead "
+            "for consistency and performance.",
+            DeprecationWarning
+            )
+
+        if not NX_FOUND:
+            raise ModuleNotFoundError("No module named 'networkx'")
+
+        cdef AVALUE INFTY = np.inf
         cdef AINDEX[::1] parent_indicator = np.arange(n_points)
         cdef AINDEX[::1] root_clabel_indicator = np.arange(n_points)
         cdef dict top_bundles = {}
         cdef ABOOL[::1] checked = np.zeros(n_points - 1, dtype=bool)
         cdef Bundle top, left, right
-        cdef AVALUE current_weight = INFTY
+        cdef AVALUE weight, current_weight = INFTY
         cdef bint needs_folding = False
+        cdef AINDEX i, a, b, ra, rb, la, lb, bundle_index
 
         i = -1
         for i in range(self._priority_queue_tree.size()):
@@ -1026,6 +1295,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
                 needs_folding = True
 
             top = top_bundles[i] = Bundle(
+                alias=f"{i + n_points}",
                 graph=nx.Graph([(a, b, {"weight": weight})]),
             )
             top._lambda = weight
@@ -1055,7 +1325,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
         for bundle_index, top in top_bundles.items():
             if checked[bundle_index]:
                 continue
-            check_children(top, _member_cutoff, needs_folding)
+            check_children(top, member_cutoff, needs_folding)
 
         if i < (n_points - 2):
 
@@ -1079,9 +1349,6 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             bundle._graph = top._graph
             bundle._lambda = top._lambda
 
-        if v:
-            print("Finished building hierarchy")
-
 
 cdef class HierarchicalFitterExtCommonNNMSTPrim:
 
@@ -1101,53 +1368,29 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
         self._similarity_checker = similarity_checker
         self._priority_queue = priority_queue
         self._priority_queue_tree = priority_queue_tree
+        self._artifacts = {}
 
     def __str__(self):
-
-        attr_str = ", ".join([
-            f"ngetter={self._neighbours_getter}",
-            f"na={self._neighbours}",
-            f"nb={self._neighbour_neighbours}",
-            f"checker={self._similarity_checker}",
-            f"prioq={self._priority_queue}",
-            f"prioq_tree={self._priority_queue_tree}"
-        ])
+        return HierarchicalFitterCommonNNMSTPrim.__str__(self)
 
     @classmethod
     def get_builder_kwargs(cls):
-        return [
-            ("neighbours_getter", None),
-            ("neighbours", None),
-            ("neighbour_neighbours","neighbours"),
-            ("similarity_checker", None),
-            ("priority_queue", None),
-            ("priority_queue_tree", "priority_queue")
-            ]
+        return HierarchicalFitterCommonNNMSTPrim.get_builder_kwargs()
 
-    def make_parameters(
-            self, **kwargs) -> Type["ClusterParameters"]:
-        cluster_params = self._parameter_type.from_mapping(kwargs)
+    def make_parameters(self, **kwargs) -> Type["ClusterParameters"]:
+        return HierarchicalFitterCommonNNMSTPrim.make_parameters(self, **kwargs)
 
-        try:
-            used_metric = self._neighbours_getter._distance_getter._metric
-        except AttributeError:
-            pass
-        else:
-            cluster_params.radius_cutoff = used_metric.adjust_radius(cluster_params.radius_cutoff)
-
-        return cluster_params
-
-    def fit(self, bundle, *, purge=True, info=True, **kwargs):
-        HierarchicalFitterCommonNNMSTPrim.fit(self, bundle, purge=purge, info=info, **kwargs)
+    def fit(self, bundle, *, info=True, member_cutoff=10, scipy_hierarchy=True, bundle_hierarchy=True, **kwargs) -> (float, Type["ClusterParameters"]):
+        HierarchicalFitterCommonNNMSTPrim.fit(self, bundle, info=info, member_cutoff=member_cutoff, scipy_hierarchy=scipy_hierarchy, bundle_hierarchy=bundle_hierarchy, **kwargs)
 
     def _fit(
             self,
-            input_data: Type['InputData'],
-            labels: Type['Labels'],
-            cluster_params: Type['ClusterParameters']):
+            InputDataExtInterface input_data,
+            Labels labels,
+            ClusterParameters cluster_params) -> None:
 
         self._make_mst(input_data, labels, cluster_params)
-        self._make_scipy_hierarchy(input_data._n_points)
+        logger.info(f"Built MST")
 
     cdef void _make_mst(
             self,
@@ -1157,7 +1400,6 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
 
         cdef AINDEX n_points, point, n_members, member, member_index, a, b
         cdef AVALUE weight
-        cdef AINDEX* _labels = &labels._labels[0]
         cdef ABOOL* _consider = &labels._consider[0]
         cdef (AINDEX, AINDEX, AVALUE) edge
 
@@ -1200,7 +1442,7 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
                 self._priority_queue._push(point, member, weight)
 
             while not self._priority_queue._is_empty():
-                edge = self._priority_queue_tree._pop()
+                edge = self._priority_queue._pop()
                 a = edge[0]
                 b = edge[1]
                 weight = edge[2]
@@ -1240,31 +1482,29 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
 
                     self._priority_queue._push(b, member, weight)
 
-    cdef void _make_scipy_hierarchy(self, AINDEX n_points):
+    cpdef void _make_scipy_hierarchy(self, AINDEX n_points):
         """Build a SciPy-compatible linkage matrix Z from MST edges"""
 
+        cdef stdvector[AINDEX] top_roots = []
         cdef AVALUE[:, ::1] Z = np.zeros((n_points - 1, 4), dtype=P_AVALUE)
         cdef AINDEX[::1] parents_indicator = np.arange(n_points * 2 - 1, dtype=P_AINDEX)
 
-        self._make_scipy_hierarchy_inner(Z, parents_indicator)
-        
-        self._artifcats = {
-            "Z": np.array(Z),
-        }
+        self._make_scipy_hierarchy_inner(Z, parents_indicator, top_roots)
+        self._artifacts["Z"] = np.array(Z)
 
-    cdef void _make_scipy_hierarchy_inner(self, AVALUE[:, ::1] Z, AINDEX[::1] parents_indicator) nogil:
+    cdef void _make_scipy_hierarchy_inner(self, AVALUE[:, ::1] Z, AINDEX[::1] parents_indicator, stdvector[AINDEX] top_roots) nogil:
         """Build a SciPy-compatible linkage matrix Z from MST edges"""
 
         cdef AVALUE* _Z = &Z[0, 0]
         cdef AINDEX* _parents_indicator = &parents_indicator[0]
-        cdef AINDEX i, _i, n_points, a, b, root_a, root_b, index
+        cdef AINDEX i, _i, index, new_id, n_points, a, b, root_a, root_b
         cdef AVALUE weight, size_a, size_b
         cdef (AINDEX, AINDEX, AVALUE) edge
 
         n_points = Z.shape[0] + 1
         i = 0
+        _i = 0
         while not self._priority_queue_tree._is_empty():
-            _i = i * 4
 
             edge = self._priority_queue_tree._pop()
             a = edge[0]
@@ -1279,7 +1519,7 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
                 size_a = _Z[index]
             else:
                 size_a = 1
-                
+
             if root_b >= n_points:
                 index = (root_b - n_points) * 4 + 3
                 size_b = _Z[index]
@@ -1292,10 +1532,59 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
             _Z[_i + 2] = weight
             _Z[_i + 3] = size_a + size_b
 
-            _parents_indicator[root_a] = n_points + i
-            _parents_indicator[root_b] = n_points + i
+            new_id = n_points + i
+            _parents_indicator[root_a] = new_id
+            _parents_indicator[root_b] = new_id
 
             i += 1
+            _i = i * 4
+
+        # Merge disjoint components
+        for index in range(n_points + i):
+            if parents_indicator[index] == index:
+                top_roots.push_back(index)
+
+        if top_roots.size() > 1:
+            root_a = top_roots.back()
+            top_roots.pop_back()
+            while top_roots.size() > 0:
+                root_b =  top_roots.back()
+                top_roots.pop_back()
+
+                if root_a >= n_points:
+                    index = (root_a - n_points) * 4 + 3
+                    size_a = _Z[index]
+                else:
+                    size_a = 1
+                    
+                if root_b >= n_points:
+                    index = (root_b - n_points) * 4 + 3
+                    size_b = _Z[index]
+                else:
+                    size_b = 1
+
+                # Record the merge in Z
+                _Z[_i] = min(root_a, root_b)
+                _Z[_i + 1] = max(root_a, root_b)
+                _Z[_i + 2] = 0
+                _Z[_i + 3] = size_a + size_b
+                
+                new_id = n_points + i
+                parents_indicator[root_a] = new_id
+                parents_indicator[root_b] = new_id
+                root_a = new_id
+
+                i += 1
+                _i = i * 4
+
+    def scipy_to_bundle_hierarchy(self, Bundle bundle, *, AVALUE[:, ::1] Z, AINDEX member_cutoff=10) -> None:
+        HierarchicalFitterCommonNNMSTPrim.scipy_to_bundle_hierarchy(self, bundle, Z=Z, member_cutoff=member_cutoff)
+
+    def _make_bundle_hierarchy(self, Bundle bundle, AINDEX n_points, AINDEX member_cutoff=10) -> None:
+        HierarchicalFitterCommonNNMSTPrim._make_bundle_hierarchy(self, bundle, n_points, member_cutoff=member_cutoff)
+
+HierarchicalFitter.register(HierarchicalFitterExtCommonNNMSTPrim)
+
 
 class HierarchicalFitterRepeat(HierarchicalFitter):
 
@@ -1319,16 +1608,16 @@ class HierarchicalFitterRepeat(HierarchicalFitter):
             ]
 
     def fit(
-            self, Bundle bundle,
+            self,
+            Bundle bundle,
+            *,
             radius_cutoffs,
             similarity_cutoffs,
-            *,
             sort_by_size=True,
             member_cutoff=None,
             max_clusters=None,
             info=True,
-            v=False,
-            **kwargs):
+            **kwargs) -> None:
 
         if not isinstance(radius_cutoffs, Iterable):
             radius_cutoffs = [radius_cutoffs]
@@ -1366,13 +1655,11 @@ class HierarchicalFitterRepeat(HierarchicalFitter):
         cdef dict new_terminal_bundles
 
         for step in range(n_steps):
-
-            if v:
-                print(
-                    f"Running step {step:<5} "
-                    f"(r = {radius_cutoffs[step]}, "
-                    f"c = {similarity_cutoffs[step]})"
-                    )
+            logger.info(
+                f"Running step {step:<5} "
+                f"(r = {radius_cutoffs[step]}, "
+                f"c = {similarity_cutoffs[step]})"
+            )
 
             new_terminal_bundles = {}
 
@@ -1545,7 +1832,7 @@ class PredictorCommonNNFirstmatch(PredictorCommonNN):
         return
 
 # TODO: Create union find and/or graph type
-cdef inline AINDEX get_root(AINDEX p, AINDEX[::1] parent_indicator) nogil:
+cdef inline AINDEX get_root(AINDEX p, AINDEX[::1] parent_indicator) except -1 nogil:
     cdef AINDEX parent
     parent = parent_indicator[p]
     while parent != p:

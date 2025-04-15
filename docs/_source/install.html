@@ -1,21 +1,17 @@
-
 <!DOCTYPE html>
 
-<html lang="en">
+<html lang="en" data-content_root="../">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Installation instructions &#8212; CommonNN Clustering  documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/custom.css" />
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a5519fdd" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=77a3bc79" />
+    <link rel="stylesheet" type="text/css" href="../_static/custom.css?v=d18eccf6" />
+    <script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -24,8 +20,9 @@
    
   <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
   
+
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+  
 
   </head><body>
   
@@ -38,14 +35,15 @@
           <div class="body" role="main">
             
   <section id="installation-instructions">
-<h1>Installation instructions<a class="headerlink" href="#installation-instructions" title="Permalink to this heading">¶</a></h1>
+<h1>Installation instructions<a class="headerlink" href="#installation-instructions" title="Link to this heading">¶</a></h1>
 <section id="requirements">
-<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading">¶</a></h2>
+<h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">¶</a></h2>
 <p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">commonnn</span></code> package is developed and tested in Python &gt;=3.6.
 At runtime the package has a few mandatory third party dependencies.
 We recommend to install the latest version of:</p>
 <blockquote>
 <div><ul class="simple">
+<li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">loguru</span></code></p></li>
 <li><p><code class="xref py py-mod docutils literal notranslate"><span class="pre">numpy</span></code></p></li>
 </ul>
 </div></blockquote>
@@ -62,33 +60,39 @@ packages are installed as well:</p>
 </div></blockquote>
 </section>
 <section id="pypi">
-<h2>PyPi<a class="headerlink" href="#pypi" title="Permalink to this heading">¶</a></h2>
+<h2>PyPi<a class="headerlink" href="#pypi" title="Link to this heading">¶</a></h2>
 <p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">commonnn</span></code> package is available on the Python package index.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install commonnn-clustering
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>commonnn-clustering
 </pre></div>
 </div>
 <p>To install with optional dependencies use:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install commonnn-clustering<span class="o">[</span>optional<span class="o">]</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>commonnn-clustering<span class="o">[</span>optional<span class="o">]</span>
 </pre></div>
 </div>
 <p>Other extras can be specified with <code class="code docutils literal notranslate"><span class="pre">[dev]</span></code>, <code class="code docutils literal notranslate"><span class="pre">[docs]</span></code>, and <code class="code docutils literal notranslate"><span class="pre">[test]</span></code>.</p>
 </section>
 <section id="developement-installation">
-<h2>Developement installation<a class="headerlink" href="#developement-installation" title="Permalink to this heading">¶</a></h2>
+<h2>Developement installation<a class="headerlink" href="#developement-installation" title="Link to this heading">¶</a></h2>
 <p>Clone the source repository <a class="reference external" href="https://github.com/bkellerlab/CommonNNClustering">https://github.com/bkellerlab/CommonNNClustering</a> and use the package
-<code class="xref py py-mod docutils literal notranslate"><span class="pre">commonnn</span></code> as you prefer it, e.g. install it via pip in editable mode.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ git clone https://github.com/bkellerlab/CommonNNClustering
-$ <span class="nb">cd</span> CommonNNClustering
-$ pip install -e .
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">commonnn</span></code> as you prefer it, e.g. install it via <code class="code docutils literal notranslate"><span class="pre">pip</span></code> in editable mode.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/bkellerlab/CommonNNClustering
+$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>CommonNNClustering
+$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
 </pre></div>
 </div>
 <p>To recompile the Cython-extensions (requires <code class="xref py py-mod docutils literal notranslate"><span class="pre">cython</span></code> installed) use:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$ python setup.py build_ext --inplace
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>setup.py<span class="w"> </span>build_ext<span class="w"> </span>--inplace
+</pre></div>
+</div>
+<p>We provide a <code class="code docutils literal notranslate"><span class="pre">env_dev.yml</span></code> file to create a conda environment with all development dependencies
+before installing the package itself with <code class="code docutils literal notranslate"><span class="pre">pip</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>env_dev.yml
+$<span class="w"> </span>conda<span class="w"> </span>activate<span class="w"> </span>commonnn-dev
 </pre></div>
 </div>
 </section>
 <section id="testing-and-documentation">
-<h2>Testing and documentation<a class="headerlink" href="#testing-and-documentation" title="Permalink to this heading">¶</a></h2>
+<h2>Testing and documentation<a class="headerlink" href="#testing-and-documentation" title="Link to this heading">¶</a></h2>
 <p>Tests can be found under the <code class="code docutils literal notranslate"><span class="pre">test/</span></code> directory and can be run using <code class="xref py py-mod docutils literal notranslate"><span class="pre">pytest</span></code>.
 Make sure you have all dependencies installed. To enable code coverage reports,
 the package needs to be compiled with <code class="code docutils literal notranslate"><span class="pre">TRACE_CYTHON=1</span></code>. Note that this slows
@@ -103,7 +107,7 @@ and a corresponding badge, one can use the script <code class="code docutils lit
           
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
 <h1 class="logo"><a href="../index.html">CommonNN Clustering</a></h1>
 
@@ -140,7 +144,7 @@ and a corresponding badge, one can use the script <code class="code docutils lit
   </ul></li>
 </ul>
 </div>
-<div id="searchbox" style="display: none" role="search">
+<search id="searchbox" style="display: none" role="search">
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../search.html" method="get">
@@ -148,7 +152,7 @@ and a corresponding badge, one can use the script <code class="code docutils lit
       <input type="submit" value="Go" />
     </form>
     </div>
-</div>
+</search>
 <script>document.getElementById('searchbox').style.display = "block"</script>
 
 
@@ -163,11 +167,11 @@ and a corresponding badge, one can use the script <code class="code docutils lit
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &copy;2022, Jan-Oliver Kapp-Joswig.
+      &#169;2022, Jan-Oliver Kapp-Joswig.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.2.3</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.7</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
       
       |
       <a href="../_sources/_source/install.rst.txt"

@@ -1,7 +1,8 @@
 """User module containing utilities for plotting"""
 
-from collections import deque
+import itertools
 import random
+from collections import deque
 from typing import Dict, Tuple
 from typing import Sequence
 from typing import Any, Optional
@@ -139,14 +140,15 @@ def plot_graph_sugiyama_straight(graph, ax, pos_props=None, draw_props=None):
     if draw_props is None:
         draw_props = {}
 
+    positions = find_node_positions_sugiyama_straight(graph, **pos_props)
     nx.draw(
         graph,
-        pos=find_node_positions_sugiyama_straight(graph, **pos_props),
+        pos=positions,
         ax=ax,
         **draw_props
     )
 
-    return
+    return positions
 
 
 def get_pieces(bundle):
@@ -266,7 +268,9 @@ def pie(clustering, ax, pie_props=None):
     n_points = pieces[0][0][1]
 
     for level, cluster_shares in enumerate(pieces[1:]):
-        ax.set_prop_cycle(None)
+        prop_cycle = plt.rcParams['axes.prop_cycle']
+        color_cycle = itertools.cycle(prop_cycle.by_key()['color'])
+
         ringvalues = []
         colors = []
         for label, member_count in cluster_shares:
@@ -274,7 +278,7 @@ def pie(clustering, ax, pie_props=None):
             if label.rsplit(".", 1)[-1] == "0":
                 colors.append("#262626")
             else:
-                colors.append(next(ax._get_lines.prop_cycler)["color"])
+                colors.append(next(color_cycle))
 
         ax.pie(
             ringvalues,
