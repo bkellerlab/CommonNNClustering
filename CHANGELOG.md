@@ -4,7 +4,7 @@ Summary of changes
 v0.0.4
 ------
 
-  * Improved "automatic" hierarchical clustering (PR:)
+  * Improved "automatic" hierarchical clustering (PR: 1)
     * Added Cython extension type `HierarchicalFitterExtCommonNNMSTPrim`
     * Added recipes:
        * `"coordinates_mst/_debug"`
