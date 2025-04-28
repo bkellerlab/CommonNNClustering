@@ -1,6 +1,11 @@
 Summary of changes
 ==================
 
+v0.0.5 (dev)
+------------
+
+ * Add `Clustering.to_dlabels()` and `Clustering.to_dmapping()` convenience functions
+
 v0.0.4
 ------
 

@@ -969,3 +969,37 @@ class Clustering:
             dtrajs = dtrajs[:last_dtraj_index]
 
         return dtrajs
+        
+    
+    def to_dlabels(self, bundle=None):
+        """Split cluster label assignments according to edge information on input data"""
+
+        try:
+            meta = bundle._labels.meta
+        except AttributeError:
+            meta = None
+
+        dtrajs = self.to_dtrajs(bundle)
+        dlabels = [Labels(t, meta=meta) for t in dtrajs]
+
+        return dlabels
+        
+    def to_dmapping(self, bundle=None):
+        """Convert discrete label containers to mapping of labels to lists of lists of indices per input trajectory"""
+        
+        dlabels = self.to_dlabels(bundle)
+        mappings = [dl.mapping for dl in dlabels]
+        labels_set = set(
+            label
+            for m in mappings
+            for label in m.keys()
+        )
+        
+        dmapping = {}
+        for label in labels_set:
+            dmapping[label] = [
+                m.get(label, [])
+                for m in mappings
+            ]
+
+        return dmapping
