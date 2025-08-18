@@ -898,7 +898,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             make_labels=True,
             **kwargs) -> None:
         """Orchestrates hierarchical clustering
-        
+
         Args:
             bundle: Bundle object containing the input data and labels.
             info: If True, store the parameters in the labels meta dictionary.
@@ -1088,12 +1088,12 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
             root_b = get_root(b, parents_indicator)
 
             logger.debug(f"Iteration {i}: Points {a} (cluster {root_a}) and {b} (cluster {root_b}) connect at weight={weight}")
-            
+
             if root_a >= n_points:
                 size_a = Z[root_a - n_points, 3]
             else:
                 size_a = 1
-                
+
             if root_b >= n_points:
                 size_b = Z[root_b  - n_points, 3]
             else:
@@ -1128,7 +1128,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
                     size_a = Z[root_a - n_points, 3]
                 else:
                     size_a = 1
-                    
+
                 if root_b >= n_points:
                     size_b = Z[root_b - n_points, 3]
                 else:
@@ -1138,7 +1138,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
                 Z[i, 1] = max(root_a, root_b)
                 Z[i, 2] = 0
                 Z[i, 3] = size_a + size_b
-                
+
                 new_id = n_points + i
                 parents_indicator[root_a] = new_id
                 parents_indicator[root_b] = new_id
@@ -1150,11 +1150,11 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
 
     def scipy_to_bundle_hierarchy(self, Bundle bundle, *, AVALUE[:, ::1] Z, AINDEX member_cutoff=10) -> None:
         """Build a hierarchy of bundles from a SciPy-compatible linkage matrix Z
-        
+
         Args:
             bundle: Root bundle
             Z: SciPy-compatible linkage matrix
-        
+
         Keyword args:
             member_cutoff: Minimum number of members in a bundle to
                 consider it as independent cluster. Clusters with fewer
@@ -1207,6 +1207,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
 
             # Make parent bundle and update top bundles
             parent_bundle = Bundle(alias=f"{new_id}", graph=bundle_a.graph | bundle_b.graph, children={1: bundle_a, 2: bundle_b})
+            # parent_bundle.graph.add_edge(a, b, weight=w)
             parent_bundle._lambda = w
             parent_bundle._size = bundle_a._size + bundle_b._size
             top_bundles[new_id] = parent_bundle
@@ -1215,7 +1216,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
                 del top_bundles[a]
             if b >= n_points:
                 del top_bundles[b]
-                
+
             prev_weight = w
 
         # Check remaining top bundles (should only be root if Z is complete)
@@ -1233,17 +1234,17 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
 
     def _make_bundle_hierarchy(self, Bundle bundle, AINDEX n_points, AINDEX member_cutoff=10) -> None:
         """Build a hierarchy of bundles from MST edges
-        
+
         Note:
             This function should not be used in production at the moment
             and will undergo changes in the future. Use :meth:`scipy_to_bundle_hierarchy`
             after :meth:`_make_scipy_hierarchy` instead.
-        
+
         Note:
             This function consumes MST edges from the priority queue
             (:attr:`_priority_queue_tree`) filled by :meth:`_make_mst`
             and can only be called once before the MST needs to be rebuilt.
-            
+
         Args:
             bundle: Root bundle
             n_points: Number of points in the dataset
@@ -1513,7 +1514,7 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
 
             root_a = get_root(a, parents_indicator)
             root_b = get_root(b, parents_indicator)
-            
+
             if root_a >= n_points:
                 index = (root_a - n_points) * 4 + 3
                 size_a = _Z[index]

@@ -456,7 +456,7 @@ cpdef int fold_same_lambda(Bundle bundle) except 1:
         count += 1
 
     return 0
-    
+
 
 cdef inline int _trim_small_children(Bundle bundle, AINDEX member_cutoff) except 1:
     cdef AINDEX label, count
@@ -467,7 +467,7 @@ cdef inline int _trim_small_children(Bundle bundle, AINDEX member_cutoff) except
         if len(child._graph) >= member_cutoff:
             new_children[label] = child
 
-    bundle._children = new_children 
+    bundle._children = new_children
 
     return 0
 
@@ -488,7 +488,7 @@ cpdef void check_children(
         AINDEX member_cutoff,
         bint needs_folding: bool = False):
     """Modify a bundles children mapping
-    
+
     Note:
         These actions will be available through a number of
         hierarchy processing functions in the future
@@ -544,12 +544,13 @@ cpdef void check_children(
     # Replace lone children with grandchildren
     if len(bundle._children) == 1:
         child = bundle._children.popitem()[1]
+        bundle._lambda = child._lambda
         for label, grandchild in enumerate(child.children.values(), 1):
             bundle._children[label] = grandchild
-            bundle._lambda = child._lambda
 
     for child in bundle.children.values():
         child._parent = weakref.proxy(bundle)
+
 
 def reset_hierarchy_levels(Bundle bundle, AINDEX hierarchy_level=0) -> None:
     """Recursively reset the hierarchy levels of a bundle and its children

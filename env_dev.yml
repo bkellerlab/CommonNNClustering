@@ -6,6 +6,7 @@ dependencies:
   - python=3.10
   - pip
   - numpy
+  - loguru
   - matplotlib
   - networkx
   - pandas
