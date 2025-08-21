@@ -560,6 +560,10 @@ class Neighbours(ABC):
     def contains(self, member: int) -> bool:
        """Return True if member is in neighbours container"""
 
+    @abstractmethod
+    def get_n_points(self) -> int:
+       """Return total number of points"""
+
     def __repr__(self):
         return f"{type(self).__name__}"
 
@@ -610,25 +614,35 @@ class NeighboursGetter(ABC):
 cdef class NeighboursExtInterface:
 
     cdef void _assign(self, const AINDEX member) noexcept nogil: ...
+    cdef void _assign_p(self, const AINDEX member, const AINDEX thread_id) noexcept nogil: ...
     cdef void _reset(self) noexcept nogil: ...
+    cdef void _reset_p(self, const AINDEX thread_id) noexcept nogil: ...
     cdef bint _enough(self, const AINDEX member_cutoff) noexcept nogil: ...
+    cdef bint _enough_p(self, const AINDEX member_cutoff, const AINDEX thread_id) noexcept nogil: ...
     cdef AINDEX _get_member(self, const AINDEX index) noexcept nogil: ...
+    cdef AINDEX _get_member_p(self, const AINDEX index, const AINDEX thread_id) noexcept nogil: ...
     cdef bint _contains(self, const AINDEX member) noexcept nogil: ...
+    cdef bint _contains_p(self, const AINDEX member, const AINDEX thread_id) noexcept nogil: ...
+    cdef AINDEX _get_n_points(self) noexcept nogil: ...
+    cdef AINDEX _get_n_points_p(self, const AINDEX thread_id) noexcept nogil: ...
 
-    def assign(self, member: int):
+    def assign(self, member: int) -> None:
         self._assign(member)
 
-    def reset(self):
+    def reset(self) -> None:
         self._reset()
 
-    def enough(self, member_cutoff: int):
+    def enough(self, member_cutoff: int) -> bool:
         return self._enough(member_cutoff)
 
-    def get_member(self, index: int):
+    def get_member(self, index: int) -> int:
         return self._get_member(index)
 
-    def contains(self, member: int):
+    def contains(self, member: int) -> bool:
         return self._contains(member)
+
+    def get_n_points(self) -> int:
+        return self._get_n_points()
 
     def __repr__(self):
         return f"{type(self).__name__}"
@@ -647,6 +661,14 @@ cdef class NeighboursGetterExtInterface:
             NeighboursExtInterface neighbours,
             ClusterParameters cluster_params) noexcept nogil: ...
 
+    cdef void _get_p(
+            self,
+            const AINDEX index,
+            InputDataExtInterface input_data,
+            NeighboursExtInterface neighbours,
+            ClusterParameters cluster_params,
+            const AINDEX thread_id) noexcept nogil: ...
+
     cdef void _get_other(
             self,
             const AINDEX index,
@@ -654,6 +676,15 @@ cdef class NeighboursGetterExtInterface:
             InputDataExtInterface other_input_data,
             NeighboursExtInterface neighbours,
             ClusterParameters cluster_params) noexcept nogil: ...
+
+    cdef void _get_other_p(
+            self,
+            const AINDEX index,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data,
+            NeighboursExtInterface neighbours,
+            ClusterParameters cluster_params,
+            const AINDEX thread_id) noexcept nogil: ...
 
     def get(
             self,
@@ -1605,6 +1636,9 @@ class NeighboursList(Neighbours):
             return True
         return False
 
+    def get_n_points(self) -> int:
+        return len(self._neighbours)
+
 
 class NeighboursSet(Neighbours):
     """Implements the neighbours interface"""
@@ -1661,6 +1695,9 @@ class NeighboursSet(Neighbours):
             return True
         return False
 
+    def get_n_points(self) -> int:
+        return len(self._neighbours)
+
 
 cdef class NeighboursExtVector(NeighboursExtInterface):
     """Implements the neighbours interface
@@ -1668,8 +1705,8 @@ cdef class NeighboursExtVector(NeighboursExtInterface):
     Uses an underlying C++ std:vector.
 
     Keyword args:
-        neighbours: A sequence of labels suitable to be cast to a vector.
-        initial_size: Number of elements reserved for the size of vector.
+        neighbours: A sequence of indices suitable to be cast to a vector.
+        initial_size: Number of elements reserved for the size of the vector.
     """
 
     def __cinit__(self, neighbours=None, *, AINDEX initial_size=1):
@@ -1686,24 +1723,45 @@ cdef class NeighboursExtVector(NeighboursExtInterface):
         self._neighbours.push_back(member)
         self._n_points += 1
 
+    cdef void _assign_p(self, const AINDEX member, const AINDEX thread_id) noexcept nogil:
+        self._assign(member)
+
     cdef void _reset(self) noexcept nogil:
         self._neighbours.resize(0)
         self._neighbours.reserve(self._initial_size)
         self._n_points = 0
+
+    cdef void _reset_p(self, const AINDEX thread_id) noexcept nogil:
+        self._reset()
 
     cdef bint _enough(self, const AINDEX member_cutoff) noexcept nogil:
         if self._n_points > member_cutoff:
             return True
         return False
 
+    cdef bint _enough_p(self, const AINDEX member_cutoff, const AINDEX thread_id) noexcept nogil:
+        return self._enough(member_cutoff)
+
     cdef AINDEX _get_member(self, const AINDEX index) noexcept nogil:
         return self._neighbours[index]
+
+    cdef AINDEX _get_member_p(self, const AINDEX index, const AINDEX thread_id) noexcept nogil:
+        return self._get_member(index)
 
     cdef bint _contains(self, const AINDEX member) noexcept nogil:
 
         if find(self._neighbours.begin(), self._neighbours.end(), member) == self._neighbours.end():
             return False
         return True
+
+    cdef bint _contains_p(self, const AINDEX member, const AINDEX thread_id) noexcept nogil:
+        return self._contains(member)
+
+    cdef AINDEX _get_n_points(self) noexcept nogil:
+        return self._neighbours.size()
+
+    cdef AINDEX _get_n_points_p(self, const AINDEX thread_id) noexcept nogil:
+        return self._get_n_points()
 
     def to_neighbours_array(self):
         cdef AINDEX i
@@ -1716,7 +1774,88 @@ cdef class NeighboursExtVector(NeighboursExtInterface):
 
     @property
     def n_points(self):
-        return self._neighbours.size()
+        return self._get_n_points()
+
+
+cdef class NeighboursExtParallelVector(NeighboursExtInterface):
+    """Implements the neighbours interface
+
+    Uses an underlying C++ std:vector of vectors.
+
+    Keyword args:
+        neighbours: A nested sequence of indices suitable to be cast to a vector of vectors.
+        initial_size: Number of elements reserved for the size of the vectors.
+    """
+
+    def __cinit__(self, neighbours=None, *, AINDEX initial_size=1, AINDEX n_threads=1):
+        cdef AINDEX i
+
+        self._initial_size = initial_size
+        self._n_threads = n_threads
+        self._neighbours.reserve(n_threads)
+
+        if neighbours is not None:
+            if len(neighbours) != n_threads:
+                raise ValueError(
+                    f"{n_threads} threads specified but got {len(neighbours)} neighbours containers to initialise"
+                )
+            for i in range(n_threads):
+                self._neighbours[i] = neighbours[i]
+                self._neighbours[i].reserve(self._initial_size)
+        else:
+            self._reset()
+
+    cdef void _assign(self, const AINDEX member) noexcept nogil:
+        self._assign_p(member, 0)
+
+    cdef void _assign_p(self, const AINDEX member, const AINDEX thread_id) noexcept nogil:
+        self._neighbours[thread_id].push_back(member)
+
+    cdef void _reset(self) noexcept nogil:
+        self._neighbours.resize(0)
+        self._neighbours.reserve(self._n_threads)
+        for i in range(self._n_threads):
+            self._neighbours[i].reserve(self._initial_size)
+
+    cdef void _reset_p(self, const AINDEX thread_id) noexcept nogil:
+        self._neighbours[thread_id].resize(0)
+        self._neighbours[thread_id].reserve(self._initial_size)
+
+    cdef bint _enough(self, const AINDEX member_cutoff) noexcept nogil:
+        return self._enough_p(member_cutoff, 0)
+
+    cdef bint _enough_p(self, const AINDEX member_cutoff, const AINDEX thread_id) noexcept nogil:
+        if self._get_n_points_p(thread_id) > member_cutoff:
+            return True
+        return False
+
+    cdef AINDEX _get_member(self, const AINDEX index) noexcept nogil:
+        return self._get_member_p(index, index)
+
+    cdef AINDEX _get_member_p(self, const AINDEX index, const AINDEX thread_id) noexcept nogil:
+        return self._neighbours[thread_id][index]
+
+    cdef bint _contains(self, const AINDEX member) noexcept nogil:
+        return self._contains_p(member, 0)
+
+    cdef bint _contains_p(self, const AINDEX member, const AINDEX thread_id) noexcept nogil:
+        if find(self._neighbours[thread_id].begin(), self._neighbours[thread_id].end(), member) == self._neighbours[thread_id].end():
+            return False
+        return True
+
+    cdef AINDEX _get_n_points(self) noexcept nogil:
+        return self._get_n_points_p(0)
+
+    cdef AINDEX _get_n_points_p(self, const AINDEX thread_id) noexcept nogil:
+        return self._neighbours[thread_id].size()
+
+    def to_neighbours_array(self):
+        raise NotImplementedError
+
+    @property
+    def n_points(self):
+        cdef AINDEX i
+        return [self._neighbours[i].size() for i in range(self._n_threads)]
 
 
 cdef class NeighboursExtSet(NeighboursExtInterface):
@@ -1762,6 +1901,12 @@ cdef class NeighboursExtSet(NeighboursExtInterface):
         if self._neighbours.find(member) == self._neighbours.end():
             return False
         return True
+
+    cdef AINDEX _get_n_points(self) noexcept nogil:
+        return self._neighbours.size()
+
+    cdef AINDEX _get_n_points_p(self, const AINDEX thread_id) noexcept nogil:
+        return self._get_n_points()
 
     def to_neighbours_array(self):
         cdef stdset[AINDEX].iterator it = self._neighbours.begin()
@@ -1823,6 +1968,12 @@ cdef class NeighboursExtUnorderedSet(NeighboursExtInterface):
         if self._neighbours.find(member) == self._neighbours.end():
             return False
         return True
+
+    cdef AINDEX _get_n_points(self) noexcept nogil:
+        return self._neighbours.size()
+
+    cdef AINDEX _get_n_points_p(self, const AINDEX thread_id) noexcept nogil:
+        return self._get_n_points()
 
     def to_neighbours_array(self):
         cdef stduset[AINDEX].iterator it = self._neighbours.begin()
@@ -1889,6 +2040,12 @@ cdef class NeighboursExtVectorUnorderedSet(NeighboursExtInterface):
             return False
         return True
 
+    cdef AINDEX _get_n_points(self) noexcept nogil:
+        return self._neighbours.size()
+
+    cdef AINDEX _get_n_points_p(self, const AINDEX thread_id) noexcept nogil:
+        return self._get_n_points()
+
     def to_neighbours_array(self):
         cdef AINDEX i
         cdef AINDEX[::1] a = np.empty(self._n_points, dtype=P_AINDEX)
@@ -1904,6 +2061,7 @@ cdef class NeighboursExtVectorUnorderedSet(NeighboursExtInterface):
 
 
 Neighbours.register(NeighboursExtVector)
+Neighbours.register(NeighboursExtParallelVector)
 Neighbours.register(NeighboursExtSet)
 Neighbours.register(NeighboursExtUnorderedSet)
 Neighbours.register(NeighboursExtVectorUnorderedSet)
@@ -2077,7 +2235,7 @@ cdef class NeighboursGetterExtBruteForce(NeighboursGetterExtInterface):
             if distance <= cluster_params.fparams[0]:
                 neighbours._assign(i)
 
-    cdef void _get_other(
+    cdef void _get_other_p(
             self,
             const AINDEX index,
             InputDataExtInterface input_data,
@@ -2781,7 +2939,7 @@ class SimilarityCheckerContains(SimilarityChecker):
             neighbours_b: Type["Neighbours"],
             cluster_params: Type['ClusterParameters']) -> bool:
 
-        cdef AINDEX na = neighbours_a._n_points
+        cdef AINDEX na = neighbours_a.get_n_points()
 
         cdef AINDEX c = cluster_params.get_iparam(0)
         cdef AINDEX member_a, member_index_a
@@ -2806,7 +2964,7 @@ class SimilarityCheckerContains(SimilarityChecker):
             cluster_params: Type['ClusterParameters']) -> int:
         """Return number of common neighbours"""
 
-        cdef AINDEX na = neighbours_a._n_points
+        cdef AINDEX na = neighbours_a.get_n_points()
 
         cdef AINDEX member_a, member_index_a
         cdef AINDEX common = 0
@@ -2845,8 +3003,8 @@ class SimilarityCheckerSwitchContains(SimilarityChecker):
             neighbours_b: Type["Neighbours"],
             cluster_params: Type['ClusterParameters']) -> bool:
 
-        cdef AINDEX na = neighbours_a._n_points
-        cdef AINDEX nb = neighbours_b._n_points
+        cdef AINDEX na = neighbours_a.get_n_points()
+        cdef AINDEX nb = neighbours_b.get_n_points()
 
         cdef AINDEX c = cluster_params.get_iparam(0)
         cdef AINDEX member_a, member_index_a
@@ -2875,8 +3033,8 @@ class SimilarityCheckerSwitchContains(SimilarityChecker):
             cluster_params: Type['ClusterParameters']) -> int:
         """Return number of common neighbours"""
 
-        cdef AINDEX na = neighbours_a._n_points
-        cdef AINDEX nb = neighbours_b._n_points
+        cdef AINDEX na = neighbours_a.get_n_points()
+        cdef AINDEX nb = neighbours_b.get_n_points()
 
         cdef AINDEX member_a, member_index_a
         cdef AINDEX common = 0
@@ -2925,7 +3083,7 @@ cdef class SimilarityCheckerExtContains(SimilarityCheckerExtInterface):
         if c == 0:
             return True
 
-        cdef AINDEX na = neighbours_a._n_points
+        cdef AINDEX na = neighbours_a._get_n_points()
         cdef AINDEX member_a, member_index_a
         cdef AINDEX common = 0
 
@@ -2944,7 +3102,7 @@ cdef class SimilarityCheckerExtContains(SimilarityCheckerExtInterface):
             NeighboursExtInterface neighbours_b,
             ClusterParameters cluster_params) noexcept nogil:
 
-        cdef AINDEX na = neighbours_a._n_points
+        cdef AINDEX na = neighbours_a._get_n_points()
         cdef AINDEX member_a, member_index_a
         cdef AINDEX common = 0
 
@@ -2989,8 +3147,8 @@ cdef class SimilarityCheckerExtSwitchContains(SimilarityCheckerExtInterface):
         if c == 0:
             return True
 
-        cdef AINDEX na = neighbours_a._n_points
-        cdef AINDEX nb = neighbours_b._n_points
+        cdef AINDEX na = neighbours_a._get_n_points()
+        cdef AINDEX nb = neighbours_b._get_n_points()
 
         cdef AINDEX member_a, member_index_a
         cdef AINDEX common = 0
@@ -3015,8 +3173,8 @@ cdef class SimilarityCheckerExtSwitchContains(SimilarityCheckerExtInterface):
             NeighboursExtInterface neighbours_b,
             ClusterParameters cluster_params) noexcept nogil:
 
-        cdef AINDEX na = neighbours_a._n_points
-        cdef AINDEX nb = neighbours_b._n_points
+        cdef AINDEX na = neighbours_a._get_n_points()
+        cdef AINDEX nb = neighbours_b._get_n_points()
 
         cdef AINDEX member_a, member_index_a
         cdef AINDEX common = 0
@@ -3062,8 +3220,8 @@ cdef class SimilarityCheckerExtScreensorted(SimilarityCheckerExtInterface):
         if c == 0:
             return True
 
-        cdef AINDEX na = neighbours_a._n_points
-        cdef AINDEX nb = neighbours_b._n_points
+        cdef AINDEX na = neighbours_a._get_n_points()
+        cdef AINDEX nb = neighbours_b._get_n_points()
 
         if (na == 0) or (nb == 0):
             return False
@@ -3111,8 +3269,8 @@ cdef class SimilarityCheckerExtScreensorted(SimilarityCheckerExtInterface):
             NeighboursExtInterface neighbours_b,
             ClusterParameters cluster_params) noexcept nogil:
 
-        cdef AINDEX na = neighbours_a._n_points
-        cdef AINDEX nb = neighbours_b._n_points
+        cdef AINDEX na = neighbours_a._get_n_points()
+        cdef AINDEX nb = neighbours_b._get_n_points()
 
         if (na == 0) or (nb == 0):
             return 0

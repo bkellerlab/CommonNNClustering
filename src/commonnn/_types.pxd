@@ -56,8 +56,6 @@ cdef class InputDataExtInterface:
 
 
 cdef class NeighboursExtInterface:
-    cdef public:
-        AINDEX _n_points
 
     cdef void _assign(self, const AINDEX member) noexcept nogil
     cdef void _assign_p(self, const AINDEX member, const AINDEX thread_id) noexcept nogil
@@ -69,7 +67,8 @@ cdef class NeighboursExtInterface:
     cdef AINDEX _get_member_p(self, const AINDEX index, const AINDEX thread_id) noexcept nogil
     cdef bint _contains(self, const AINDEX member) noexcept nogil
     cdef bint _contains_p(self, const AINDEX member, const AINDEX thread_id) noexcept nogil
-
+    cdef AINDEX _get_n_points(self) noexcept nogil
+    cdef AINDEX _get_n_points_p(self, const AINDEX thread_id) noexcept nogil
 
 cdef class NeighboursGetterExtInterface:
     cdef public:
@@ -192,17 +191,29 @@ cdef class InputDataExtNeighbourhoodsVector(InputDataExtInterface):
 
 cdef class NeighboursExtVector(NeighboursExtInterface):
     cdef:
+        AINDEX _n_points
         AINDEX _initial_size
         stdvector[AINDEX] _neighbours
 
+cdef class NeighboursExtParallelVector(NeighboursExtInterface):
+    cdef:
+        AINDEX _initial_size
+        AINDEX _n_threads
+        stdvector[stdvector[AINDEX]] _neighbours
+
 cdef class NeighboursExtSet(NeighboursExtInterface):
-    cdef stdset[AINDEX] _neighbours
+    cdef:
+        AINDEX _n_points
+        stdset[AINDEX] _neighbours
 
 cdef class NeighboursExtUnorderedSet(NeighboursExtInterface):
-    cdef stduset[AINDEX] _neighbours
+    cdef:
+        AINDEX _n_points
+        stduset[AINDEX] _neighbours
 
 cdef class NeighboursExtVectorUnorderedSet(NeighboursExtInterface):
     cdef:
+        AINDEX _n_points
         AINDEX _initial_size
         stdvector[AINDEX] _neighbours
         stduset[AINDEX] _neighbours_view

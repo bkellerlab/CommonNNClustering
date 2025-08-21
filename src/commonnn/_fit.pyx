@@ -398,7 +398,7 @@ class FitterCommonNNBFS(FitterCommonNN):
 
             while True:
 
-                m = self._neighbours._n_points
+                m = self._neighbours.get_n_points()
 
                 for member_index in range(m):
                     member = self._neighbours.get_member(member_index)
@@ -595,7 +595,7 @@ class FitterCommonNNBFSDebug(FitterCommonNN):
 
             while True:
 
-                m = self._neighbours._n_points
+                m = self._neighbours.get_n_points()
                 if self._verbose:
                     print(f"    ... loop over {m} neighbours")
 
@@ -763,7 +763,7 @@ cdef class FitterExtCommonNNBFS(FitterExtCommonNNInterface):
 
             while True:
 
-                m = self._neighbours._n_points
+                m = self._neighbours._get_n_points()
 
                 for member_index in range(m):
                     member = self._neighbours._get_member(member_index)
@@ -1001,7 +1001,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
                 cluster_params
                 )
 
-            n_members = self._neighbours._n_points
+            n_members = self._neighbours.get_n_points()
             if (n_members - self._neighbours_getter.is_selfcounting) == 0:
                 logger.warning(f"Point {point} has no neighbours")
 
@@ -1042,7 +1042,7 @@ class HierarchicalFitterCommonNNMSTPrim(HierarchicalFitter):
                     cluster_params
                     )
 
-                n_members = self._neighbours._n_points
+                n_members = self._neighbours.get_n_points()
                 for member_index in range(n_members):
                     member = self._neighbours.get_member(member_index)
 
@@ -1420,7 +1420,7 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
                 cluster_params
                 )
 
-            n_members = self._neighbours._n_points
+            n_members = self._neighbours._get_n_points()
             for member_index in range(n_members):
                 member = self._neighbours._get_member(member_index)
 
@@ -1461,7 +1461,7 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
                     cluster_params
                     )
 
-                n_members = self._neighbours._n_points
+                n_members = self._neighbours._get_n_points()
                 for member_index in range(n_members):
                     member = self._neighbours._get_member(member_index)
 
@@ -1557,7 +1557,7 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
                     size_a = _Z[index]
                 else:
                     size_a = 1
-                    
+
                 if root_b >= n_points:
                     index = (root_b - n_points) * 4 + 3
                     size_b = _Z[index]
@@ -1569,7 +1569,7 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
                 _Z[_i + 1] = max(root_a, root_b)
                 _Z[_i + 2] = 0
                 _Z[_i + 3] = size_a + size_b
-                
+
                 new_id = n_points + i
                 parents_indicator[root_a] = new_id
                 parents_indicator[root_b] = new_id
@@ -1804,7 +1804,7 @@ class PredictorCommonNNFirstmatch(PredictorCommonNN):
             if not self._neighbours.enough(_support_cutoff):
                 continue
 
-            m = self._neighbours._n_points
+            m = self._neighbours.get_n_points()
             for member_index in range(m):
                 member = self._neighbours.get_member(member_index)
                 label = _labels[member]
