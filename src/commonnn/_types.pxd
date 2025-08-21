@@ -60,10 +60,15 @@ cdef class NeighboursExtInterface:
         AINDEX _n_points
 
     cdef void _assign(self, const AINDEX member) noexcept nogil
+    cdef void _assign_p(self, const AINDEX member, const AINDEX thread_id) noexcept nogil
     cdef void _reset(self) noexcept nogil
+    cdef void _reset_p(self, const AINDEX thread_id) noexcept nogil
     cdef bint _enough(self, const AINDEX member_cutoff) noexcept nogil
+    cdef bint _enough_p(self, const AINDEX member_cutoff, const AINDEX thread_id) noexcept nogil
     cdef AINDEX _get_member(self, const AINDEX index) noexcept nogil
+    cdef AINDEX _get_member_p(self, const AINDEX index, const AINDEX thread_id) noexcept nogil
     cdef bint _contains(self, const AINDEX member) noexcept nogil
+    cdef bint _contains_p(self, const AINDEX member, const AINDEX thread_id) noexcept nogil
 
 
 cdef class NeighboursGetterExtInterface:
@@ -78,6 +83,14 @@ cdef class NeighboursGetterExtInterface:
             NeighboursExtInterface neighbours,
             ClusterParameters cluster_params) noexcept nogil
 
+    cdef void _get_p(
+            self,
+            const AINDEX index,
+            InputDataExtInterface input_data,
+            NeighboursExtInterface neighbours,
+            ClusterParameters cluster_params,
+            const AINDEX thread_id) noexcept nogil
+
     cdef void _get_other(
             self,
             const AINDEX index,
@@ -85,6 +98,15 @@ cdef class NeighboursGetterExtInterface:
             InputDataExtInterface other_input_data,
             NeighboursExtInterface neighbours,
             ClusterParameters cluster_params) noexcept nogil
+
+    cdef void _get_other_p(
+            self,
+            const AINDEX index,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data,
+            NeighboursExtInterface neighbours,
+            ClusterParameters cluster_params,
+            const AINDEX thread_id) noexcept nogil
 
 
 cdef class DistanceGetterExtInterface:
