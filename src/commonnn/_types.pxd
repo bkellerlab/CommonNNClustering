@@ -70,6 +70,7 @@ cdef class NeighboursExtInterface:
     cdef AINDEX _get_n_points(self) noexcept nogil
     cdef AINDEX _get_n_points_p(self, const AINDEX thread_id) noexcept nogil
 
+
 cdef class NeighboursGetterExtInterface:
     cdef public:
         bint is_selfcounting
@@ -146,11 +147,26 @@ cdef class SimilarityCheckerExtInterface:
             NeighboursExtInterface neighbours_b,
             ClusterParameters cluster_params) noexcept nogil
 
+    cdef bint _check_p(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params,
+            const AINDEX thread_id) noexcept nogil
+
     cdef AINDEX _get(
             self,
             NeighboursExtInterface neighbours_a,
             NeighboursExtInterface neighbours_b,
             ClusterParameters cluster_params) noexcept nogil
+
+    cdef AINDEX _get_p(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params,
+            const AINDEX thread_id) noexcept nogil
+
 
 cdef class QueueExtInterface:
 

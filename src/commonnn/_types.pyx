@@ -882,6 +882,13 @@ cdef class SimilarityCheckerExtInterface:
             NeighboursExtInterface neighbours_b,
             ClusterParameters cluster_params) noexcept nogil: ...
 
+    cdef bint _check_p(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params,
+            const AINDEX thread_id) noexcept nogil: ...
+
     def check(
             self,
             NeighboursExtInterface neighbours_a,
@@ -895,6 +902,13 @@ cdef class SimilarityCheckerExtInterface:
             NeighboursExtInterface neighbours_a,
             NeighboursExtInterface neighbours_b,
             ClusterParameters cluster_params) noexcept nogil: ...
+
+    cdef AINDEX _get_p(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params,
+            const AINDEX thread_id) noexcept nogil: ...
 
     def get(
             self,
@@ -3096,6 +3110,31 @@ cdef class SimilarityCheckerExtContains(SimilarityCheckerExtInterface):
                 continue
         return False
 
+    cdef bint _check_p(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params,
+            const AINDEX thread_id) noexcept nogil:
+
+        cdef AINDEX c = cluster_params.iparams[0]
+
+        if c == 0:
+            return True
+
+        cdef AINDEX na = neighbours_a._get_n_points_p(thread_id)
+        cdef AINDEX member_a, member_index_a
+        cdef AINDEX common = 0
+
+        for member_index_a in range(na):
+            member_a = neighbours_a._get_member_p(member_index_a, thread_id)
+            if neighbours_b._contains_p(member_a, thread_id):
+                common += 1
+                if common == c:
+                    return True
+                continue
+        return False
+
     cdef AINDEX _get(
             self,
             NeighboursExtInterface neighbours_a,
@@ -3109,6 +3148,24 @@ cdef class SimilarityCheckerExtContains(SimilarityCheckerExtInterface):
         for member_index_a in range(na):
             member_a = neighbours_a._get_member(member_index_a)
             if neighbours_b._contains(member_a):
+                common += 1
+
+        return common
+
+    cdef AINDEX _get_p(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params,
+            const AINDEX thread_id) noexcept nogil:
+
+        cdef AINDEX na = neighbours_a._get_n_points_p(thread_id)
+        cdef AINDEX member_a, member_index_a
+        cdef AINDEX common = 0
+
+        for member_index_a in range(na):
+            member_a = neighbours_a._get_member_p(member_index_a, thread_id)
+            if neighbours_b._contains_p(member_a, thread_id):
                 common += 1
 
         return common
@@ -3141,7 +3198,6 @@ cdef class SimilarityCheckerExtSwitchContains(SimilarityCheckerExtInterface):
             NeighboursExtInterface neighbours_b,
             ClusterParameters cluster_params) noexcept nogil:
 
-
         cdef AINDEX c = cluster_params.iparams[0]
 
         if c == 0:
@@ -3161,6 +3217,38 @@ cdef class SimilarityCheckerExtSwitchContains(SimilarityCheckerExtInterface):
         for member_index_a in range(na):
             member_a = neighbours_a._get_member(member_index_a)
             if neighbours_b._contains(member_a):
+                common += 1
+                if common == c:
+                    return True
+                continue
+        return False
+
+    cdef bint _check_p(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params,
+            const AINDEX thread_id) noexcept nogil:
+
+        cdef AINDEX c = cluster_params.iparams[0]
+
+        if c == 0:
+            return True
+
+        cdef AINDEX na = neighbours_a._get_n_points_p(thread_id)
+        cdef AINDEX nb = neighbours_b._get_n_points_p(thread_id)
+
+        cdef AINDEX member_a, member_index_a
+        cdef AINDEX common = 0
+
+        if nb < na:
+            with gil:
+                neighbours_a, neighbours_b = neighbours_b, neighbours_a
+                na, nb = nb, na
+
+        for member_index_a in range(na):
+            member_a = neighbours_a._get_member_p(member_index_a, thread_id)
+            if neighbours_b._contains_p(member_a, thread_id):
                 common += 1
                 if common == c:
                     return True
@@ -3187,6 +3275,31 @@ cdef class SimilarityCheckerExtSwitchContains(SimilarityCheckerExtInterface):
         for member_index_a in range(na):
             member_a = neighbours_a._get_member(member_index_a)
             if neighbours_b._contains(member_a):
+                common += 1
+
+        return common
+
+    cdef AINDEX _get_p(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params,
+            const AINDEX thread_id) noexcept nogil:
+
+        cdef AINDEX na = neighbours_a._get_n_points_p(thread_id)
+        cdef AINDEX nb = neighbours_b._get_n_points_p(thread_id)
+
+        cdef AINDEX member_a, member_index_a
+        cdef AINDEX common = 0
+
+        if nb < na:
+            with gil:
+                neighbours_a, neighbours_b = neighbours_b, neighbours_a
+                na, nb = nb, na
+
+        for member_index_a in range(na):
+            member_a = neighbours_a._get_member_p(member_index_a, thread_id)
+            if neighbours_b._contains_p(member_a, thread_id):
                 common += 1
 
         return common
@@ -3263,6 +3376,61 @@ cdef class SimilarityCheckerExtScreensorted(SimilarityCheckerExtInterface):
 
         return False
 
+    cdef bint _check_p(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params,
+            const AINDEX thread_id) noexcept nogil:
+
+        cdef AINDEX c = cluster_params.iparams[0]
+
+        if c == 0:
+            return True
+
+        cdef AINDEX na = neighbours_a._get_n_points_p(thread_id)
+        cdef AINDEX nb = neighbours_b._get_n_points_p(thread_id)
+
+        if (na == 0) or (nb == 0):
+            return False
+
+        cdef AINDEX member_index_a = 0, member_index_b = 0
+        cdef AINDEX member_a, member_b
+        cdef AINDEX common = 0
+
+        member_a = neighbours_a._get_member_p(member_index_a, thread_id)
+        member_b = neighbours_b._get_member_p(member_index_b, thread_id)
+
+        while True:
+            if member_a == member_b:
+                common += 1
+                if common == c:
+                    return True
+
+                member_index_a += 1
+                member_index_b += 1
+
+                if (member_index_a == na) or (member_index_b == nb):
+                    break
+
+                member_a = neighbours_a._get_member_p(member_index_a, thread_id)
+                member_b = neighbours_b._get_member_p(member_index_b, thread_id)
+                continue
+
+            if member_a < member_b:
+                member_index_a += 1
+                if (member_index_a == na):
+                    break
+                member_a = neighbours_a._get_member_p(member_index_a, thread_id)
+                continue
+
+            member_index_b += 1
+            if (member_index_b == nb):
+                break
+            member_b = neighbours_b._get_member_p(member_index_b, thread_id)
+
+        return False
+
     cdef AINDEX _get(
             self,
             NeighboursExtInterface neighbours_a,
@@ -3307,6 +3475,54 @@ cdef class SimilarityCheckerExtScreensorted(SimilarityCheckerExtInterface):
             if (member_index_b == nb):
                 break
             member_b = neighbours_b._get_member(member_index_b)
+
+        return common
+
+    cdef AINDEX _get_p(
+            self,
+            NeighboursExtInterface neighbours_a,
+            NeighboursExtInterface neighbours_b,
+            ClusterParameters cluster_params,
+            const AINDEX thread_id) noexcept nogil:
+
+        cdef AINDEX na = neighbours_a._get_n_points_p(thread_id)
+        cdef AINDEX nb = neighbours_b._get_n_points_p(thread_id)
+
+        if (na == 0) or (nb == 0):
+            return 0
+
+        cdef AINDEX member_index_a = 0, member_index_b = 0
+        cdef AINDEX member_a, member_b
+        cdef AINDEX common = 0
+
+        member_a = neighbours_a._get_member_p(member_index_a, thread_id)
+        member_b = neighbours_b._get_member_p(member_index_b, thread_id)
+
+        while True:
+            if member_a == member_b:
+                common += 1
+
+                member_index_a += 1
+                member_index_b += 1
+
+                if (member_index_a == na) or (member_index_b == nb):
+                    break
+
+                member_a = neighbours_a._get_member_p(member_index_a, thread_id)
+                member_b = neighbours_b._get_member_p(member_index_b, thread_id)
+                continue
+
+            if member_a < member_b:
+                member_index_a += 1
+                if (member_index_a == na):
+                    break
+                member_a = neighbours_a._get_member_p(member_index_a, thread_id)
+                continue
+
+            member_index_b += 1
+            if (member_index_b == nb):
+                break
+            member_b = neighbours_b._get_member_p(member_index_b, thread_id)
 
         return common
 
