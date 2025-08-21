@@ -2035,6 +2035,27 @@ cdef class NeighboursGetterExtBruteForce(NeighboursGetterExtInterface):
             if distance <= cluster_params.fparams[0]:
                 neighbours._assign(i)
 
+    cdef void _get_p(
+            self,
+            const AINDEX index,
+            InputDataExtInterface input_data,
+            NeighboursExtInterface neighbours,
+            ClusterParameters cluster_params,
+            const AINDEX thread_id) noexcept nogil:
+
+        cdef AINDEX i
+        cdef AVALUE distance
+
+        neighbours._reset_p(thread_id)
+
+        for i in range(input_data._n_points):
+            distance = self._distance_getter._get_single(
+                index, i, input_data
+                )
+
+            if distance <= cluster_params.fparams[0]:
+                neighbours._assign_p(i, thread_id)
+
     cdef void _get_other(
             self,
             const AINDEX index,
@@ -2055,6 +2076,28 @@ cdef class NeighboursGetterExtBruteForce(NeighboursGetterExtInterface):
 
             if distance <= cluster_params.fparams[0]:
                 neighbours._assign(i)
+
+    cdef void _get_other(
+            self,
+            const AINDEX index,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data,
+            NeighboursExtInterface neighbours,
+            ClusterParameters cluster_params,
+            const AINDEX thread_id) noexcept nogil:
+
+        cdef AINDEX i
+        cdef AVALUE distance
+
+        neighbours._reset_p(thread_id)
+
+        for i in range(input_data._n_points):
+            distance = self._distance_getter._get_single_other(
+                index, i, input_data, other_input_data
+                )
+
+            if distance <= cluster_params.fparams[0]:
+                neighbours._assign_p(i, thread_id)
 
     @classmethod
     def get_builder_kwargs(cls):
@@ -2142,6 +2185,20 @@ cdef class NeighboursGetterExtLookup(NeighboursGetterExtInterface):
         for i in range(input_data._get_n_neighbours(index)):
             neighbours._assign(input_data._get_neighbour(index, i))
 
+    cdef void _get_p(
+            self,
+            const AINDEX index,
+            InputDataExtInterface input_data,
+            NeighboursExtInterface neighbours,
+            ClusterParameters cluster_params,
+            const AINDEX thread_id) noexcept nogil:
+
+        cdef AINDEX i
+        neighbours._reset_p(thread_id)
+
+        for i in range(input_data._get_n_neighbours(index)):
+            neighbours._assign_p(input_data._get_neighbour(index, i), thread_id)
+
     cdef void _get_other(
             self,
             const AINDEX index,
@@ -2156,6 +2213,22 @@ cdef class NeighboursGetterExtLookup(NeighboursGetterExtInterface):
 
         for i in range(other_input_data._get_n_neighbours(index)):
             neighbours._assign(other_input_data._get_neighbour(index, i))
+
+    cdef void _get_other_p(
+            self,
+            const AINDEX index,
+            InputDataExtInterface input_data,
+            InputDataExtInterface other_input_data,
+            NeighboursExtInterface neighbours,
+            ClusterParameters cluster_params,
+            const AINDEX thread_id) noexcept nogil:
+
+        cdef AINDEX i
+
+        neighbours._reset_p(thread_id)
+
+        for i in range(other_input_data._get_n_neighbours(index)):
+            neighbours._assign_p(other_input_data._get_neighbour(index, i), thread_id)
 
 
 class NeighboursGetterRecomputeLookup(NeighboursGetter):
