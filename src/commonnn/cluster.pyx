@@ -503,7 +503,7 @@ class Clustering:
             annotate_props=None,
             annotate_format="{alias}: (λ={lambda}, s={size})"):
         """Make a layer plot of the cluster hierarchy
-        
+
         Keyword args:
             ax: The Matplotlib `Axes` instance to which to add the plot.  If
                 `None`, a new `Figure` with `Axes` will be created.
@@ -570,7 +570,7 @@ class Clustering:
                 "fontsize": 8,
                 "color": "k"
             }
-            
+
             if annotate_props is not None:
                 annotate_props_defaults.update(annotate_props)
 
@@ -969,8 +969,7 @@ class Clustering:
             dtrajs = dtrajs[:last_dtraj_index]
 
         return dtrajs
-        
-    
+
     def to_dlabels(self, bundle=None):
         """Split cluster label assignments according to edge information on input data"""
 
@@ -983,10 +982,10 @@ class Clustering:
         dlabels = [Labels(t, meta=meta) for t in dtrajs]
 
         return dlabels
-        
+
     def to_dmapping(self, bundle=None):
         """Convert discrete label containers to mapping of labels to lists of lists of indices per input trajectory"""
-        
+
         dlabels = self.to_dlabels(bundle)
         mappings = [dl.mapping for dl in dlabels]
         labels_set = set(
@@ -994,7 +993,7 @@ class Clustering:
             for m in mappings
             for label in m.keys()
         )
-        
+
         dmapping = {}
         for label in labels_set:
             dmapping[label] = [

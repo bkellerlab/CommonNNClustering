@@ -1799,6 +1799,9 @@ cdef class NeighboursExtParallelVector(NeighboursExtInterface):
     Keyword args:
         neighbours: A nested sequence of indices suitable to be cast to a vector of vectors.
         initial_size: Number of elements reserved for the size of the vectors.
+        n_threads: The number of threads to serve, i.e. the number of underlying
+            neighbour containers. Should be consistent with `neighbours` if initial
+            containers are provided.
     """
 
     def __cinit__(self, neighbours=None, *, AINDEX initial_size=1, AINDEX n_threads=1):
@@ -1813,8 +1816,10 @@ cdef class NeighboursExtParallelVector(NeighboursExtInterface):
                 raise ValueError(
                     f"{n_threads} threads specified but got {len(neighbours)} neighbours containers to initialise"
                 )
+
+            self._neighbours = neighbours
+
             for i in range(n_threads):
-                self._neighbours[i] = neighbours[i]
                 self._neighbours[i].reserve(self._initial_size)
         else:
             self._reset()
@@ -1829,6 +1834,7 @@ cdef class NeighboursExtParallelVector(NeighboursExtInterface):
         self._neighbours.resize(0)
         self._neighbours.reserve(self._n_threads)
         for i in range(self._n_threads):
+            self._neighbours.push_back(stdvector[AINDEX]())
             self._neighbours[i].reserve(self._initial_size)
 
     cdef void _reset_p(self, const AINDEX thread_id) noexcept nogil:
@@ -1864,12 +1870,18 @@ cdef class NeighboursExtParallelVector(NeighboursExtInterface):
         return self._neighbours[thread_id].size()
 
     def to_neighbours_array(self):
-        raise NotImplementedError
+        cdef AINDEX i
+        cdef list neighbours = []
+
+        for i in range(self._n_threads):
+            neighbours.append(np.asarray(list(self._neighbours[i])))
+
+        return neighbours
 
     @property
     def n_points(self):
         cdef AINDEX i
-        return [self._neighbours[i].size() for i in range(self._n_threads)]
+        return [self._get_n_points_p(i) for i in range(self._n_threads)]
 
 
 cdef class NeighboursExtSet(NeighboursExtInterface):

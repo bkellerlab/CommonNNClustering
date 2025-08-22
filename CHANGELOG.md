@@ -4,7 +4,8 @@ Summary of changes
 v0.0.5 (dev)
 ------------
 
- * Add `Clustering.to_dlabels()` and `Clustering.to_dmapping()` convenience functions
+ * Added `PredictorExtCommonnNNFirstmatch` supporting parallel label prediction
+ * Added `Clustering.to_dlabels()` and `Clustering.to_dmapping()` convenience functions
 
 v0.0.4
 ------

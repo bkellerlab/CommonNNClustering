@@ -55,4 +55,24 @@ cdef class HierarchicalFitterExtCommonNNMSTPrim:
     cpdef void _make_scipy_hierarchy(self, AINDEX n_points)
     cdef void _make_scipy_hierarchy_inner(self, AVALUE[:, ::1] Z, AINDEX[::1] parents_indicator, stdvector[AINDEX] top_roots) nogil
 
+cdef class PredictorExtInterface:
+    cdef void _predict_inner(
+        self,
+        InputDataExtInterface input_data,
+        InputDataExtInterface predictand_input_data,
+        Labels labels,
+        Labels predictand_labels,
+        ClusterParameters cluster_params) nogil
+
+cdef class PredictorExtCommonnNNInterface(PredictorExtInterface): pass
+
+cdef class PredictorExtCommonnNNFirstmatch(PredictorExtCommonnNNInterface):
+    cdef public:
+        NeighboursGetterExtInterface _neighbours_getter
+        NeighboursGetterExtInterface _neighbours_getter_other
+        NeighboursExtInterface _neighbours
+        NeighboursExtInterface _neighbour_neighbours
+        SimilarityCheckerExtInterface _similarity_checker
+        AINDEX _n_threads
+
 cdef AINDEX get_root(AINDEX p, AINDEX[::1] parent_indicator) except -1 nogil

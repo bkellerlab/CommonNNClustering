@@ -39,6 +39,7 @@ from commonnn._types import (
     )
 
 from cython.operator cimport dereference, preincrement
+from cython.parallel cimport prange, threadid
 
 
 class Fitter(ABC):
@@ -300,6 +301,55 @@ class PredictorCommonNN(Predictor):
 
     def get_fit_signature(self):
         return FitterCommonNN.get_fit_signature(self)
+
+
+cdef class PredictorExtInterface:
+    def predict(self, Bundle bundle, Bundle other, *, **kwargs): ...
+
+    def _predict(
+            self,
+            input_data: Type['InputData'],
+            predictand_input_data: Type['InputData'],
+            labels: Type['Labels'],
+            predictand_labels: Type['Labels'],
+            cluster_params: Type['ClusterParameters']):
+
+        self._predict_inner(
+            input_data,
+            predictand_input_data,
+            labels,
+            predictand_labels,
+            cluster_params
+        )
+
+    cdef void _predict_inner(
+            self,
+            InputDataExtInterface input_data,
+            InputDataExtInterface predictand_input_data,
+            Labels labels,
+            Labels predictand_labels,
+            ClusterParameters cluster_params) nogil: ...
+
+    @abstractmethod
+    def make_parameters(self, **kwargs) -> Type["ClusterParameters"]: ...
+
+    def __repr__(self):
+        return f"{type(self).__name__}"
+
+
+cdef class PredictorExtCommonnNNInterface(PredictorExtInterface):
+
+    _parameter_type = CommonNNParameters
+
+    def predict(self, Bundle bundle, Bundle other, *, **kwargs):
+        return PredictorCommonNN.predict(self, bundle, other, **kwargs)
+
+    def make_parameters(
+            self, **kwargs) -> Type["ClusterParameters"]:
+        return PredictorCommonNN.make_parameters(self, **kwargs)
+
+    def get_fit_signature(self):
+        return PredictorCommonNN.get_fit_signature(self)
 
 
 class FitterCommonNNBFS(FitterCommonNN):
@@ -1831,6 +1881,135 @@ class PredictorCommonNNFirstmatch(PredictorCommonNN):
                     break
 
         return
+
+cdef class PredictorExtCommonnNNFirstmatch(PredictorExtCommonnNNInterface):
+    """Concrete implementation of the predictor interface
+
+    Realises prediction under the CommonNN similarity criterion
+    where labels are predicted based on the first matching reference
+    point.
+
+    Args:
+        neighbours_getter: Any extension type
+            implementing the neighbours getter
+            interface. Used to retrieve neighbours of predicted
+            point within reference set.
+        neighbours_getter_other: Any extension type
+            implementing the neighbours getter
+            interface. Used to retrieve neighbours of points
+            within reference set.
+        neighbours: Any extension type implementing the neighbours
+            interface (parallel).
+        neighbour_neighbours: Any extension type implementing the neighbours
+            interface (parallel).
+        similarity_checker: Any extension type implementing the similarity checker
+            interface.
+        n_threads: Number of parallel threads to use
+    """
+    def __cinit__(
+            self,
+            NeighboursGetterExtInterface neighbours_getter,
+            NeighboursGetterExtInterface neighbours_getter_other,
+            NeighboursExtInterface neighbours,
+            NeighboursExtInterface neighbour_neighbours,
+            SimilarityCheckerExtInterface similarity_checker,
+            AINDEX n_threads = 1):
+        self._neighbours_getter = neighbours_getter
+        self._neighbours_getter_other = neighbours_getter_other
+        self._neighbours = neighbours
+        self._neighbour_neighbours = neighbour_neighbours
+        self._similarity_checker = similarity_checker
+        self._n_threads = n_threads
+
+    def __str__(self):
+
+        attr_str = ", ".join([
+            f"ngetter={self._neighbours_getter}",
+            f"ngetter_other={self._neighbours_getter_other}",
+            f"na={self._neighbours}",
+            f"nb={self._neighbour_neighbours}",
+            f"checker={self._similarity_checker}",
+        ])
+
+        return f"{type(self).__name__}({attr_str})"
+
+    @classmethod
+    def get_builder_kwargs(cls):
+        return [
+            ("neighbours_getter", None),
+            ("neighbours_getter_other", "neighbours_getter"),
+            ("neighbours", None),
+            ("neighbour_neighbours","neighbours"),
+            ("similarity_checker", None),
+            ]
+
+    cdef void _predict_inner(
+            self,
+            InputDataExtInterface input_data,
+            InputDataExtInterface predictand_input_data,
+            Labels labels,
+            Labels predictand_labels,
+            ClusterParameters cluster_params) nogil:
+        """Generic cluster label prediction"""
+
+        cdef AINDEX _support_cutoff = cluster_params.iparams[1]
+        cdef AINDEX n, m, point, member, member_index, label
+
+        cdef AINDEX* _labels = &labels._labels[0]
+        cdef AINDEX* _predictand_labels = &predictand_labels._labels[0]
+        cdef ABOOL* _consider = &predictand_labels._consider[0]
+        cdef stduset[AINDEX] _consider_set = predictand_labels._consider_set
+        cdef AINDEX tid
+
+        n = predictand_input_data._n_points
+        for point in prange(n, num_threads=self._n_threads, nogil=True):
+            tid = threadid()
+
+            if _consider[point] == 0:
+                continue
+
+            self._neighbours_getter_other._get_other_p(
+                point,
+                input_data,
+                predictand_input_data,
+                self._neighbours,
+                cluster_params,
+                tid,
+            )
+
+            if not self._neighbours._enough_p(_support_cutoff, tid):
+                continue
+
+            m = self._neighbours._get_n_points_p(tid)
+            for member_index in range(m):
+                member = self._neighbours._get_member_p(member_index, tid)
+                label = _labels[member]
+
+                if _consider_set.find(label) == _consider_set.end():
+                    continue
+
+                self._neighbours_getter._get_p(
+                    member,
+                    input_data,
+                    self._neighbour_neighbours,
+                    cluster_params,
+                    tid
+                    )
+
+                if not self._neighbour_neighbours._enough_p(_support_cutoff, tid):
+                    continue
+
+                if self._similarity_checker._check_p(
+                        self._neighbours,
+                        self._neighbour_neighbours,
+                        cluster_params,
+                        tid):
+                    _consider[point] = 0
+                    _predictand_labels[point] = label
+                    break
+
+        return
+
 
 # TODO: Create union find and/or graph type
 cdef inline AINDEX get_root(AINDEX p, AINDEX[::1] parent_indicator) except -1 nogil:
