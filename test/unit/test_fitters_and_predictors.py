@@ -127,8 +127,6 @@ def test_fit_debug(fitter, basic_components, file_regression, capsys):
     file_regression.check(yielded + "\n\n" + captured.out)
 
 
-# TODO: The following tests may already count as integration tests
-
 @pytest.mark.parametrize(
     "fitter",
     [
