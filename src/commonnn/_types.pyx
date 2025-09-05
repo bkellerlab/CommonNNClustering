@@ -230,7 +230,7 @@ cdef class Labels:
         self._consider_set = value
 
     def __repr__(self):
-        return f"{type(self).__name__}({list(self.labels)!s})"
+        return f"{type(self).__name__}({self.labels.tolist()})"
 
     def __str__(self):
         return f"{self.labels!s}"
