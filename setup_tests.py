@@ -1,3 +1,4 @@
+import os
 import sysconfig
 import tempfile
 from distutils.errors import CompileError
@@ -34,6 +35,7 @@ class BuildExt(build_ext):
     def build_extensions(self):
         ct = self.compiler.compiler_type
         opts = self.compile_flags.get(ct, [])
+
         if ct == 'unix':
             # Only add flags which pass the `flag_filter`
             opts += flag_filter(
@@ -43,7 +45,7 @@ class BuildExt(build_ext):
                 )
 
         for ext in self.extensions:
-            ext.extra_compile_args = list(set(opts) & set(ext.extra_compile_args))
+            ext.extra_compile_args = list(set(opts) | set(ext.extra_compile_args))
 
         build_ext.build_extensions(self)
 
@@ -54,14 +56,14 @@ cython_macros: List[Tuple[str, Optional[str]]] = [
     ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")
 ]
 
-cflags_list = sysconfig.get_config_var('CFLAGS')
-if cflags_list is None:
-    cflags_list = []
-else:
-    cflags_list = cflags_list.split()
+cflags_base = sysconfig.get_config_var('CFLAGS') or ""
+cflags_env = os.getenv("CFLAGS", "")
+cflags_set = set(cflags_base.split() + cflags_env.split())
+cflags_set.discard('-Wstrict-prototypes')  # not valid for C++
 
-extra_compile_args = set(cflags_list)
-extra_compile_args.discard('-Wstrict-prototypes')
+ldflags_base = sysconfig.get_config_var('LDFLAGS') or ""
+ldflags_env = os.getenv("LDFLAGS", "")
+ldflags_set = set(ldflags_base.split() + ldflags_env.split())
 
 extensions = [
     Extension(
@@ -70,7 +72,8 @@ extensions = [
         define_macros=cython_macros,
         language="c++",
         include_dirs=[np.get_include(), "src", "src/commonnn"],
-        extra_compile_args=list(extra_compile_args),
+        extra_compile_args=list(cflags_set),
+        extra_link_args=list(ldflags_set)
     )
 ]
 
@@ -83,7 +86,7 @@ compiler_directives = {
     "cdivision": True,
     "nonecheck": False,
     "linetrace": True,
-    "annotation_typing": False
+    "annotation_typing": False,
 }
 
 extensions = cythonize(extensions, compiler_directives=compiler_directives)

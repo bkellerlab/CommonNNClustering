@@ -37,8 +37,15 @@ To install with optional dependencies use:
 
 Other extras can be specified with `[dev]`, `[docs]`, and `[test]`.
 
-Developement installation
--------------------------
+To make use of parallel implementations, enable OpenMP support prior to installation:
+
+.. code-block:: bash
+
+   $ export CFLAGS="-fopenmp $CFLAGS"
+   $ export LDFLAGS="-fopenmp $LDFLAGS"
+
+Development installation
+------------------------
 
 Clone the source repository `https://github.com/bkellerlab/CommonNNClustering
 <https://github.com/bkellerlab/CommonNNClustering>`_ and use the package
@@ -73,3 +80,6 @@ the package needs to be compiled with `TRACE_CYTHON=1`. Note that this slows
 down the runtime of the package routines significantly and should be set
 to `TRACE_CYTHON=0` in production. To run the tests, create a coverage report
 and a corresponding badge, one can use the script `test.py`.
+
+You can rebuild tests based on Cython functions with `python setup_tests.py build_ext --inplace`
+(`PYTHONPATH` may need to include the `commonnn/src` directory).
