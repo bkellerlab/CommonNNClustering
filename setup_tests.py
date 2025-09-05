@@ -6,6 +6,7 @@ from setuptools.command.build_ext import build_ext
 from typing import List, Optional, Tuple
 
 from Cython.Build import cythonize
+from Cython.Compiler import Options
 import numpy as np
 
 
@@ -47,6 +48,8 @@ class BuildExt(build_ext):
         build_ext.build_extensions(self)
 
 
+Options.fast_fail = True
+
 cython_macros: List[Tuple[str, Optional[str]]] = [
     ("NPY_NO_DEPRECATED_API", "NPY_1_7_API_VERSION")
 ]
@@ -66,7 +69,7 @@ extensions = [
         ["test/unit/*.pyx"],
         define_macros=cython_macros,
         language="c++",
-        include_dirs=[np.get_include()],
+        include_dirs=[np.get_include(), "src", "src/commonnn"],
         extra_compile_args=list(extra_compile_args),
     )
 ]

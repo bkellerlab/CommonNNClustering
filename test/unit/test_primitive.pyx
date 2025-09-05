@@ -1,3 +1,6 @@
+import numpy as np
+cimport numpy as np
+
 from commonnn._primitive_types import P_AVALUE, P_AVALUE32, P_AINDEX, P_ABOOL
 from commonnn._primitive_types cimport AVALUE, AVALUE32, AINDEX, ABOOL
 from commonnn._primitive_types cimport _allocate_and_fill_aindex_array, _allocate_and_fill_avalue_array
