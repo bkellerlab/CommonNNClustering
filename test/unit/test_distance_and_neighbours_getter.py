@@ -147,17 +147,17 @@ def test_get_neighbours_lookup(
     n_points = len(basic_neighbourhoods)
     for i in range(n_points):
         neighbours_getter.get(i, input_data, neighbours, cluster_params)
-        assert neighbours._n_points == len(basic_neighbourhoods[i])
+        assert neighbours.n_points == len(basic_neighbourhoods[i])
 
-        for n in range(neighbours._n_points):
+        for n in range(neighbours.n_points):
             assert neighbours.get_member(n) == basic_neighbourhoods[i][n]
 
         neighbours_getter.get_other(
             i, input_data, input_data, neighbours, cluster_params
         )
-        assert neighbours._n_points == len(basic_neighbourhoods[i])
+        assert neighbours.n_points == len(basic_neighbourhoods[i])
 
-        for n in range(neighbours._n_points):
+        for n in range(neighbours.n_points):
             assert neighbours.get_member(n) == basic_neighbourhoods[i][n]
 
 
