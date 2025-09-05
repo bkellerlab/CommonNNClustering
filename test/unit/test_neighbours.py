@@ -35,7 +35,7 @@ def test_init_neighbours(neighbours_type, file_regression):
 )
 def test_neighbours(neighbours_type, args, kwargs, n_points, ordered):
     neighbours = neighbours_type(*args, **kwargs)
-    assert neighbours.n_points == n_points == neighbours._n_points
+    assert neighbours.n_points == n_points
     if hasattr(neighbours, "neighbours"):
         assert neighbours.neighbours is not None
 
@@ -68,4 +68,4 @@ def test_neighbours(neighbours_type, args, kwargs, n_points, ordered):
     assert not neighbours.enough(4)
 
     neighbours.reset()
-    assert neighbours.n_points == 0 == neighbours._n_points
+    assert neighbours.n_points == 0
