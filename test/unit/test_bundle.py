@@ -16,7 +16,7 @@ from commonnn import _types
 def test_bundle_init(file_regression):
     bundle = _bundle.Bundle()
     assert bundle.input_data is None
-    assert bundle.graph is None
+    assert bundle.graph is set()
     assert bundle.labels is None
     assert bundle.root_indices is None
     assert bundle.parent_indices is None
