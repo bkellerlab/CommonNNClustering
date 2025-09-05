@@ -2,7 +2,7 @@ import importlib
 import sys
 
 
-cython_test_modules = ["test_primitive"]
+cython_test_modules = ["_test_primitive", "_test_parallel"]
 
 for mod in cython_test_modules:
     print(mod)
